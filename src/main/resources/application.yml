@@ -1,0 +1,16 @@
+server:
+  port: 6789
+
+spring:
+  application:
+    name: mirai-omnitrix
+  profiles:
+    active: local
+
+bot:
+  qq:
+  password:
+
+proxy: #代理配置
+  host: localhost
+  port: 7890
