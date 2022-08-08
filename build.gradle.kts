@@ -23,8 +23,9 @@ repositories {
 }
 
 dependencies {
-    api("net.mamoe:mirai-core-api:${properties["version.mirai"]}")
+    implementation("net.mamoe:mirai-core-api:${properties["version.mirai"]}")
     runtimeOnly("net.mamoe:mirai-core:${properties["version.mirai"]}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
