@@ -7,11 +7,11 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties("bot")
 data class BotProperties(
     /**
-     * qq号.
+     * qq号
      */
     val qq: Long,
     /**
-     * qq密码.
+     * qq密码
      */
     val password: String
 )

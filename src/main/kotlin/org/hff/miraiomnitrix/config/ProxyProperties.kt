@@ -7,11 +7,11 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties("proxy")
 data class ProxyProperties(
     /**
-     * 代理ip.
+     * 代理ip
      */
     val host: String,
     /**
-     * 代理端口.
+     * 代理端口
      */
     val port: Int,
 )
