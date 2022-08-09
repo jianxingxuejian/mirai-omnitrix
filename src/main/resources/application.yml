@@ -11,6 +11,6 @@ bot:
   qq:
   password:
 
-proxy: #代理配置
+proxy:
   host: localhost
   port: 7890

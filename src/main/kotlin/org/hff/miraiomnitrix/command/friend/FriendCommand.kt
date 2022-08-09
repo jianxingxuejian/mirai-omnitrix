@@ -2,9 +2,10 @@ package org.hff.miraiomnitrix.command.friend
 
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.command.Command
 
 /** 适用于好友消息指令接口 */
-interface FriendCommand {
+interface FriendCommand : Command {
 
     /**
      * 执行指令
@@ -13,5 +14,5 @@ interface FriendCommand {
      * @param message 消息
      * @param args 追加参数
      */
-    fun execute(sender: Friend, message: MessageChain, args: Array<String>)
+    fun execute(sender: Friend, message: MessageChain, args: List<String>): MessageChain?
 }
