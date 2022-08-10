@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class Command(
+    /** 指令名称列表 */
     val name: Array<String>,
+    /** 是否需要指令头，默认为true */
     val isNeedHeader: Boolean = true,
 )

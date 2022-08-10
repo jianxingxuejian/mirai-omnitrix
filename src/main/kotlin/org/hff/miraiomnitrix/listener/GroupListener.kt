@@ -12,4 +12,5 @@ object GroupListener : ListenerHost {
         val messageChain = CommandManager.executeGroupCommand(sender, message, group) ?: return
         group.sendMessage(messageChain)
     }
+
 }
