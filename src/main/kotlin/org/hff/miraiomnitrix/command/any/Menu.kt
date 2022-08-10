@@ -12,7 +12,6 @@ class Menu : AnyCommand {
     override fun execute(sender: User, message: MessageChain, subject: Contact, args: List<String>): MessageChain {
         val result = buildMessageChain {
             +"帮助说明：\n"
-            +"/bz - 查询某个人的信息\n"
         }
         return result
     }

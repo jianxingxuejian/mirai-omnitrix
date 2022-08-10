@@ -11,12 +11,13 @@ import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
 import kotlin.reflect.full.findAnnotation
 
 object CommandManager {
+    private val commandHeads = arrayOf(",", ".", "，", "。")
+    private val botProperties = getBean(BotProperties::class.java)
+
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
     private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
     private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
     private val noCommands: ArrayList<String> = arrayListOf()
-    private val commandHeads = arrayOf(",", ".", "，", "。")
-    private val botProperties = getBean(BotProperties::class.java)
 
     init {
         getBeansWithAnnotation(Command::class.java)?.values?.forEach { command ->
@@ -30,39 +31,40 @@ object CommandManager {
         }
     }
 
-
     fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): MessageChain? {
-        val (isCommand, args) = check(message.contentToString())
-        val command = anyCommands[args[0]] ?: return null
-        if (!isCommand) return null
-        return command.execute(sender, message, subject, args.drop(1))
+        val (command, args) = getCommand(message, anyCommands) ?: return null
+        return command.execute(sender, message, subject, args)
     }
 
     fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): MessageChain? {
-        val (isCommand, args) = check(message.contentToString())
-        val command = groupCommands[args[0]] ?: return null
-        if (!isCommand) return null
-        return command.execute(sender, message, group, args.drop(1))
+        val (command, args) = getCommand(message, groupCommands) ?: return null
+        return command.execute(sender, message, group, args)
     }
 
     fun executeFriendCommand(sender: Friend, message: MessageChain): MessageChain? {
-        val (isCommand, args) = check(message.contentToString())
-        val command = friendCommands[args[0]] ?: return null
-        if (!isCommand) return null
-        return command.execute(sender, message, args.drop(1))
+        val (command, args) = getCommand(message, friendCommands) ?: return null
+        return command.execute(sender, message, args)
     }
 
-    data class Result(val isCommand: Boolean, val args: List<String>)
+    data class Result<T>(val command: T, val args: MutableList<String>)
 
-    private fun check(message: String): Result {
-        val (isCommand, msg) = commandHeads.any { message.startsWith(it) }
+    private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Result<T>? {
+        val string = message.contentToString()
+        val (hasHeader, msg) = commandHeads.any { string.startsWith(it) }
             .let {
-                if (it) Pair(true, message.substring(1))
-                else if (message.contains("@" + botProperties?.qq))
-                    Pair(true, message.replace("@" + botProperties?.qq, ""))
-                else Pair(false, message)
+                if (it) Pair(true, string.substring(1))
+                else if (botProperties != null && string.contains("@" + botProperties.qq))
+                    Pair(true, string.replace("@" + botProperties.qq, ""))
+                else Pair(false, string)
             }
-        return Result(isCommand, msg.trim().split("\\s+"))
+        val args = msg.trim().split("\\s+").toMutableList()
+        for ((index, arg) in args.withIndex()) {
+            if (!noCommands.contains(arg) && !hasHeader) continue
+            val command = commands[arg] ?: continue
+            args.removeAt(index)
+            return Result(command, args)
+        }
+        return null
     }
 
 }
