@@ -13,9 +13,7 @@ object SpringUtil : ApplicationContextAware {
         context = applicationContext
     }
 
-    fun <T> getBean(beanClass: Class<out T>): T? {
-        return context?.getBean(beanClass)
-    }
+    fun <T> getBean(beanClass: Class<out T>) = context?.getBean(beanClass)
 
     fun getBeansWithAnnotation(annotationClass: Class<out Annotation>): Map<String, Any>? {
         return context?.getBeansWithAnnotation(annotationClass)
