@@ -3,10 +3,9 @@ package org.hff.miraiomnitrix.command.group
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.Command
 
 /** 适用于群消息指令接口 */
-interface GroupCommand : Command {
+interface GroupCommand  {
 
 
     /**

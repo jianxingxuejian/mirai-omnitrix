@@ -2,10 +2,9 @@ package org.hff.miraiomnitrix.command.friend
 
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.Command
 
 /** 适用于好友消息指令接口 */
-interface FriendCommand : Command {
+interface FriendCommand  {
 
     /**
      * 执行指令

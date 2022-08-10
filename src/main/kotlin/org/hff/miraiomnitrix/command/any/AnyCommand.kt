@@ -3,10 +3,9 @@ package org.hff.miraiomnitrix.command.any
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.Command
 
 /** 适用于所有消息指令接口 */
-interface AnyCommand : Command {
+interface AnyCommand {
 
     /**
      * 执行指令

@@ -7,44 +7,48 @@ import org.hff.miraiomnitrix.command.friend.FriendCommand
 import org.hff.miraiomnitrix.command.group.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
-import org.reflections.Reflections
+import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
+import kotlin.reflect.full.findAnnotation
 
 object CommandManager {
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
     private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
     private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
+    private val noCommands: ArrayList<String> = arrayListOf()
     private val commandHeads = arrayOf(",", ".", "，", "。")
     private val botProperties = getBean(BotProperties::class.java)
 
     init {
-        val reflections = Reflections("org.hff.miraiomnitrix.command")
-        val anyList = reflections.getSubTypesOf(AnyCommand::class.java).mapNotNull { it.kotlin.objectInstance }
-        anyList.forEach { it.name?.forEach { name -> anyCommands[name] = it } }
-        val friendList = reflections.getSubTypesOf(FriendCommand::class.java).mapNotNull { it.kotlin.objectInstance }
-        friendList.forEach { it.name?.forEach { name -> friendCommands[name] = it } }
-        val groupList = reflections.getSubTypesOf(GroupCommand::class.java).mapNotNull { it.kotlin.objectInstance }
-        groupList.forEach { it.name?.forEach { name -> groupCommands[name] = it } }
+        getBeansWithAnnotation(Command::class.java)?.values?.forEach { command ->
+            val annotation = command::class.findAnnotation<Command>()!!
+            if (!annotation.isNeedHeader) annotation.name.forEach { noCommands.add(it) }
+            when (command) {
+                is AnyCommand -> annotation.name.forEach { anyCommands[it] = command }
+                is FriendCommand -> annotation.name.forEach { friendCommands[it] = command }
+                is GroupCommand -> annotation.name.forEach { groupCommands[it] = command }
+            }
+        }
     }
 
 
     fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): MessageChain? {
         val (isCommand, args) = check(message.contentToString())
         val command = anyCommands[args[0]] ?: return null
-        if (!isCommand.and(command.isNeedHeader)) return null
+        if (!isCommand) return null
         return command.execute(sender, message, subject, args.drop(1))
     }
 
     fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): MessageChain? {
         val (isCommand, args) = check(message.contentToString())
         val command = groupCommands[args[0]] ?: return null
-        if (!isCommand.and(command.isNeedHeader)) return null
+        if (!isCommand) return null
         return command.execute(sender, message, group, args.drop(1))
     }
 
     fun executeFriendCommand(sender: Friend, message: MessageChain): MessageChain? {
         val (isCommand, args) = check(message.contentToString())
         val command = friendCommands[args[0]] ?: return null
-        if (!isCommand.and(command.isNeedHeader)) return null
+        if (!isCommand) return null
         return command.execute(sender, message, args.drop(1))
     }
 
@@ -60,4 +64,5 @@ object CommandManager {
             }
         return Result(isCommand, msg.trim().split("\\s+"))
     }
+
 }

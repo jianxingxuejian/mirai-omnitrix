@@ -4,10 +4,10 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.buildMessageChain
+import org.hff.miraiomnitrix.command.Command
 
-object Menu : AnyCommand {
-
-    override val name = arrayOf("menu", "help", "菜单", "帮助")
+@Command(name = ["menu", "help", "菜单", "帮助"])
+class Menu : AnyCommand {
 
     override fun execute(sender: User, message: MessageChain, subject: Contact, args: List<String>): MessageChain {
         val result = buildMessageChain {
