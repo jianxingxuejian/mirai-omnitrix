@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.utils
 
-import org.springframework.beans.factory.getBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import org.springframework.stereotype.Component
@@ -14,8 +13,8 @@ object SpringUtil : ApplicationContextAware {
         context = applicationContext
     }
 
-    fun getBean(T : Any): Any? {
-        return context?.getBean(T)
+    fun <T>getBean(beanClass: Class<out T>): T? {
+        return context?.getBean(beanClass)
     }
 
 }

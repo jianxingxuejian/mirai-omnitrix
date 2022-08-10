@@ -10,11 +10,11 @@ import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.reflections.Reflections
 
 object CommandManager {
-    private val anyCommands: HashMap<String, AnyCommand> = TODO()
-    private val friendCommands: HashMap<String, FriendCommand> = TODO()
-    private val groupCommands: HashMap<String, GroupCommand> = TODO()
-    private val commandHeads = arrayOf(",", ".", "/", "，", "。", "、")
-    private val botProperties = getBean(BotProperties::class)
+    private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
+    private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
+    private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
+    private val commandHeads = arrayOf(",", ".", "，", "。")
+    private val botProperties = getBean(BotProperties::class.java)
 
     init {
         val reflections = Reflections("org.hff.miraiomnitrix.command")
@@ -54,10 +54,10 @@ object CommandManager {
         val (isCommand, msg) = commandHeads.any { message.startsWith(it) }
             .let {
                 if (it) Pair(true, message.substring(1))
-                else if (message.contains("@" + botProperties.qq))
-                    Pair(true, message.replace("@" + botProperties.qq, ""))
+                else if (message.contains("@" + botProperties?.qq))
+                    Pair(true, message.replace("@" + botProperties?.qq, ""))
                 else Pair(false, message)
             }
-        return Result(isCommand, msg.split("\\s+"))
+        return Result(isCommand, msg.trim().split("\\s+"))
     }
 }
