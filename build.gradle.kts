@@ -23,9 +23,9 @@ repositories {
 }
 
 dependencies {
-    implementation("net.mamoe:mirai-core-api:${properties["version.mirai"]}")
-    runtimeOnly("net.mamoe:mirai-core:${properties["version.mirai"]}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("net.mamoe:mirai-core-api:2.12.1")
+    runtimeOnly("net.mamoe:mirai-core:2.12.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -34,7 +34,7 @@ dependencies {
     runtimeOnly("mysql:mysql-connector-java")
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    implementation ("org.reflections:reflections:0.10.2")
+    implementation("com.sksamuel.scrimage:scrimage-core:4.0.31")
 }
 
 tasks.withType<KotlinCompile> {

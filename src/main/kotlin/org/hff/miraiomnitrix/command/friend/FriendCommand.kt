@@ -4,7 +4,7 @@ import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.message.data.MessageChain
 
 /** 适用于好友消息指令接口 */
-interface FriendCommand  {
+interface FriendCommand {
 
     /**
      * 执行指令
@@ -13,5 +13,6 @@ interface FriendCommand  {
      * @param message 消息
      * @param args 追加参数
      */
-    fun execute(sender: Friend, message: MessageChain, args: List<String>): MessageChain?
+    suspend fun execute(sender: Friend, message: MessageChain, args: List<String>): MessageChain?
+
 }

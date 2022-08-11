@@ -11,6 +11,7 @@ bot:
   qq:
   password:
 
-proxy:
-  host: localhost
-  port: 7890
+http:
+  proxy:
+    host: localhost
+    port: 7890

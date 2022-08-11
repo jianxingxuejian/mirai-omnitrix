@@ -46,9 +46,7 @@ object CommandManager {
         return command.execute(sender, message, args)
     }
 
-    data class Result<T>(val command: T, val args: MutableList<String>)
-
-    private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Result<T>? {
+    private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Pair<T,MutableList<String>>? {
         val string = message.contentToString()
         val (hasHeader, msg) = commandHeads.any { string.startsWith(it) }
             .let {
@@ -62,7 +60,7 @@ object CommandManager {
             if (!noCommands.contains(arg) && !hasHeader) continue
             val command = commands[arg] ?: continue
             args.removeAt(index)
-            return Result(command, args)
+            return Pair(command, args)
         }
         return null
     }

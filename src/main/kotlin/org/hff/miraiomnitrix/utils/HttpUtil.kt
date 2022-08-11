@@ -1,0 +1,41 @@
+package org.hff.miraiomnitrix.utils
+
+
+import kotlinx.coroutines.future.await
+import org.hff.miraiomnitrix.config.HttpProperties
+import java.io.InputStream
+import java.net.InetSocketAddress
+import java.net.ProxySelector
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+
+object HttpUtil {
+    val httpProperties = SpringUtil.getBean(HttpProperties::class.java)
+
+    val httpClient = HttpClient.newHttpClient()
+    var proxyClient: HttpClient? = null
+
+    init {
+        if (httpProperties != null) {
+            val (host, port) = httpProperties.proxy
+            proxyClient = HttpClient.newBuilder()
+                .proxy(ProxySelector.of(InetSocketAddress(host, port)))
+                .build()
+        }
+    }
+
+    suspend fun getString(url: String): HttpResponse<String>? {
+        val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
+        val response= httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return response.await()
+    }
+    suspend fun getInputStream(url: String): HttpResponse<InputStream>? {
+        val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
+        val response= httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+        return response.await()
+    }
+
+
+}

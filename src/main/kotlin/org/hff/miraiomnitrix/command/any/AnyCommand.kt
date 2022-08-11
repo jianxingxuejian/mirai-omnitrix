@@ -15,5 +15,6 @@ interface AnyCommand {
      * @param subject 联系人
      * @param args 追加参数
      */
-    fun execute(sender: User, message: MessageChain, subject: Contact, args: List<String>): MessageChain?
+    suspend fun execute(sender: User, message: MessageChain, subject: Contact, args: List<String>): MessageChain?
+
 }
