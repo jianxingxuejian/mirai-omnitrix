@@ -31,17 +31,17 @@ object CommandManager {
         }
     }
 
-    fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): MessageChain? {
+    suspend fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): MessageChain? {
         val (command, args) = getCommand(message, anyCommands) ?: return null
         return command.execute(sender, message, subject, args)
     }
 
-    fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): MessageChain? {
+    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): MessageChain? {
         val (command, args) = getCommand(message, groupCommands) ?: return null
         return command.execute(sender, message, group, args)
     }
 
-    fun executeFriendCommand(sender: Friend, message: MessageChain): MessageChain? {
+    suspend fun executeFriendCommand(sender: Friend, message: MessageChain): MessageChain? {
         val (command, args) = getCommand(message, friendCommands) ?: return null
         return command.execute(sender, message, args)
     }

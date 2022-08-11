@@ -9,7 +9,7 @@ import org.hff.miraiomnitrix.command.Command
 @Command(name = ["menu", "help", "菜单", "帮助"])
 class Menu : AnyCommand {
 
-    override fun execute(sender: User, message: MessageChain, subject: Contact, args: List<String>): MessageChain {
+    override suspend fun execute(sender: User, message: MessageChain, subject: Contact, args: List<String>): MessageChain {
         val result = buildMessageChain {
             +"帮助说明：\n"
         }
