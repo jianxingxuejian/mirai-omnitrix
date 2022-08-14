@@ -19,7 +19,7 @@ configurations {
 }
 
 springBoot {
-    mainClass.set("org.hff.miraiomnitrix.MiraiomnitrixApplication")
+    mainClass.set("org.hff.miraiomnitrix.MiraiOmnitrixApplication")
 }
 
 repositories {
