@@ -32,8 +32,13 @@ object CommandManager {
     }
 
     suspend fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): MessageChain? {
-        val (command, args) = getCommand(message, anyCommands) ?: return null
-        return command.execute(sender, message, subject, args)
+        if (subject is Friend) {
+            val (command, args) = getCommandByFriend(message, anyCommands) ?: return null
+            return command.execute(sender, message, subject, args)
+        } else {
+            val (command, args) = getCommand(message, anyCommands) ?: return null
+            return command.execute(sender, message, subject, args)
+        }
     }
 
     suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): MessageChain? {
@@ -42,11 +47,11 @@ object CommandManager {
     }
 
     suspend fun executeFriendCommand(sender: Friend, message: MessageChain): MessageChain? {
-        val (command, args) = getCommand(message, friendCommands) ?: return null
+        val (command, args) = getCommandByFriend(message, friendCommands) ?: return null
         return command.execute(sender, message, args)
     }
 
-    private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Pair<T,MutableList<String>>? {
+    private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Pair<T, MutableList<String>>? {
         val string = message.contentToString()
         val (hasHeader, msg) = commandHeads.any { string.startsWith(it) }
             .let {
@@ -55,9 +60,23 @@ object CommandManager {
                     Pair(true, string.replace("@" + botProperties.qq, ""))
                 else Pair(false, string)
             }
-        val args = msg.trim().split("\\s+").toMutableList()
+        val args = msg.trim().split("\\s+".toRegex()).toMutableList()
         for ((index, arg) in args.withIndex()) {
             if (!noCommands.contains(arg) && !hasHeader) continue
+            val command = commands[arg] ?: continue
+            args.removeAt(index)
+            return Pair(command, args)
+        }
+        return null
+    }
+
+    private fun <T> getCommandByFriend(
+        message: MessageChain,
+        commands: HashMap<String, T>
+    ): Pair<T, MutableList<String>>? {
+        val string = message.contentToString()
+        val args = string.trim().split("\\s+".toRegex()).toMutableList()
+        for ((index, arg) in args.withIndex()) {
             val command = commands[arg] ?: continue
             args.removeAt(index)
             return Pair(command, args)

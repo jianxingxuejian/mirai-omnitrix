@@ -16,6 +16,10 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
     override fun run(args: Array<String>) {
         runBlocking {
             val (qq, password) = botProperties
+            if (qq == null || password == null) {
+                println("qq或者密码为空，请先在配置文件里添加")
+                return@runBlocking
+            }
             val bot = BotFactory.newBot(qq, password) {
                 BotConfiguration.MiraiProtocol.IPAD
                 fileBasedDeviceInfo("device.json")

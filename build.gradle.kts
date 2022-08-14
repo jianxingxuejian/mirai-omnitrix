@@ -18,6 +18,10 @@ configurations {
     }
 }
 
+springBoot {
+    mainClass.set("org.hff.miraiomnitrix.MiraiomnitrixApplication")
+}
+
 repositories {
     mavenCentral()
 }
@@ -35,6 +39,11 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("com.sksamuel.scrimage:scrimage-core:4.0.31")
+    implementation("cn.hutool:hutool-all:5.8.5")
+    implementation("org.jsoup:jsoup:1.15.2")
+    implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
+    implementation("com.baomidou:mybatis-plus-generator:3.5.3")
+    implementation("org.freemarker:freemarker:2.3.31")
 }
 
 tasks.withType<KotlinCompile> {

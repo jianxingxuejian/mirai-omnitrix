@@ -11,8 +11,8 @@ data class HttpProperties(
 ) {
     data class Proxy(
         /** 代理ip */
-        val host: String,
+        val host: String?,
         /** 代理端口 */
-        val port: Int,
+        val port: Int?
     )
 }

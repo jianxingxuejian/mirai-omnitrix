@@ -7,9 +7,16 @@ spring:
   profiles:
     active: local
 
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 bot:
   qq:
   password:
+
+permission:
+  admin:
 
 http:
   proxy:

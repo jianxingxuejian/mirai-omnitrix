@@ -7,9 +7,15 @@ import org.hff.miraiomnitrix.command.CommandManager
 
 object AnyListener : ListenerHost {
 
+//    override fun handleException(context: CoroutineContext, exception: Throwable) {
+//        println(exception.message)
+//    }
+
     @EventHandler
     suspend fun MessageEvent.onMessage() {
-        val messageChain = CommandManager.executeAnyCommand(sender, message, subject) ?: return
-        subject.sendMessage(messageChain)
+        val messageChain = CommandManager.executeAnyCommand(sender, message, subject)
+        if(messageChain != null) {
+            subject.sendMessage(messageChain)
+        }
     }
 }
