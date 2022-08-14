@@ -1,6 +1,7 @@
 package org.hff.miraiomnitrix.app.entity
 
 import com.baomidou.mybatisplus.annotation.IdType
+import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import java.io.Serializable
 import java.math.BigDecimal
@@ -18,6 +19,7 @@ class Bgm : Serializable {
     var nameOriginal: String? = null
 
     /** 排名 */
+    @TableField("`rank`")
     var rank: Short? = null
 
     /** 年份 */
