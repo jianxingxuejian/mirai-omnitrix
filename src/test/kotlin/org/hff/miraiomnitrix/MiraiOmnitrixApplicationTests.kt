@@ -53,8 +53,8 @@ class MiraiOmnitrixApplicationTests {
         }
     }
 
-    @Test
-    fun contextLoads() {
-    }
+//    @Test
+//    fun contextLoads() {
+//    }
 
 }
