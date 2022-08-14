@@ -28,8 +28,8 @@ class Pa(
 
     private val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
-    private val paDir = ".\\img\\pa"
-    private val tieDir = ".\\img\\tie"
+    private val paDir = "/opt/img/pa"
+    private val tieDir = "/opt/img/tie"
 
     override suspend fun execute(
         sender: Member,
@@ -41,7 +41,7 @@ class Pa(
         if (qq == null) {
             if (message.contentToString().contains("@" + botProperties.qq)) {
                 qq = sender.id
-            }else{
+            } else {
                 return null
             }
         }
