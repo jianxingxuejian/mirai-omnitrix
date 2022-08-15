@@ -39,7 +39,6 @@ class Bgm(private val bgmService: BgmService) : AnyCommand {
         val list = wrapper.last("ORDER BY RAND() LIMIT $num").list()
         list.forEach {
             GlobalScope.launch {
-                println("kkk")
                 val msg = MessageChainBuilder()
                 if (it.imgUrl != null && !it.imgUrl.equals("https:/img/no_icon_subject.png")) {
                     val response = HttpUtil.getInputStreamByProxy(it.imgUrl!!)

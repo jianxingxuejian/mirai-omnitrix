@@ -41,6 +41,12 @@ object HttpUtil {
         return response.await()
     }
 
+    suspend fun getStringByProxy(url: String): HttpResponse<String>? {
+        val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
+        val response = proxyClient?.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        return response?.await()
+    }
+
     suspend fun getInputStream(url: String): HttpResponse<InputStream>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
         val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
