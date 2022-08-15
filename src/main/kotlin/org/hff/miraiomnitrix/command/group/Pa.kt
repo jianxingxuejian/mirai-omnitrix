@@ -41,7 +41,7 @@ class Pa(
         if (qq == null) {
             if (message.contentToString().contains("@" + botProperties.qq)) {
                 qq = sender.id
-            }else{
+            } else {
                 return null
             }
         }

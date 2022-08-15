@@ -22,8 +22,8 @@ class Wallpaper : AnyCommand {
         "https://dev.iw233.cn/api.php?type=json&sort="
     )
 
-    private val stUrl = "https://qiafan.vip/mirlkoi.php?type=json"
-
+    //private val stUrl = "https://qiafan.vip/mirlkoi.php?sort=setu"
+    private val vipUrl = "https://qiafan.vip/api.php?type=json&sort="
     override suspend fun execute(
         sender: User,
         message: MessageChain,
@@ -31,7 +31,6 @@ class Wallpaper : AnyCommand {
         args: List<String>
     ): MessageChain? {
         var sort = "random"
-        var st = false
         args.forEach {
             when (it) {
                 "正常" -> sort = "iw233"
@@ -50,16 +49,19 @@ class Wallpaper : AnyCommand {
                 "cat" -> sort = "cat"
                 "星空" -> sort = "xing"
                 "xk" -> sort = "xing"
-                "涩图" -> st = true
-                "setu" -> st = true
-                "st" -> st = true
+                "涩图" -> sort = "setu"
+                "setu" -> sort = "setu"
+                "st" -> sort = "setu"
+                "白丝" -> sort = "bs"
+                "baisi" -> sort = "bs"
+                "bs" -> sort = "bs"
             }
         }
 
-        if (st) {
-            val response1 = HttpUtil.getString(stUrl)
+        if (sort == "setu" || sort == "bs") {
+            val response1 = HttpUtil.getString(vipUrl + sort)
             if (response1?.statusCode() != 200) return null
-            val url = JSONUtil.parseObj(response1.body()).getStr("pic")
+            val url = JSONUtil.parseObj(response1.body()).getJSONArray("pic").getStr(0)
             val response2 = HttpUtil.getInputStream(url)
             if (response2?.statusCode() != 200) return null
             subject.sendImage(response2.body())
