@@ -30,9 +30,9 @@ dependencies {
     implementation("net.mamoe:mirai-core-api:2.12.1")
     runtimeOnly("net.mamoe:mirai-core:2.12.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    implementation("org.springframework.boot:spring-boot-starter-web")
+//    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+//    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("mysql:mysql-connector-java")
@@ -40,10 +40,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("com.sksamuel.scrimage:scrimage-core:4.0.31")
     implementation("cn.hutool:hutool-all:5.8.5")
-    implementation("org.jsoup:jsoup:1.15.2")
+    compileOnly("org.jsoup:jsoup:1.15.2")
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
-    implementation("com.baomidou:mybatis-plus-generator:3.5.3")
-    implementation("org.freemarker:freemarker:2.3.31")
+    compileOnly("com.baomidou:mybatis-plus-generator:3.5.3")
+    compileOnly("org.freemarker:freemarker:2.3.31")
 }
 
 tasks.withType<KotlinCompile> {
