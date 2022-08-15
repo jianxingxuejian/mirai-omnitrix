@@ -60,7 +60,7 @@ object CommandManager {
                     Pair(true, string.replace("@" + botProperties.qq, ""))
                 else Pair(false, string)
             }
-        val args = msg.trim().split("\\s+".toRegex()).toMutableList()
+        val args = msg.trim().split(Regex("\\s+|\\[图片]")).toMutableList()
         for ((index, arg) in args.withIndex()) {
             if (!noCommands.contains(arg) && !hasHeader) continue
             val command = commands[arg] ?: continue
@@ -75,7 +75,7 @@ object CommandManager {
         commands: HashMap<String, T>
     ): Pair<T, MutableList<String>>? {
         val string = message.contentToString()
-        val args = string.trim().split("\\s+".toRegex()).toMutableList()
+        val args = string.trim().split(Regex("\\s+|\\[图片]")).toMutableList()
         for ((index, arg) in args.withIndex()) {
             val command = commands[arg] ?: continue
             args.removeAt(index)
