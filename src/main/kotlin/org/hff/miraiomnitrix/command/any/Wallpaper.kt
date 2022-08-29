@@ -42,6 +42,7 @@ class Wallpaper : AnyCommand {
                 "星空", "xingkong", "xk" -> sort = "xing"
                 "涩图", "setu", "st" -> sort = "setu"
                 "白丝", "baisi", "bs" -> sort = "bs"
+                "黑丝", "heisi", "hs" -> sort = "hs"
             }
         }
 
