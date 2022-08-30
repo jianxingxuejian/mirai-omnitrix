@@ -8,9 +8,11 @@ import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.result.ResultMessage
+import org.hff.miraiomnitrix.result.fail
+import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -26,7 +28,7 @@ class Setu : AnyCommand {
         message: MessageChain,
         subject: Contact,
         args: List<String>
-    ): MessageChain? {
+    ): ResultMessage? {
         var r18 = 0
         var num = 1
         val sb = StringBuilder()
@@ -41,7 +43,7 @@ class Setu : AnyCommand {
         }
 
         val response = HttpUtil.getString(url + "?" + sb + "r18=" + r18 + "&num=" + num)
-        if (response?.statusCode() != 200) return PlainText("网络错误").toMessageChain()
+        if (response?.statusCode() != 200) return fail()
         val data = JSONUtil.parseObj(response.body()).getJSONArray("data")
         val forwardBuilder = ForwardMessageBuilder(subject)
         runBlocking {
@@ -57,8 +59,8 @@ class Setu : AnyCommand {
             }
         }
         if (forwardBuilder.size > 0) {
-            return forwardBuilder.build().toMessageChain()
+            return result(forwardBuilder.build().toMessageChain())
         }
-        return PlainText("没有找到符合条件的涩图").toMessageChain()
+        return result("没有找到符合条件的涩图")
     }
 }

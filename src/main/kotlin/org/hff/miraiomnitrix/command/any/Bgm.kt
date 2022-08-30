@@ -1,8 +1,7 @@
 package org.hff.miraiomnitrix.command.any
 
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
@@ -11,18 +10,18 @@ import net.mamoe.mirai.message.data.MessageChainBuilder
 import org.hff.miraiomnitrix.app.entity.Bgm
 import org.hff.miraiomnitrix.app.service.BgmService
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.utils.HttpUtil
 
 @Command(name = ["番剧推荐", "bgm"])
 class Bgm(private val bgmService: BgmService) : AnyCommand {
 
-    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun execute(
         sender: User,
         message: MessageChain,
         subject: Contact,
         args: List<String>
-    ): MessageChain? {
+    ): ResultMessage? {
         var num: Short = 1
 
         val wrapper = bgmService.ktQuery()
@@ -37,24 +36,27 @@ class Bgm(private val bgmService: BgmService) : AnyCommand {
         }
 
         val list = wrapper.last("ORDER BY RAND() LIMIT $num").list()
-        list.forEach {
-            GlobalScope.launch {
-                val msg = MessageChainBuilder()
-                if (it.imgUrl != null && !it.imgUrl.equals("https:/img/no_icon_subject.png")) {
-                    val response = HttpUtil.getInputStreamByProxy(it.imgUrl!!)
-                    if (response?.statusCode() == 200) {
-                        val image = subject.uploadImage(response.body())
-                        msg.append(image)
+        runBlocking {
+            list.forEach {
+                launch {
+                    val msg = MessageChainBuilder()
+                    if (it.imgUrl != null && !it.imgUrl.equals("https:/img/no_icon_subject.png")) {
+                        val response = HttpUtil.getInputStreamByProxy(it.imgUrl!!)
+                        if (response?.statusCode() == 200) {
+                            val image = subject.uploadImage(response.body())
+                            msg.append(image)
+                        }
                     }
+                    msg.append("名字: ${it.name}\n")
+                        .append("年份: ${it.year}\n")
+                        .append("排名: ${it.rank}\n")
+                        .append("评分: ${it.rate}(${it.rateNum}人)\n")
+                        .append("说明: ${it.info}\n")
+                    subject.sendMessage(msg.build())
                 }
-                msg.append("名字: ${it.name}\n")
-                    .append("年份: ${it.year}\n")
-                    .append("排名: ${it.rank}\n")
-                    .append("评分: ${it.rate}(${it.rateNum}人)\n")
-                    .append("说明: ${it.info}\n")
-                subject.sendMessage(msg.build())
             }
         }
+
         return null
     }
 }

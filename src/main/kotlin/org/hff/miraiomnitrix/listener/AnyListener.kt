@@ -13,9 +13,12 @@ object AnyListener : ListenerHost {
 
     @EventHandler
     suspend fun MessageEvent.onMessage() {
-        val messageChain = CommandManager.executeAnyCommand(sender, message, subject)
-        if (messageChain != null) {
-            subject.sendMessage(messageChain)
+        val (msg, message) = CommandManager.executeAnyCommand(sender, message, subject) ?: return
+        if (msg != null) {
+            subject.sendMessage(msg)
+        }
+        if (message != null) {
+            subject.sendMessage(message)
         }
     }
 }

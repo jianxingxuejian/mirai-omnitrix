@@ -10,6 +10,9 @@ import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
+import org.hff.miraiomnitrix.result.ResultMessage
+import org.hff.miraiomnitrix.result.fail
+import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import java.awt.BasicStroke
 import java.awt.Color
@@ -36,7 +39,7 @@ class Pa(
         message: MessageChain,
         group: Group,
         args: List<String>
-    ): MessageChain? {
+    ): ResultMessage? {
         var qq = args.find { it.startsWith("@") }?.substring(1)?.toLong()
         if (qq == null) {
             if (message.contentToString().contains("@" + botProperties.qq)) {
@@ -45,10 +48,10 @@ class Pa(
                 return null
             }
         }
-        val file = getFileByQQ(qq) ?: return null
+        val file = getFileByQQ(qq) ?: return result("获取qq头像失败")
 
         val response = HttpUtil.getInputStream(url + qq)
-        if (response?.statusCode() != 200) return null
+        if (response?.statusCode() != 200) return fail()
 
         val imageA = ImmutableImage.loader().fromFile(file)
             .scaleTo(400, 400)

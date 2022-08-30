@@ -5,9 +5,9 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.message.data.PlainText
-import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.result.ResultMessage
+import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.utils.HttpUtil
 
 @Command(name = ["壁纸", "bizhi"])
@@ -29,8 +29,9 @@ class Wallpaper : AnyCommand {
         message: MessageChain,
         subject: Contact,
         args: List<String>
-    ): MessageChain? {
+    ): ResultMessage? {
         var sort = "random"
+        val vip = arrayOf("setu", "bs", "hs")
         args.forEach {
             when (it) {
                 "正常", "no", "normal" -> sort = "iw233"
@@ -40,18 +41,18 @@ class Wallpaper : AnyCommand {
                 "银发", "yin" -> sort = "yin"
                 "兽耳", "cat" -> sort = "cat"
                 "星空", "xingkong", "xk" -> sort = "xing"
-                "涩图", "setu", "st" -> sort = "setu"
-                "白丝", "baisi", "bs" -> sort = "bs"
-                "黑丝", "heisi", "hs" -> sort = "hs"
+                "涩图", "setu", "st" -> sort = vip[0]
+                "白丝", "baisi", "bs" -> sort = vip[1]
+                "黑丝", "heisi", "hs" -> sort = vip[2]
             }
         }
 
-        if (sort == "setu" || sort == "bs") {
+        if (vip.contains(sort)) {
             val response1 = HttpUtil.getString(vipUrl + sort)
-            if (response1?.statusCode() != 200) return null
+            if (response1?.statusCode() != 200) return fail()
             val url = JSONUtil.parseObj(response1.body()).getJSONArray("pic").getStr(0)
             val response2 = HttpUtil.getInputStream(url)
-            if (response2?.statusCode() != 200) return null
+            if (response2?.statusCode() != 200) return fail()
             subject.sendImage(response2.body())
             return null
         }
@@ -65,6 +66,6 @@ class Wallpaper : AnyCommand {
             return null
         }
 
-        return PlainText("网络错误").toMessageChain()
+        return fail()
     }
 }

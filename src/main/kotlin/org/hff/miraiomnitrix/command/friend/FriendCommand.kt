@@ -2,6 +2,7 @@ package org.hff.miraiomnitrix.command.friend
 
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.result.ResultMessage
 
 /** 适用于好友消息指令接口 */
 interface FriendCommand {
@@ -13,6 +14,6 @@ interface FriendCommand {
      * @param message 消息
      * @param args 追加参数
      */
-    suspend fun execute(sender: Friend, message: MessageChain, args: List<String>): MessageChain?
+    suspend fun execute(sender: Friend, message: MessageChain, args: List<String>): ResultMessage?
 
 }

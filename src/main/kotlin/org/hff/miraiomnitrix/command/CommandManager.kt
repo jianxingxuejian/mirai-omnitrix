@@ -6,6 +6,7 @@ import org.hff.miraiomnitrix.command.any.AnyCommand
 import org.hff.miraiomnitrix.command.friend.FriendCommand
 import org.hff.miraiomnitrix.command.group.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
+import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
 import kotlin.reflect.full.findAnnotation
@@ -31,7 +32,7 @@ object CommandManager {
         }
     }
 
-    suspend fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): MessageChain? {
+    suspend fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): ResultMessage? {
         if (subject is Friend) {
             val (command, args) = getCommandByFriend(message, anyCommands) ?: return null
             return command.execute(sender, message, subject, args)
@@ -41,12 +42,12 @@ object CommandManager {
         }
     }
 
-    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): MessageChain? {
+    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): ResultMessage? {
         val (command, args) = getCommand(message, groupCommands) ?: return null
         return command.execute(sender, message, group, args)
     }
 
-    suspend fun executeFriendCommand(sender: Friend, message: MessageChain): MessageChain? {
+    suspend fun executeFriendCommand(sender: Friend, message: MessageChain): ResultMessage? {
         val (command, args) = getCommandByFriend(message, friendCommands) ?: return null
         return command.execute(sender, message, args)
     }

@@ -9,8 +9,13 @@ object GroupListener : ListenerHost {
 
     @EventHandler
     suspend fun GroupMessageEvent.onMessage() {
-        val messageChain = CommandManager.executeGroupCommand(sender, message, group) ?: return
-        group.sendMessage(messageChain)
+        val (msg, message) = CommandManager.executeGroupCommand(sender, message, group) ?: return
+        if (msg != null) {
+            subject.sendMessage(msg)
+        }
+        if (message != null) {
+            subject.sendMessage(message)
+        }
     }
 
 }

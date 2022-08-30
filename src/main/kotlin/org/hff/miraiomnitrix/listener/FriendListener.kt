@@ -5,12 +5,17 @@ import net.mamoe.mirai.event.ListenerHost
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import org.hff.miraiomnitrix.command.CommandManager
 
-object FriendListener: ListenerHost {
+object FriendListener : ListenerHost {
 
     @EventHandler
     suspend fun FriendMessageEvent.onMessage() {
-        val messageChain = CommandManager.executeFriendCommand(sender, message) ?: return
-        sender.sendMessage(messageChain)
+        val (msg, message) = CommandManager.executeFriendCommand(sender, message) ?: return
+        if (msg != null) {
+            subject.sendMessage(msg)
+        }
+        if (message != null) {
+            subject.sendMessage(message)
+        }
     }
 
 }
