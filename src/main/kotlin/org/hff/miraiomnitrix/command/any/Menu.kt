@@ -23,6 +23,7 @@ class Menu : AnyCommand {
             +"2: 壁纸、bizhi，可追加:精选、横屏(pc)、竖屏(mp)、银发、兽耳、涩图、白丝\n"
             +"3: bgm，可追加:年份(4位数字) r[最低排名] n[数量] 任意关键词\n"
             +"4: 搜图、soutu、st，请发送一张图片\n"
+            +"5: 原神语音，格式为角色 空格 想说的话\n"
         }
         return result(menu)
     }
