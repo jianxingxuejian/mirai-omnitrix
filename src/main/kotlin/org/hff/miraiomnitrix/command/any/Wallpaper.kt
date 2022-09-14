@@ -14,12 +14,12 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 class Wallpaper : AnyCommand {
 
     private val urls = listOf(
-        "https://iw233.cn/api.php?type=json&sort=",
         "http://api.iw233.cn/api.php?type=json&sort=",
         "http://ap1.iw233.cn/api.php?type=json&sort=",
         "http://skri.iw233.cn/api.php?type=json&sort=",
         "http://aqua.iw233.cn/api.php?type=json&sort=",
-        "https://dev.iw233.cn/api.php?type=json&sort="
+        "https://dev.iw233.cn/api.php?type=json&sort=",
+        "https://iw233.cn/api.php?type=json&sort="
     )
 
     //private val stUrl = "https://qiafan.vip/mirlkoi.php?sort=setu"
