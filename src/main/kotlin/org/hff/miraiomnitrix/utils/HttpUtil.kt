@@ -10,11 +10,12 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.Duration
 
 object HttpUtil {
     private val httpProperties = SpringUtil.getBean(HttpProperties::class.java)
 
-    private val httpClient = HttpClient.newHttpClient()
+    private val httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
     private var proxyClient: HttpClient? = null
 
     init {

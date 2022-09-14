@@ -24,6 +24,8 @@ class Wallpaper : AnyCommand {
 
     //private val stUrl = "https://qiafan.vip/mirlkoi.php?sort=setu"
     private val vipUrl = "https://qiafan.vip/api.php?type=json&sort="
+    private val vip = arrayOf("setu", "bs", "hs")
+
     override suspend fun execute(
         sender: User,
         message: MessageChain,
@@ -31,7 +33,6 @@ class Wallpaper : AnyCommand {
         args: List<String>
     ): ResultMessage? {
         var sort = "random"
-        val vip = arrayOf("setu", "bs", "hs")
         args.forEach {
             when (it) {
                 "正常", "no", "normal" -> sort = "iw233"
