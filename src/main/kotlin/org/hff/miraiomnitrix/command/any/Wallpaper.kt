@@ -16,15 +16,12 @@ class Wallpaper : AnyCommand {
     private val urls = listOf(
         "http://api.iw233.cn/api.php?type=json&sort=",
         "http://ap1.iw233.cn/api.php?type=json&sort=",
-        "http://skri.iw233.cn/api.php?type=json&sort=",
-        "http://aqua.iw233.cn/api.php?type=json&sort=",
         "https://dev.iw233.cn/api.php?type=json&sort=",
         "https://iw233.cn/api.php?type=json&sort="
     )
 
-    //private val stUrl = "https://qiafan.vip/mirlkoi.php?sort=setu"
-    private val vipUrl = "https://qiafan.vip/api.php?type=json&sort="
-    private val vip = arrayOf("setu", "bs", "hs")
+    private val vipUrl = "http://api.iw233.cn/zhuanfasima.php?type=json&sort="
+    private val vip = arrayOf("st", "sw", "swbs", "swhs")
 
     override suspend fun execute(
         sender: User,
@@ -35,6 +32,7 @@ class Wallpaper : AnyCommand {
         var sort = "random"
         args.forEach {
             when (it) {
+                "随机", "suiji", "sj" -> sort = "random"
                 "正常", "no", "normal" -> sort = "iw233"
                 "推荐", "精选", "top" -> sort = "top"
                 "横屏", "pc" -> sort = "pc"
@@ -43,8 +41,9 @@ class Wallpaper : AnyCommand {
                 "兽耳", "cat" -> sort = "cat"
                 "星空", "xingkong", "xk" -> sort = "xing"
                 "涩图", "setu", "st" -> sort = vip[0]
-                "白丝", "baisi", "bs" -> sort = vip[1]
-                "黑丝", "heisi", "hs" -> sort = vip[2]
+                "丝袜", "siwa", "sw" -> sort = vip[1]
+                "白丝", "baisi", "bs" -> sort = vip[2]
+                "黑丝", "heisi", "hs" -> sort = vip[3]
             }
         }
 

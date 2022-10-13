@@ -39,7 +39,7 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("com.sksamuel.scrimage:scrimage-core:4.0.32")
-    implementation("cn.hutool:hutool-all:5.8.6")
+    implementation("cn.hutool:hutool-all:5.8.8")
     compileOnly("org.jsoup:jsoup:1.15.3")
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
     compileOnly("com.baomidou:mybatis-plus-generator:3.5.3")

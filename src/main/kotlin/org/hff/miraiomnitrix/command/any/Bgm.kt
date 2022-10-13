@@ -1,6 +1,7 @@
 package org.hff.miraiomnitrix.command.any
 
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
@@ -16,6 +17,7 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 @Command(name = ["番剧推荐", "bgm"])
 class Bgm(private val bgmService: BgmService) : AnyCommand {
 
+    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun execute(
         sender: User,
         message: MessageChain,
@@ -38,7 +40,7 @@ class Bgm(private val bgmService: BgmService) : AnyCommand {
         val list = wrapper.last("ORDER BY RAND() LIMIT $num").list()
 
             list.forEach {
-                MainScope().launch {
+                GlobalScope.launch {
                     val msg = MessageChainBuilder()
                     if (it.imgUrl != null && !it.imgUrl.equals("https:/img/no_icon_subject.png")) {
                         val response = HttpUtil.getInputStreamByProxy(it.imgUrl!!)
@@ -55,9 +57,6 @@ class Bgm(private val bgmService: BgmService) : AnyCommand {
                     subject.sendMessage(msg.build())
                 }
             }
-
-
-
 
         return null
     }
