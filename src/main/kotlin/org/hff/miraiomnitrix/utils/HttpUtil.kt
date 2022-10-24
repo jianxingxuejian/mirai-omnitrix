@@ -1,7 +1,5 @@
 package org.hff.miraiomnitrix.utils
 
-
-import kotlinx.coroutines.future.await
 import org.hff.miraiomnitrix.config.HttpProperties
 import java.io.InputStream
 import java.net.InetSocketAddress
@@ -30,39 +28,39 @@ object HttpUtil {
         }
     }
 
-    suspend fun getString(url: String): HttpResponse<String>? {
+    fun getString(url: String): HttpResponse<String>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
         return try {
             val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-            response.await()
-        }catch (e: HttpConnectTimeoutException){
+            response.join()
+        } catch (e: HttpConnectTimeoutException) {
             null
         }
     }
 
-    suspend fun getString(url: String, cookie: String): HttpResponse<String>? {
+    fun getString(url: String, cookie: String): HttpResponse<String>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET()
             .setHeader("cookie", cookie).build()
         val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        return response.await()
+        return response.join()
     }
 
-    suspend fun getStringByProxy(url: String): HttpResponse<String>? {
+    fun getStringByProxy(url: String): HttpResponse<String>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
         val response = proxyClient?.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        return response?.await()
+        return response?.join()
     }
 
-    suspend fun getInputStream(url: String): HttpResponse<InputStream>? {
+    fun getInputStream(url: String): HttpResponse<InputStream>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
         val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
-        return response.await()
+        return response.join()
     }
 
-    suspend fun getInputStreamByProxy(url: String): HttpResponse<InputStream>? {
+    fun getInputStreamByProxy(url: String): HttpResponse<InputStream>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
         val response = proxyClient?.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
-        return response?.await()
+        return response?.join()
     }
 
 
