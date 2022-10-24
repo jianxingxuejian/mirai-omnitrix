@@ -9,10 +9,11 @@ import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
+import java.util.*
 import kotlin.reflect.full.findAnnotation
 
 object CommandManager {
-    private val commandHeads = arrayOf(",", ".", "，", "。")
+    private val commandHeads = arrayOf("|","\\",",", ".", "，", "。")
     private val botProperties = getBean(BotProperties::class.java)
 
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
