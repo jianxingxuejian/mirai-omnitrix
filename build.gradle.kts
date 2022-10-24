@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.7.2"
-    id("io.spring.dependency-management") version "1.0.12.RELEASE"
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.spring") version "1.6.21"
-    kotlin("kapt") version "1.6.21"
+    id("org.springframework.boot") version "2.7.5"
+    id("io.spring.dependency-management") version "1.1.0"
+    kotlin("jvm") version "1.7.20"
+    kotlin("plugin.spring") version "1.7.20"
+    kotlin("kapt") version "1.7.20"
 }
 
 group = "org.hff"
@@ -27,8 +27,8 @@ repositories {
 }
 
 dependencies {
-    implementation("net.mamoe:mirai-core-api:2.12.3")
-    runtimeOnly("net.mamoe:mirai-core:2.12.3")
+    implementation("net.mamoe:mirai-core-api:2.13.0-RC2")
+    runtimeOnly("net.mamoe:mirai-core:2.13.0-RC2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
 //    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
