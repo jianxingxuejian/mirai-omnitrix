@@ -8,13 +8,15 @@ import java.net.InetSocketAddress
 import java.net.ProxySelector
 import java.net.URI
 import java.net.http.HttpClient
+import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.Duration
 
 object HttpUtil {
     private val httpProperties = SpringUtil.getBean(HttpProperties::class.java)
 
-    private val httpClient = HttpClient.newHttpClient()
+    private val httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
     private var proxyClient: HttpClient? = null
 
     init {
@@ -30,8 +32,12 @@ object HttpUtil {
 
     suspend fun getString(url: String): HttpResponse<String>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
-        val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        return response.await()
+        return try {
+            val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            response.await()
+        }catch (e: HttpConnectTimeoutException){
+            null
+        }
     }
 
     suspend fun getString(url: String, cookie: String): HttpResponse<String>? {
