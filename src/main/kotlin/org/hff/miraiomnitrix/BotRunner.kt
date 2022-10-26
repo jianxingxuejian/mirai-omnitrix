@@ -21,7 +21,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
                 return@runBlocking
             }
             val bot = BotFactory.newBot(qq, password) {
-                BotConfiguration.MiraiProtocol.IPAD
+                protocol = BotConfiguration.MiraiProtocol.IPAD
                 fileBasedDeviceInfo("device.json")
             }
             bot.login()
