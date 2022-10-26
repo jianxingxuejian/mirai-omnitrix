@@ -19,7 +19,7 @@ class Repeat : GroupCommand {
             if(args[0] == "我是猪"){
                 return result("你是猪")
             }
-            return result(args.joinToString(""))
+            return result(args.joinToString(" "))
         }
         return null
     }

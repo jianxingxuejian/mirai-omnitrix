@@ -31,8 +31,7 @@ object HttpUtil {
     fun getString(url: String): HttpResponse<String>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
         return try {
-            val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-            response.join()
+            httpClient.send(request, HttpResponse.BodyHandlers.ofString())
         } catch (e: HttpConnectTimeoutException) {
             null
         }
@@ -41,27 +40,22 @@ object HttpUtil {
     fun getString(url: String, cookie: String): HttpResponse<String>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET()
             .setHeader("cookie", cookie).build()
-        val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        return response.join()
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString())
     }
 
     fun getStringByProxy(url: String): HttpResponse<String>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
-        val response = proxyClient?.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        return response?.join()
+        return proxyClient?.send(request, HttpResponse.BodyHandlers.ofString())
     }
 
     fun getInputStream(url: String): HttpResponse<InputStream>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
-        val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
-        return response.join()
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream())
     }
 
     fun getInputStreamByProxy(url: String): HttpResponse<InputStream>? {
         val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
-        val response = proxyClient?.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
-        return response?.join()
+        return proxyClient?.send(request, HttpResponse.BodyHandlers.ofInputStream())
     }
-
 
 }

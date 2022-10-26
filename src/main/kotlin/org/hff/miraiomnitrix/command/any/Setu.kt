@@ -1,8 +1,9 @@
 package org.hff.miraiomnitrix.command.any
 
 import cn.hutool.json.JSONUtil
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
@@ -23,6 +24,7 @@ class Setu : AnyCommand {
 
     private val url = "https://api.lolicon.app/setu/v2"
 
+    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun execute(
         sender: User,
         message: MessageChain,
@@ -38,6 +40,7 @@ class Setu : AnyCommand {
                 it == "r" -> r18 = 1
                 it.startsWith("n") || it.startsWith("num") ->
                     num = Pattern.compile("[^0-9]").matcher(it).replaceAll("").toInt()
+
                 else -> sb.append("tag=").append(URLEncoder.encode(it, StandardCharsets.UTF_8)).append("&")
             }
         }
@@ -46,10 +49,11 @@ class Setu : AnyCommand {
         if (response?.statusCode() != 200) return fail()
         val data = JSONUtil.parseObj(response.body()).getJSONArray("data")
         val forwardBuilder = ForwardMessageBuilder(subject)
-        runBlocking {
+
+        GlobalScope.launch {
             data.forEach {
-                val url = JSONUtil.parseObj(it).getJSONObject("urls").getStr("original")
                 launch {
+                    val url = JSONUtil.parseObj(it).getJSONObject("urls").getStr("original")
                     val result = HttpUtil.getInputStreamByProxy(url)
                     if (result?.statusCode() == 200) {
                         val image = subject.uploadImage(result.body())
@@ -57,7 +61,8 @@ class Setu : AnyCommand {
                     }
                 }
             }
-        }
+        }.join()
+
         if (forwardBuilder.size > 0) {
             return result(forwardBuilder.build().toMessageChain())
         }

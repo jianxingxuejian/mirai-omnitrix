@@ -3,7 +3,6 @@ package org.hff.miraiomnitrix.command.group
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.utils.ExternalResource
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.result.ResultMessage
@@ -12,7 +11,7 @@ import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 
 @Command(name = ["语音", "vits", "yuyin"])
-class VitsCommand : GroupCommand {
+class Vits : GroupCommand {
 
     private val url = "http://233366.proxy.nscc-gz.cn:8888/?"
 
