@@ -8,6 +8,7 @@ import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
+import org.openjdk.nashorn.api.scripting.ScriptObjectMirror
 import java.util.concurrent.Executors
 import javax.script.ScriptException
 
@@ -33,8 +34,18 @@ class JsCommand : GroupCommand {
     ): ResultMessage? {
         val command = args.joinToString(" ")
         return try {
-            val result = sandbox.eval(command)
-            result(result.toString())
+            val result = sandbox.eval(command) ?: return result("null")
+            if (result is ScriptObjectMirror) {
+                if(result.isArray){
+                    if(result.size==0){
+                        return result("[]")
+                    }
+                    return result(result.values.joinToString("\n"))
+                }
+            }
+            val text = result.toString()
+            if (text.isBlank()) return result("blank")
+            result(text)
         } catch (error: ScriptCPUAbuseException) {
             error.message?.let { result(it) }
         } catch (error: ScriptException) {
