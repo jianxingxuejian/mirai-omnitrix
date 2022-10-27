@@ -45,12 +45,19 @@ object GroupListener : ListenerHost {
 
         val stringQueue = groupMsgMap[group.id]!!
 
-        if (stringQueue.count { it.equals(text) } >= 2) {
+        if (stringQueue.count() < 3) {
+            stringQueue.add(text)
+            return
+        }
+
+        val last = stringQueue.toList().takeLast(3)
+        if (text == last[0] && last[0] == last[1] && last[1] == last[2]) {
             stringQueue.removeIf { it.equals(text) }
             group.sendMessage(getBreakText())
         } else {
             stringQueue.add(text)
         }
+
     }
 
     private fun getBreakText() = breaks[random.nextInt(bound)]
