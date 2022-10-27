@@ -46,6 +46,8 @@ dependencies {
     compileOnly("org.freemarker:freemarker:2.3.31")
     implementation("org.javadelight:delight-nashorn-sandbox:0.2.5")
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
+    implementation("com.google.guava:guava:31.1-jre")
+
 }
 
 tasks.withType<KotlinCompile> {
