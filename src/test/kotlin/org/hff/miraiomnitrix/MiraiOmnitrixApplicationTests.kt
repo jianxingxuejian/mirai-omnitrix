@@ -23,7 +23,7 @@ class MiraiOmnitrixApplicationTests {
     fun test() {
         runBlocking {
             for (i in 151..300) {
-                val response = HttpUtil.getString("https://bgm.tv/anime/browser?sort=rank&page=$i", cookie)
+                val response = HttpUtil.getString("https://bgm.tv/anime/browser?sort=rank&page=$i", null, cookie)
                 if (response?.statusCode() != 200) return@runBlocking
                 val document = Jsoup.parse(response.body())
                 val list = document.select("#browserItemList")
@@ -46,7 +46,7 @@ class MiraiOmnitrixApplicationTests {
                     } else {
                         bgm.year = 0
                     }
-                    bgmService.ktQuery().eq(Bgm::year,0).list()
+                    bgmService.ktQuery().eq(Bgm::year, 0).list()
                     bgmService.save(bgm)
                 }
             }

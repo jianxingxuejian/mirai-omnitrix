@@ -2,13 +2,15 @@ package org.hff.miraiomnitrix.command.any
 
 import cn.hutool.json.JSONUtil
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.listener.AnyListener.imageCache
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.utils.HttpUtil
+import java.io.InputStream
 
 @Command(name = ["壁纸", "bizhi"])
 class Wallpaper : AnyCommand {
@@ -53,7 +55,7 @@ class Wallpaper : AnyCommand {
             val url = JSONUtil.parseObj(response1.body()).getJSONArray("pic").getStr(0)
             val response2 = HttpUtil.getInputStream(url)
             if (response2?.statusCode() != 200) return fail()
-            subject.sendImage(response2.body())
+            sendImage(subject, response2.body())
             return null
         }
         for (i in 0..5) {
@@ -62,10 +64,16 @@ class Wallpaper : AnyCommand {
             val url = JSONUtil.parseObj(response1.body()).getJSONArray("pic").getStr(0)
             val response2 = HttpUtil.getInputStream(url)
             if (response2?.statusCode() != 200) continue
-            subject.sendImage(response2.body())
+            sendImage(subject, response2.body())
             return null
         }
 
         return fail()
+    }
+
+    suspend fun sendImage(subject: Contact, inputStream: InputStream) {
+        val image = subject.uploadImage(inputStream)
+        val send = subject.sendMessage(image)
+        imageCache.put(send.source.internalIds[0], image.imageId)
     }
 }

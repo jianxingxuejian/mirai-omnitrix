@@ -7,8 +7,8 @@ import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 
-@Command(name = ["复读", "说", "repeat", "echo"])
-class Repeat : GroupCommand {
+@Command(name = ["说", "echo"])
+class Echo : GroupCommand {
     override suspend fun execute(
         sender: Member,
         message: MessageChain,
@@ -16,7 +16,7 @@ class Repeat : GroupCommand {
         args: List<String>
     ): ResultMessage? {
         if (args.isNotEmpty()) {
-            if(args[0] == "我是猪"){
+            if (args[0] == "我是猪") {
                 return result("你是猪")
             }
             return result(args.joinToString(" "))

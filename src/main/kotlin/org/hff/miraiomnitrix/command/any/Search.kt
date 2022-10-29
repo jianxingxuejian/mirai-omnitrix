@@ -4,11 +4,10 @@ import cn.hutool.json.JSONUtil
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
-import net.mamoe.mirai.message.data.Image
+import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.message.data.MessageChainBuilder
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.listener.AnyListener.imageCache
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.result.result
@@ -26,7 +25,14 @@ class Search : AnyCommand {
         subject: Contact,
         args: List<String>
     ): ResultMessage? {
-        val image = message[Image.Key] ?: return result("请发送一张图片")
+
+        val quote = message[QuoteReply.Key]
+        val image = if (quote != null) {
+            val imageId = imageCache.getIfPresent(quote.source.internalIds[0]) ?: return result("请发送一张图片")
+            Image(imageId)
+        } else {
+            message[Image.Key] ?: return result("请发送一张图片")
+        }
 
         val response1 = HttpUtil.getStringByProxy("$url$key&url=${image.queryUrl()}")
         if (response1?.statusCode() != 200) return fail()
@@ -40,13 +46,24 @@ class Search : AnyCommand {
         val response2 = HttpUtil.getInputStreamByProxy(thumbnail)
         if (response2?.statusCode() != 200) return fail()
 
+        val urls = data.getJSONArray("ext_urls")
+        val urlsText = if (urls.size == 1) {
+            "链接: " + urls[0]
+        } else {
+            urls.mapIndexed { index, url -> "链接${index + 1}：$url\n" }.joinToString("")
+        }
         val builder = MessageChainBuilder()
         builder.append("搜图结果：\n")
+
             .append(subject.uploadImage(response2.body()))
             .append("相似度：").append(header.getStr("similarity")).append("\n")
             .append("标题：").append(data.getStr("title")).append("\n")
-            .append("链接：").append(data.getStr("ext_urls")).append("\n")
-            .append("作者：").append(data.getStr("member_name")).append("\n")
+            .append(urlsText)
+            .append("作者：").append(
+                data.getStr("member_name") ?: data.getStr("user_name")
+                ?: data.getStr("creator") ?: data.getStr("jp_name")
+            )
+            .append("\n")
         return result(builder.build())
     }
 }
