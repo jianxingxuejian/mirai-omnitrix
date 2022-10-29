@@ -48,7 +48,7 @@ class Search : AnyCommand {
 
         val urls = data.getJSONArray("ext_urls")
         val urlsText = if (urls.size == 1) {
-            "链接: " + urls[0]
+            "链接: " + urls[0] + "\n"
         } else {
             urls.mapIndexed { index, url -> "链接${index + 1}：$url\n" }.joinToString("")
         }
