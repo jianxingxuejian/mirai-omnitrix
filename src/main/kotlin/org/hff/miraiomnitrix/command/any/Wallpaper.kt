@@ -16,14 +16,14 @@ import java.io.InputStream
 class Wallpaper : AnyCommand {
 
     private val urls = listOf(
-//        "http://api.iw233.cn/api.php?type=json&sort=",
-//        "http://ap1.iw233.cn/api.php?type=json&sort=",
+        "http://api.iw233.cn/api.php?type=json&sort=",
+        "http://ap1.iw233.cn/api.php?type=json&sort=",
         "https://dev.iw233.cn/api.php?type=json&sort=",
         "https://iw233.cn/api.php?type=json&sort="
     )
 
-    private val vipUrl = "http://api.iw233.cn/zhuanfasima.php?type=json&sort="
-    private val vip = arrayOf("st", "sw", "swbs", "swhs")
+    private val vipUrl = "http://aikohfiosehgairl.fgimax2.fgnwctvip.com/uyfvnuvhgbuiesbrghiuudvbfkllsgdhngvbhsdfklbghdfsjksdhnvfgkhdfkslgvhhrjkdshgnverhbgkrthbklg.php?type=json&sort="
+    private val vip = arrayOf("qwuydcuqwgbvwgqefvbwgueahvbfkbegh", "dsrgvkbaergfvyagvbkjavfwe", "ergbskjhebrgkjlhkerjsbkbregsbg", "rsetbgsekbjlghelkrabvfgheiv")
 
     override suspend fun execute(
         sender: User,
@@ -52,18 +52,22 @@ class Wallpaper : AnyCommand {
         if (vip.contains(sort)) {
             val response1 = HttpUtil.getString(vipUrl + sort)
             if (response1?.statusCode() != 200) return fail()
-            val url = JSONUtil.parseObj(response1.body()).getJSONArray("pic").getStr(0)
+            val body = response1.body()
+            if (body.isBlank()) return fail()
+            val url = JSONUtil.parseObj(body).getJSONArray("pic").getStr(0)
             val response2 = HttpUtil.getInputStream(url)
-            if (response2?.statusCode() != 200) return fail()
+            if (response2.statusCode() != 200) return fail()
             sendImage(subject, response2.body())
             return null
         }
-        for (i in 0..5) {
+        for (i in 0..3) {
             val response1 = HttpUtil.getString(urls[i] + sort)
             if (response1?.statusCode() != 200) continue
-            val url = JSONUtil.parseObj(response1.body()).getJSONArray("pic").getStr(0)
+            val body = response1.body()
+            if (body.isBlank()) continue
+            val url = JSONUtil.parseObj(body).getJSONArray("pic").getStr(0)
             val response2 = HttpUtil.getInputStream(url)
-            if (response2?.statusCode() != 200) continue
+            if (response2.statusCode() != 200) continue
             sendImage(subject, response2.body())
             return null
         }
