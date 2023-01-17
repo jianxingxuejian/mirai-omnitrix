@@ -15,7 +15,10 @@ import java.time.Duration
 object HttpUtil {
     private val httpProperties = SpringUtil.getBean(HttpProperties::class.java)
 
-    private val httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
+    private val httpClient = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .version(HttpClient.Version.HTTP_1_1)
+        .build()
     private var proxyClient: HttpClient? = null
 
     init {
