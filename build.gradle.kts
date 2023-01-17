@@ -27,8 +27,8 @@ repositories {
 }
 
 dependencies {
-    implementation("net.mamoe:mirai-core-api:2.13.0-RC2")
-    runtimeOnly("net.mamoe:mirai-core:2.13.0-RC2")
+    implementation("net.mamoe:mirai-core-api:2.13.3")
+    runtimeOnly("net.mamoe:mirai-core:2.13.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
 //    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -39,7 +39,7 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("com.sksamuel.scrimage:scrimage-core:4.0.32")
-    implementation("cn.hutool:hutool-all:5.8.8")
+    implementation("cn.hutool:hutool-all:5.8.11")
     compileOnly("org.jsoup:jsoup:1.15.3")
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
     compileOnly("com.baomidou:mybatis-plus-generator:3.5.3")
