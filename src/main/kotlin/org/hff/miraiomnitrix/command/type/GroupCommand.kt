@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.command.group
+package org.hff.miraiomnitrix.command.type
 
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member

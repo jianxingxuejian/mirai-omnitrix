@@ -2,21 +2,21 @@ package org.hff.miraiomnitrix.utils
 
 import cn.hutool.json.JSONUtil
 import org.hff.miraiomnitrix.config.HttpProperties
+import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import java.io.InputStream
 import java.net.InetSocketAddress
 import java.net.ProxySelector
 import java.net.URI
 import java.net.http.HttpClient
-import java.net.http.HttpConnectTimeoutException
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 
 object HttpUtil {
-    private val httpProperties = SpringUtil.getBean(HttpProperties::class.java)
+    private val httpProperties = getBean(HttpProperties::class)
 
     private val httpClient = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(5))
+        .connectTimeout(Duration.ofSeconds(10))
         .version(HttpClient.Version.HTTP_1_1)
         .build()
     private var proxyClient: HttpClient? = null
@@ -32,44 +32,8 @@ object HttpUtil {
         }
     }
 
-    fun getString(url: String): HttpResponse<String>? = try {
-        httpClient.send(requestGet(url), HttpResponse.BodyHandlers.ofString())
-    } catch (e: HttpConnectTimeoutException) {
-        null
-    }
-
-    fun getString(url: String, token: String?): HttpResponse<String> {
-        val request = HttpRequest.newBuilder(URI.create(url))
-            .GET()
-            .setHeader("authorization", token)
-            .build()
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-    }
-
-    fun postString(url: String, data: Map<String, String?>, token: String?): HttpResponse<String> {
-        val request = HttpRequest.newBuilder(URI.create(url))
-            .POST(mapToJson(data))
-            .setHeader("authorization", token)
-            .build()
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-    }
-
-    fun postString(url: String, token: String?): HttpResponse<String> {
-        val request = HttpRequest.newBuilder(URI.create(url))
-            .POST(HttpRequest.BodyPublishers.ofString(url))
-            .setHeader("authorization", token)
-            .build()
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-    }
-
-    fun getString(url: String, token: String?, cookie: String?): HttpResponse<String> {
-        val request = HttpRequest.newBuilder(URI.create(url))
-            .GET()
-            .setHeader("authorization", token)
-            .setHeader("cookie", cookie)
-            .build()
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-    }
+    fun getString(url: String, headers: Map<String, String>? = null): HttpResponse<String> =
+        httpClient.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
 
     fun getStringByProxy(url: String): HttpResponse<String>? =
         proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofString())
@@ -80,19 +44,43 @@ object HttpUtil {
     fun getInputStreamByProxy(url: String): HttpResponse<InputStream>? =
         proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
 
-    fun postStringByProxy(url: String, data: Map<String, String?>, token: String?): HttpResponse<String>? {
-        println(JSONUtil.parse(data).toString())
-        val request = HttpRequest.newBuilder(URI.create(url))
-            .POST(mapToJson(data))
-            .setHeader("Content-Type", "application/json")
-            .setHeader("authorization", token)
-            .build()
-        return proxyClient?.send(request, HttpResponse.BodyHandlers.ofString())
+    fun postString(
+        url: String,
+        data: Map<String, String?>,
+        headers: Map<String, String>? = null
+    ): HttpResponse<String> =
+        httpClient.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
+
+    fun postStringByProxy(
+        url: String,
+        data: Map<String, String?>,
+        headers: Map<String, String>? = null
+    ): HttpResponse<String>? {
+        return proxyClient?.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
     }
 
-    private fun requestGet(url: String) = HttpRequest.newBuilder(URI.create(url)).GET().build()
+    private fun requestGetBuilder(url: String) = HttpRequest.newBuilder(URI.create(url)).GET()
 
-    private fun mapToJson(data: Map<String, String?>) =
-        HttpRequest.BodyPublishers.ofString(JSONUtil.parse(data).toString())
+    private fun requestGet(url: String, headers: Map<String, String>? = null) =
+        if (headers == null) {
+            requestGetBuilder(url).build()
+        } else {
+            val builder = requestGetBuilder(url)
+            headers.forEach { (name, value) -> builder.setHeader(name, value) }
+            builder.build()
+        }
+
+    private fun requestPostBuilder(url: String, data: Map<String, String?>) =
+        HttpRequest.newBuilder(URI.create(url))
+            .POST(HttpRequest.BodyPublishers.ofString(JSONUtil.parse(data).toString()))
+
+    private fun requestPost(url: String, data: Map<String, String?>, headers: Map<String, String>?) =
+        if (headers == null) {
+            requestPostBuilder(url, data).build()
+        } else {
+            val builder = requestPostBuilder(url, data)
+            headers.forEach { (name, value) -> builder.setHeader(name, value) }
+            builder.build()
+        }
 
 }

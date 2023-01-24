@@ -1,16 +1,17 @@
-package org.hff.miraiomnitrix.command.any
+package org.hff.miraiomnitrix.command.impl.any
 
 import cn.hutool.json.JSONUtil
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.app.service.CharacterService
-import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.listener.AnyListener.characterCache
-import org.hff.miraiomnitrix.listener.AnyListener.characterName
-import org.hff.miraiomnitrix.listener.AnyListener.chatting
-import org.hff.miraiomnitrix.listener.AnyListener.concatId
-import org.hff.miraiomnitrix.listener.AnyListener.token
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.AnyCommand
+import org.hff.miraiomnitrix.event.Chat.characterCache
+import org.hff.miraiomnitrix.event.Chat.characterName
+import org.hff.miraiomnitrix.event.Chat.chatting
+import org.hff.miraiomnitrix.event.Chat.concatId
+import org.hff.miraiomnitrix.event.Chat.token
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.result.result
@@ -77,10 +78,13 @@ class Character(private val characterService: CharacterService) : AnyCommand {
         if (characterCache[name] != null) return null
 
         val entity = characterService.get(name) ?: return result(" 角色不存在")
+
+        if (token == null) return result("无token")
+        val headers = mapOf("token" to token)
         val param = mapOf("external_id" to entity.externalId)
-        val response1 = postStringByProxy(url + "character/info/", param, token)
+        val response1 = postStringByProxy(url + "character/info/", param, headers)
         if (response1?.statusCode() != 200) return fail()
-        val response2 = postStringByProxy(url + "history/create/", param, token)
+        val response2 = postStringByProxy(url + "history/create/", param, headers)
         if (response2?.statusCode() != 200) return fail()
 
         val character = JSONUtil.parseObj(response1.body()).getJSONObject("character")

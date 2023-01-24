@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.command.group
+package org.hff.miraiomnitrix.command.impl.group
 
 import cn.hutool.core.util.RandomUtil
 import com.sksamuel.scrimage.ImmutableImage
@@ -7,7 +7,8 @@ import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.result.ResultMessage
@@ -51,7 +52,7 @@ class Pa(
         val file = getFileByQQ(qq) ?: return result("获取qq头像失败")
 
         val response = HttpUtil.getInputStream(url + qq)
-        if (response?.statusCode() != 200) return fail()
+        if (response.statusCode() != 200) return fail()
 
         val imageA = ImmutableImage.loader().fromFile(file)
             .scaleTo(400, 400)

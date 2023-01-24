@@ -1,10 +1,11 @@
-package org.hff.miraiomnitrix.command.group
+package org.hff.miraiomnitrix.command.impl.group
 
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
-import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.result.result
@@ -33,7 +34,7 @@ class Vits : GroupCommand {
         if (!avatars.contains(speaker)) return result("角色名错误")
         val text = args[1]
         val response = HttpUtil.getInputStream(url + "speaker=" + speaker + "&text=" + text)
-        if (response?.statusCode() != 200) return fail()
+        if (response.statusCode() != 200) return fail()
         val audio = response.body().toExternalResource().use { group.uploadAudio(it) }
         group.sendMessage(audio)
         return null

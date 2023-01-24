@@ -1,16 +1,15 @@
-package org.hff.miraiomnitrix.command.any
+package org.hff.miraiomnitrix.command.impl.any
 
 import cn.hutool.json.JSONUtil
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.toMessageChain
-import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.result.result
@@ -46,7 +45,7 @@ class Setu : AnyCommand {
         }
 
         val response = HttpUtil.getString(url + "?" + sb + "r18=" + r18 + "&num=" + num)
-        if (response?.statusCode() != 200) return fail()
+        if (response.statusCode() != 200) return fail()
         val data = JSONUtil.parseObj(response.body()).getJSONArray("data")
         val forwardBuilder = ForwardMessageBuilder(subject)
 

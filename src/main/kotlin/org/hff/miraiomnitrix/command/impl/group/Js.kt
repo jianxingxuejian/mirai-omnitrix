@@ -1,11 +1,12 @@
-package org.hff.miraiomnitrix.command.group
+package org.hff.miraiomnitrix.command.impl.group
 
 import delight.nashornsandbox.NashornSandboxes
 import delight.nashornsandbox.exceptions.ScriptCPUAbuseException
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror

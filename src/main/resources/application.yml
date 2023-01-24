@@ -6,10 +6,10 @@ spring:
     name: mirai-omnitrix
   profiles:
     active: local
-
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  datasource:
+    url:
+    username:
+    password:
 
 bot:
   qq:
@@ -22,3 +22,8 @@ http:
   proxy:
     host: localhost
     port: 7890
+
+account:
+  characterAiToken:
+  saucenaoKey:
+  bgmCookie:

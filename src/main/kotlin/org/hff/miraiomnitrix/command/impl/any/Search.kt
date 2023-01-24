@@ -1,12 +1,17 @@
-package org.hff.miraiomnitrix.command.any
+package org.hff.miraiomnitrix.command.impl.any
 
 import cn.hutool.json.JSONUtil
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
-import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import org.hff.miraiomnitrix.command.Command
+import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.MessageChainBuilder
+import net.mamoe.mirai.message.data.QuoteReply
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.AnyCommand
+import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.listener.AnyListener.imageCache
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
@@ -14,10 +19,10 @@ import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 
 @Command(name = ["搜图", "soutu", "st"], isNeedHeader = false)
-class Search : AnyCommand {
+class Search(accountProperties: AccountProperties) : AnyCommand {
 
     private val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
-    private val key = "b34d8184b408b14507bff4ba076b5706877d4c53"
+    private val key = accountProperties.saucenaoKey
 
     override suspend fun execute(
         sender: User,
@@ -25,6 +30,7 @@ class Search : AnyCommand {
         subject: Contact,
         args: List<String>
     ): ResultMessage? {
+        if (key == null) return result("请配置saucenao api的key")
 
         val quote = message[QuoteReply.Key]
         val image = if (quote != null) {
@@ -54,7 +60,6 @@ class Search : AnyCommand {
         }
         val builder = MessageChainBuilder()
         builder.append("搜图结果：\n")
-
             .append(subject.uploadImage(response2.body()))
             .append("相似度：").append(header.getStr("similarity")).append("\n")
             .append("标题：").append(data.getStr("title")).append("\n")

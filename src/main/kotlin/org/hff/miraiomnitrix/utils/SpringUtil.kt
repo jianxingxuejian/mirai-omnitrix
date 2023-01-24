@@ -3,6 +3,7 @@ package org.hff.miraiomnitrix.utils
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import org.springframework.stereotype.Component
+import kotlin.reflect.KClass
 
 @Component
 object SpringUtil : ApplicationContextAware {
@@ -13,10 +14,10 @@ object SpringUtil : ApplicationContextAware {
         context = applicationContext
     }
 
-    fun <T> getBean(beanClass: Class<out T>) = context?.getBean(beanClass)
+    fun <T : Any> getBean(beanClass: KClass<out T>) = context?.getBean(beanClass.java)
 
-    fun getBeansWithAnnotation(annotationClass: Class<out Annotation>): Map<String, Any>? {
-        return context?.getBeansWithAnnotation(annotationClass)
+    fun getBeansWithAnnotation(annotationClass: KClass<out Annotation>): Map<String, Any>? {
+        return context?.getBeansWithAnnotation(annotationClass.java)
     }
 
 }

@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.command.friend
+package org.hff.miraiomnitrix.command.type
 
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.message.data.MessageChain

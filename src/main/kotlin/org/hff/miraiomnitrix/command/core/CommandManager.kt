@@ -1,20 +1,21 @@
-package org.hff.miraiomnitrix.command
+package org.hff.miraiomnitrix.command.core
 
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.any.AnyCommand
-import org.hff.miraiomnitrix.command.friend.FriendCommand
-import org.hff.miraiomnitrix.command.group.GroupCommand
+import org.hff.miraiomnitrix.command.type.AnyCommand
+import org.hff.miraiomnitrix.command.type.FriendCommand
+import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
-import java.util.*
+import java.net.http.HttpTimeoutException
+import javax.net.ssl.SSLException
 import kotlin.reflect.full.findAnnotation
 
 object CommandManager {
-    private val commandHeads = arrayOf("|","\\",",", ".", "，", "。")
-    private val botProperties = getBean(BotProperties::class.java)
+    private val commandHeads = arrayOf("|", "\\", ",", ".", "，", "。")
+    private val botProperties = getBean(BotProperties::class)
 
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
     private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
@@ -22,7 +23,7 @@ object CommandManager {
     private val noCommands: ArrayList<String> = arrayListOf()
 
     init {
-        getBeansWithAnnotation(Command::class.java)?.values?.forEach { command ->
+        getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
             val annotation = command::class.findAnnotation<Command>()!!
             if (!annotation.isNeedHeader) annotation.name.forEach { noCommands.add(it) }
             when (command) {
@@ -34,23 +35,35 @@ object CommandManager {
     }
 
     suspend fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): ResultMessage? {
-        if (subject is Friend) {
-            val (command, args) = getCommandByFriend(message, anyCommands) ?: return null
-            return command.execute(sender, message, subject, args)
+        val (command, args) = if (subject is Friend) {
+            getCommandByFriend(message, anyCommands) ?: return null
         } else {
-            val (command, args) = getCommand(message, anyCommands) ?: return null
-            return command.execute(sender, message, subject, args)
+            getCommand(message, anyCommands) ?: return null
         }
+        return tryExecute(sender) { command.execute(sender, message, subject, args) }
     }
 
     suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): ResultMessage? {
         val (command, args) = getCommand(message, groupCommands) ?: return null
-        return command.execute(sender, message, group, args)
+        return tryExecute(sender) { command.execute(sender, message, group, args) }
     }
 
     suspend fun executeFriendCommand(sender: Friend, message: MessageChain): ResultMessage? {
         val (command, args) = getCommandByFriend(message, friendCommands) ?: return null
-        return command.execute(sender, message, args)
+        return tryExecute(sender) { command.execute(sender, message, args) }
+    }
+
+    private suspend fun tryExecute(sender: User, task: suspend () -> ResultMessage?): ResultMessage? {
+        return try {
+            task()
+        } catch (e: Exception) {
+            when (e) {
+                is SSLException -> sender.sendMessage("梯子挂了")
+                is HttpTimeoutException -> sender.sendMessage("连接超时")
+            }
+            e.printStackTrace()
+            null
+        }
     }
 
     private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Pair<T, MutableList<String>>? {

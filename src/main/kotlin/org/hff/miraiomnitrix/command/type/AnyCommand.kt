@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.command.any
+package org.hff.miraiomnitrix.command.type
 
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User

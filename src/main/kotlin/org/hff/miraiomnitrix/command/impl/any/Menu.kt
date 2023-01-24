@@ -1,9 +1,10 @@
-package org.hff.miraiomnitrix.command.any
+package org.hff.miraiomnitrix.command.impl.any
 
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 
@@ -18,7 +19,9 @@ class Menu : AnyCommand {
         |4: 搜图、soutu、st，请在关键字后面粘贴一张图片
         |5: js: 执行js程序
         |6: 复读、echo: 复读后面的文字
+        |7：直播、live: 直播状态查询
     """.trimMargin()
+    private final val result = result(text)
 
     override suspend fun execute(
         sender: User,
@@ -26,7 +29,7 @@ class Menu : AnyCommand {
         subject: Contact,
         args: List<String>
     ): ResultMessage? {
-        return result(text)
+        return result
     }
 
 }

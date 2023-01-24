@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.command
+package org.hff.miraiomnitrix.command.core
 
 import org.springframework.stereotype.Component
 
@@ -12,3 +12,5 @@ annotation class Command(
     /** 是否需要指令头，默认为true */
     val isNeedHeader: Boolean = true,
 )
+
+

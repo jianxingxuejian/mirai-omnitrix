@@ -1,11 +1,12 @@
-package org.hff.miraiomnitrix.command.any
+package org.hff.miraiomnitrix.command.impl.any
 
 import cn.hutool.json.JSONUtil
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.core.Command
+import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.listener.AnyListener.imageCache
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
@@ -51,7 +52,7 @@ class Wallpaper : AnyCommand {
 
         if (vip.contains(sort)) {
             val response1 = HttpUtil.getString(vipUrl + sort)
-            if (response1?.statusCode() != 200) return fail()
+            if (response1.statusCode() != 200) return fail()
             val body = response1.body()
             if (body.isBlank()) return fail()
             val url = JSONUtil.parseObj(body).getJSONArray("pic").getStr(0)
@@ -62,7 +63,7 @@ class Wallpaper : AnyCommand {
         }
         for (i in 0..3) {
             val response1 = HttpUtil.getString(urls[i] + sort)
-            if (response1?.statusCode() != 200) continue
+            if (response1.statusCode() != 200) continue
             val body = response1.body()
             if (body.isBlank()) continue
             val url = JSONUtil.parseObj(body).getJSONArray("pic").getStr(0)
