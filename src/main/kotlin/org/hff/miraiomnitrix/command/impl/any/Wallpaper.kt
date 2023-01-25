@@ -1,16 +1,16 @@
 package org.hff.miraiomnitrix.command.impl.any
 
-import cn.hutool.json.JSONUtil
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
-import org.hff.miraiomnitrix.listener.AnyListener.imageCache
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.utils.HttpUtil
+import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
+import org.hff.miraiomnitrix.utils.JsonUtil
 import java.io.InputStream
 
 @Command(name = ["壁纸", "bizhi"])
@@ -23,8 +23,14 @@ class Wallpaper : AnyCommand {
         "https://iw233.cn/api.php?type=json&sort="
     )
 
-    private val vipUrl = "http://aikohfiosehgairl.fgimax2.fgnwctvip.com/uyfvnuvhgbuiesbrghiuudvbfkllsgdhngvbhsdfklbghdfsjksdhnvfgkhdfkslgvhhrjkdshgnverhbgkrthbklg.php?type=json&sort="
-    private val vip = arrayOf("qwuydcuqwgbvwgqefvbwgueahvbfkbegh", "dsrgvkbaergfvyagvbkjavfwe", "ergbskjhebrgkjlhkerjsbkbregsbg", "rsetbgsekbjlghelkrabvfgheiv")
+    private val vipUrl =
+        "http://aikohfiosehgairl.fgimax2.fgnwctvip.com/uyfvnuvhgbuiesbrghiuudvbfkllsgdhngvbhsdfklbghdfsjksdhnvfgkhdfkslgvhhrjkdshgnverhbgkrthbklg.php?type=json&sort="
+    private val vip = arrayOf(
+        "qwuydcuqwgbvwgqefvbwgueahvbfkbegh",
+        "dsrgvkbaergfvyagvbkjavfwe",
+        "ergbskjhebrgkjlhkerjsbkbregsbg",
+        "rsetbgsekbjlghelkrabvfgheiv"
+    )
 
     override suspend fun execute(
         sender: User,
@@ -51,25 +57,22 @@ class Wallpaper : AnyCommand {
         }
 
         if (vip.contains(sort)) {
-            val response1 = HttpUtil.getString(vipUrl + sort)
-            if (response1.statusCode() != 200) return fail()
-            val body = response1.body()
-            if (body.isBlank()) return fail()
-            val url = JSONUtil.parseObj(body).getJSONArray("pic").getStr(0)
-            val response2 = HttpUtil.getInputStream(url)
-            if (response2.statusCode() != 200) return fail()
-            sendImage(subject, response2.body())
+            val apiResult = HttpUtil.getString(vipUrl + sort)
+            if (apiResult.isBlank()) return fail()
+            val url = JsonUtil.getArray(apiResult, "pic")[0].asString
+            val image = HttpUtil.getInputStream(url)
+            sendImage(subject, image)
             return null
         }
-        for (i in 0..3) {
-            val response1 = HttpUtil.getString(urls[i] + sort)
-            if (response1.statusCode() != 200) continue
-            val body = response1.body()
-            if (body.isBlank()) continue
-            val url = JSONUtil.parseObj(body).getJSONArray("pic").getStr(0)
-            val response2 = HttpUtil.getInputStream(url)
-            if (response2.statusCode() != 200) continue
-            sendImage(subject, response2.body())
+        urls.forEach {
+            try {
+                val apiResult = HttpUtil.getString(it + sort)
+                val url = JsonUtil.getArray(apiResult, "pic")[0].asString
+                val img = HttpUtil.getInputStream(url)
+                sendImage(subject, img)
+            } catch (e: Exception) {
+                return@forEach
+            }
             return null
         }
 

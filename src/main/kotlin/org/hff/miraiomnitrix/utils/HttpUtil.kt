@@ -2,6 +2,7 @@ package org.hff.miraiomnitrix.utils
 
 import cn.hutool.json.JSONUtil
 import org.hff.miraiomnitrix.config.HttpProperties
+import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import java.io.InputStream
 import java.net.InetSocketAddress
@@ -32,31 +33,42 @@ object HttpUtil {
         }
     }
 
-    fun getString(url: String, headers: Map<String, String>? = null): HttpResponse<String> =
-        httpClient.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
+    fun getString(url: String, headers: Map<String, String>? = null): String {
+        val res = httpClient.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
+        return tryGetRightRes(res)
+    }
 
-    fun getStringByProxy(url: String): HttpResponse<String>? =
-        proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofString())
+    fun getStringByProxy(url: String): String {
+        val res = proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofString()) ?: throw RuntimeException()
+        return tryGetRightRes(res)
+    }
 
-    fun getInputStream(url: String): HttpResponse<InputStream> =
-        httpClient.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
+    fun getInputStream(url: String): InputStream {
+        val res = httpClient.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
+        return tryGetRightRes(res)
+    }
 
-    fun getInputStreamByProxy(url: String): HttpResponse<InputStream>? =
-        proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
+    fun getInputStreamByProxy(url: String): InputStream {
+        val res = proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
+        return tryGetRightRes(res)
+    }
 
     fun postString(
         url: String,
         data: Map<String, String?>,
         headers: Map<String, String>? = null
-    ): HttpResponse<String> =
-        httpClient.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
+    ): String {
+        val res = httpClient.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
+        return tryGetRightRes(res)
+    }
 
     fun postStringByProxy(
         url: String,
         data: Map<String, String?>,
         headers: Map<String, String>? = null
-    ): HttpResponse<String>? {
-        return proxyClient?.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
+    ): String{
+        val res = proxyClient?.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
+        return tryGetRightRes(res)
     }
 
     private fun requestGetBuilder(url: String) = HttpRequest.newBuilder(URI.create(url)).GET()
@@ -82,5 +94,11 @@ object HttpUtil {
             headers.forEach { (name, value) -> builder.setHeader(name, value) }
             builder.build()
         }
+
+    private fun <T : Any> tryGetRightRes(res: HttpResponse<T>?): T {
+        if (res == null) throw MyException("无代理配置")
+        if (res.statusCode() != 200) throw MyException("请求失败")
+        return res.body()
+    }
 
 }

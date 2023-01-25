@@ -12,5 +12,3 @@ annotation class Command(
     /** 是否需要指令头，默认为true */
     val isNeedHeader: Boolean = true,
 )
-
-

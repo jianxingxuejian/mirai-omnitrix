@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.listener
 
-import com.google.common.cache.CacheBuilder
 import net.mamoe.mirai.event.EventHandler
 import net.mamoe.mirai.event.SimpleListenerHost
 import net.mamoe.mirai.event.events.MessageEvent
@@ -9,12 +8,10 @@ import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.source
 import org.hff.miraiomnitrix.command.core.CommandManager
 import org.hff.miraiomnitrix.event.Chat.chat
-import java.util.concurrent.TimeUnit
+import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
 import kotlin.coroutines.CoroutineContext
 
 object AnyListener : SimpleListenerHost() {
-
-    val imageCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Int, String>()
 
     override fun handleException(context: CoroutineContext, exception: Throwable) {
         exception.printStackTrace()

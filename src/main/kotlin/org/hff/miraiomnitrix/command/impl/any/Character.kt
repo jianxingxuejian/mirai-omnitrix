@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.command.impl.any
 
-import cn.hutool.json.JSONUtil
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.MessageChain
@@ -13,9 +12,9 @@ import org.hff.miraiomnitrix.event.Chat.chatting
 import org.hff.miraiomnitrix.event.Chat.concatId
 import org.hff.miraiomnitrix.event.Chat.token
 import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil.postStringByProxy
+import org.hff.miraiomnitrix.utils.JsonUtil
 
 @Command(name = ["character", "角色"])
 class Character(private val characterService: CharacterService) : AnyCommand {
@@ -82,15 +81,13 @@ class Character(private val characterService: CharacterService) : AnyCommand {
         if (token == null) return result("无token")
         val headers = mapOf("token" to token)
         val param = mapOf("external_id" to entity.externalId)
-        val response1 = postStringByProxy(url + "character/info/", param, headers)
-        if (response1?.statusCode() != 200) return fail()
-        val response2 = postStringByProxy(url + "history/create/", param, headers)
-        if (response2?.statusCode() != 200) return fail()
+        val info = postStringByProxy(url + "character/info/", param, headers)
+        val history = postStringByProxy(url + "history/create/", param, headers)
 
-        val character = JSONUtil.parseObj(response1.body()).getJSONObject("character")
-        val identifier = character.getStr("identifier").replace("id", "internal_id")
-        val greeting = character.getStr("greeting").replace("{{user}}", sender.nick)
-        val historyExternalId = JSONUtil.parseObj(response2.body()).getStr("external_id")
+        val character = JsonUtil.getObj(info, "character")
+        val identifier = character.get("identifier").asString.replace("id", "internal_id")
+        val greeting = character.get("greeting").asString.replace("{{user}}", sender.nick)
+        val historyExternalId = JsonUtil.getStr(history, "external_id")
 
         characterCache[name] = Triple(historyExternalId, entity.externalId!!, identifier)
         subject.sendMessage(greeting)

@@ -1,6 +1,8 @@
 package org.hff.miraiomnitrix.command.impl.group
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.getMember
@@ -20,7 +22,6 @@ class Live(private val liveService: LiveService) : GroupCommand {
     private final val getInfoApi = "https://api.bilibili.com/x/space/wbi/acc/info?mid="
     private final val getRoomApi = "https://api.live.bilibili.com/room/v1/Room/get_info?room_id="
 
-    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun execute(
         sender: Member,
         message: MessageChain,
@@ -76,9 +77,8 @@ class Live(private val liveService: LiveService) : GroupCommand {
     }
 
     suspend fun getLiveState(uid: Long): String? {
-        val response = getString(getInfoApi + uid)
-        if (response.statusCode() != 200) return null
-        val userInfo = JsonUtil.fromJson(response.body(), "data", UserInfo::class)
+        val apiResult = getString(getInfoApi + uid)
+        val userInfo = JsonUtil.fromJson(apiResult, "data", UserInfo::class)
         val (liveStatus, roomStatus, _, title, url) = userInfo.live_room ?: return null
         if (liveStatus != 1 || roomStatus != 1) return null
         val newUrl = removeStr(url)
@@ -86,9 +86,8 @@ class Live(private val liveService: LiveService) : GroupCommand {
     }
 
     fun getUserInfo(uid: Long): UserInfo? {
-        val response = getString(getInfoApi + uid)
-        if (response.statusCode() != 200) return null
-        return JsonUtil.fromJson(response.body(), "data", UserInfo::class)
+        val apiResult = getString(getInfoApi + uid)
+        return JsonUtil.fromJson(apiResult, "data", UserInfo::class)
     }
 
     private fun removeStr(str: String): String {

@@ -6,6 +6,7 @@ import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.command.type.FriendCommand
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
+import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
@@ -40,31 +41,57 @@ object CommandManager {
         } else {
             getCommand(message, anyCommands) ?: return null
         }
-        return tryExecute(sender) { command.execute(sender, message, subject, args) }
+        return command.tryExecute(sender, message, subject, args)
     }
 
     suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): ResultMessage? {
         val (command, args) = getCommand(message, groupCommands) ?: return null
-        return tryExecute(sender) { command.execute(sender, message, group, args) }
+        return command.tryExecute(sender, message, group, args)
     }
 
     suspend fun executeFriendCommand(sender: Friend, message: MessageChain): ResultMessage? {
         val (command, args) = getCommandByFriend(message, friendCommands) ?: return null
-        return tryExecute(sender) { command.execute(sender, message, args) }
+        return command.tryExecute(sender, message, args)
     }
 
-    private suspend fun tryExecute(sender: User, task: suspend () -> ResultMessage?): ResultMessage? {
-        return try {
-            task()
-        } catch (e: Exception) {
-            when (e) {
-                is SSLException -> sender.sendMessage("梯子挂了")
-                is HttpTimeoutException -> sender.sendMessage("连接超时")
-            }
-            e.printStackTrace()
-            null
-        }
+    private suspend fun AnyCommand.tryExecute(
+        sender: User,
+        message: MessageChain,
+        subject: Contact,
+        args: List<String>
+    ) = try {
+        this.execute(sender, message, subject, args)
+    } catch (e: Exception) {
+        sendCommandError(e, sender)
     }
+
+    private suspend fun GroupCommand.tryExecute(
+        sender: Member,
+        message: MessageChain,
+        group: Group,
+        args: List<String>
+    ) = try {
+        this.execute(sender, message, group, args)
+    } catch (e: Exception) {
+        sendCommandError(e, sender)
+    }
+
+    private suspend fun FriendCommand.tryExecute(sender: Friend, message: MessageChain, args: List<String>) = try {
+        this.execute(sender, message, args)
+    } catch (e: Exception) {
+        sendCommandError(e, sender)
+    }
+
+    private suspend fun sendCommandError(e: Exception, sender: User): Nothing? {
+        when (e) {
+            is SSLException -> sender.sendMessage("梯子挂了")
+            is HttpTimeoutException -> sender.sendMessage("连接超时")
+            is MyException -> sender.sendMessage(e.message)
+            else -> sender.sendMessage("未知错误")
+        }
+        return null
+    }
+
 
     private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Pair<T, MutableList<String>>? {
         val string = message.contentToString()

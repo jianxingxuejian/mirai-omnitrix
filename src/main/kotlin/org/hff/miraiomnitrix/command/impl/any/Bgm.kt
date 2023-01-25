@@ -14,7 +14,6 @@ import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.jsoup.Jsoup
@@ -50,11 +49,9 @@ class Bgm(private val bgmService: BgmService, accountProperties: AccountProperti
             GlobalScope.launch {
                 val msg = MessageChainBuilder()
                 if (it.imgUrl != null && !it.imgUrl.equals("https:/img/no_icon_subject.png")) {
-                    val response = HttpUtil.getInputStreamByProxy(it.imgUrl!!)
-                    if (response?.statusCode() == 200) {
-                        val image = subject.uploadImage(response.body())
-                        msg.append(image)
-                    }
+                    val result = HttpUtil.getInputStreamByProxy(it.imgUrl!!)
+                    val image = subject.uploadImage(result)
+                    msg.append(image)
                 }
                 msg.append("名字: ${it.name}\n")
                     .append("年份: ${it.year}\n")
@@ -72,9 +69,8 @@ class Bgm(private val bgmService: BgmService, accountProperties: AccountProperti
         if (cookie == null) return result("请配置bangumi网页的cookie")
         val headers = mapOf("cookie" to cookie)
         for (i in 1..300) {
-            val response = HttpUtil.getString("https://bgm.tv/anime/browser?sort=rank&page=$i", headers)
-            if (response.statusCode() != 200) return fail()
-            val document = Jsoup.parse(response.body())
+            val result = HttpUtil.getString("https://bgm.tv/anime/browser?sort=rank&page=$i", headers)
+            val document = Jsoup.parse(result)
             val list = document.select("#browserItemList")
             list.first()?.children()?.forEach { item ->
                 val bgm = Bgm()

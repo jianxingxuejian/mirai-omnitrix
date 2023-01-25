@@ -2,7 +2,6 @@ package org.hff.miraiomnitrix.command.impl.group
 
 import cn.hutool.core.util.RandomUtil
 import com.sksamuel.scrimage.ImmutableImage
-import com.sksamuel.scrimage.nio.PngWriter
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
@@ -12,15 +11,14 @@ import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.fail
 import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil
+import org.hff.miraiomnitrix.utils.ImageUtil
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.RenderingHints
 import java.awt.geom.Ellipse2D
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
 import java.io.File
 
 
@@ -51,16 +49,13 @@ class Pa(
         }
         val file = getFileByQQ(qq) ?: return result("获取qq头像失败")
 
-        val response = HttpUtil.getInputStream(url + qq)
-        if (response.statusCode() != 200) return fail()
+        val qqImg = HttpUtil.getInputStream(url + qq)
 
-        val imageA = ImmutableImage.loader().fromFile(file)
-            .scaleTo(400, 400)
-        val imageB = ImmutableImage.loader().fromStream(response.body())
-            .scaleTo(75, 75)
+        val imageA = ImageUtil.scaleTo(file, 400, 400)
+        val imageB = ImageUtil.scaleTo(qqImg, 75, 75)
         val imageC = transformAvatar(imageB)
-
-        group.sendImage(ByteArrayInputStream(imageA.overlay(imageC, 5, 320).bytes(PngWriter())))
+        val overlay = ImageUtil.overlay(imageA, imageC, 5, 320)
+        group.sendImage(overlay)
         return null
     }
 
