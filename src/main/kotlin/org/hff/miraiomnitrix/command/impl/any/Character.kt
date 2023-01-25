@@ -15,6 +15,7 @@ import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil.postStringByProxy
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 
 @Command(name = ["character", "角色"])
 class Character(private val characterService: CharacterService) : AnyCommand {
@@ -85,8 +86,8 @@ class Character(private val characterService: CharacterService) : AnyCommand {
         val history = postStringByProxy(url + "history/create/", param, headers)
 
         val character = JsonUtil.getObj(info, "character")
-        val identifier = character.get("identifier").asString.replace("id", "internal_id")
-        val greeting = character.get("greeting").asString.replace("{{user}}", sender.nick)
+        val identifier = character.getAsStr("identifier").replace("id", "internal_id")
+        val greeting = character.getAsStr("greeting").replace("{{user}}", sender.nick)
         val historyExternalId = JsonUtil.getStr(history, "external_id")
 
         characterCache[name] = Triple(historyExternalId, entity.externalId!!, identifier)

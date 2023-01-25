@@ -14,6 +14,8 @@ import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.JsonUtil.get
+import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
@@ -72,7 +74,7 @@ class Setu : AnyCommand {
                 val data = JsonUtil.getArray(json, "data")
                 data.forEach {
                     launch {
-                        val imgUrl = it.asJsonObject.get("urls").asJsonObject.get("original").asString
+                        val imgUrl = it.get("urls").get("original").asString
                         uploadImg(imgUrl)
                     }
                 }
@@ -80,7 +82,7 @@ class Setu : AnyCommand {
                 val data = JsonUtil.getArray(json)
                 data.forEach {
                     launch {
-                        val imgUrl = it.asJsonObject.get("url").asString
+                        val imgUrl = it.getAsStr("url")
                         uploadImg(imgUrl)
                     }
                 }
