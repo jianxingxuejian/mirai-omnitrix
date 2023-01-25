@@ -1,8 +1,7 @@
 package org.hff.miraiomnitrix.command.impl.any
 
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
@@ -59,15 +58,22 @@ class Setu : AnyCommand {
         val json = HttpUtil.getString(url)
         val forwardBuilder = ForwardMessageBuilder(subject)
 
-        runBlocking(Dispatchers.IO) {
+        suspend fun uploadImg(imgUrl: String) {
+            try {
+                val result = HttpUtil.getInputStreamByProxy(imgUrl)
+                val image = subject.uploadImage(result)
+                forwardBuilder.add(subject.bot, image)
+            } catch (_: Exception) {
+            }
+        }
+
+        coroutineScope {
             if (type == 1) {
                 val data = JsonUtil.getArray(json, "data")
                 data.forEach {
                     launch {
                         val imgUrl = it.asJsonObject.get("urls").asJsonObject.get("original").asString
-                        val result = HttpUtil.getInputStreamByProxy(imgUrl)
-                        val image = subject.uploadImage(result)
-                        forwardBuilder.add(subject.bot, image)
+                        uploadImg(imgUrl)
                     }
                 }
             } else {
@@ -75,9 +81,7 @@ class Setu : AnyCommand {
                 data.forEach {
                     launch {
                         val imgUrl = it.asJsonObject.get("url").asString
-                        val result = HttpUtil.getInputStreamByProxy(imgUrl)
-                        val image = subject.uploadImage(result)
-                        forwardBuilder.add(subject.bot, image)
+                        uploadImg(imgUrl)
                     }
                 }
             }
