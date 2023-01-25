@@ -62,7 +62,7 @@ object CommandManager {
     ) = try {
         this.execute(sender, message, subject, args)
     } catch (e: Exception) {
-        sendCommandError(e, sender)
+        sendCommandError(e, subject)
     }
 
     private suspend fun GroupCommand.tryExecute(
@@ -73,7 +73,7 @@ object CommandManager {
     ) = try {
         this.execute(sender, message, group, args)
     } catch (e: Exception) {
-        sendCommandError(e, sender)
+        sendCommandError(e, group)
     }
 
     private suspend fun FriendCommand.tryExecute(sender: Friend, message: MessageChain, args: List<String>) = try {
@@ -82,12 +82,13 @@ object CommandManager {
         sendCommandError(e, sender)
     }
 
-    private suspend fun sendCommandError(e: Exception, sender: User): Nothing? {
+    private suspend fun sendCommandError(e: Exception, subject: Contact): Nothing? {
+        e.printStackTrace()
         when (e) {
-            is SSLException -> sender.sendMessage("梯子挂了")
-            is HttpTimeoutException -> sender.sendMessage("连接超时")
-            is MyException -> sender.sendMessage(e.message)
-            else -> sender.sendMessage("未知错误")
+            is SSLException -> subject.sendMessage("梯子挂了")
+            is HttpTimeoutException -> subject.sendMessage("连接超时")
+            is MyException -> subject.sendMessage(e.message)
+            else -> subject.sendMessage("未知错误")
         }
         return null
     }
