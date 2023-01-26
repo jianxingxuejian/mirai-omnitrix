@@ -26,7 +26,7 @@ object JsonUtil {
     fun <T : Any> fromJson(json: String, clazz: KClass<T>): T = gson.fromJson(json, clazz.java)
 
     fun <T : Any> fromJson(json: String, key: String, clazz: KClass<T>): T =
-        gson.fromJson(getStr(json, key), clazz.java)
+        gson.fromJson(getObj(json, key), clazz.java)
 
     fun <T : Any> fromJson(json: JsonElement, clazz: KClass<T>): T = gson.fromJson(json, clazz.java)
 

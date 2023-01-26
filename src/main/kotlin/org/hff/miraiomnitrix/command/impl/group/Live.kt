@@ -13,14 +13,10 @@ import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
-import org.hff.miraiomnitrix.utils.HttpUtil.getString
-import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.getBilibiliUserInfo
 
 @Command(name = ["直播", "live"])
 class Live(private val liveService: LiveService) : GroupCommand {
-
-    private final val getInfoApi = "https://api.bilibili.com/x/space/wbi/acc/info?mid="
-    private final val getRoomApi = "https://api.live.bilibili.com/room/v1/Room/get_info?room_id="
 
     override suspend fun execute(
         sender: Member,
@@ -62,7 +58,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
                 val count = liveService.ktQuery().eq(Live::qq, qq).eq(Live::groupId, group.id).count()
                 if (count != 0L) return result("人员重复")
                 val uid = args[2].toLong()
-                val userInfo = getUserInfo(uid) ?: return result("未找到b站信息")
+                val userInfo = getBilibiliUserInfo(uid)
                 val live = userInfo.live_room?.let { Live(null, qq, group.id, uid, it.roomid) }
                     ?: return result("未找到直播间信息")
                 val save = liveService.save(live)
@@ -77,17 +73,11 @@ class Live(private val liveService: LiveService) : GroupCommand {
     }
 
     suspend fun getLiveState(uid: Long): String? {
-        val apiResult = getString(getInfoApi + uid)
-        val userInfo = JsonUtil.fromJson(apiResult, "data", UserInfo::class)
+        val userInfo = getBilibiliUserInfo(uid)
         val (liveStatus, roomStatus, _, title, url) = userInfo.live_room ?: return null
         if (liveStatus != 1 || roomStatus != 1) return null
         val newUrl = removeStr(url)
         return "[$title] $newUrl"
-    }
-
-    fun getUserInfo(uid: Long): UserInfo? {
-        val apiResult = getString(getInfoApi + uid)
-        return JsonUtil.fromJson(apiResult, "data", UserInfo::class)
     }
 
     private fun removeStr(str: String): String {
@@ -96,14 +86,4 @@ class Live(private val liveService: LiveService) : GroupCommand {
             str.slice(0 until index)
         } else str
     }
-
-    data class UserInfo(val name: String, val live_room: LiveRoom?)
-
-    data class LiveRoom(
-        val liveStatus: Int,
-        val roomStatus: Int,
-        val roomid: Int,
-        val title: String,
-        val url: String
-    )
 }

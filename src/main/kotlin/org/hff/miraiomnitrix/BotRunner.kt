@@ -7,6 +7,7 @@ import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.listener.AnyListener
 import org.hff.miraiomnitrix.listener.FriendListener
 import org.hff.miraiomnitrix.listener.GroupListener
+import org.hff.miraiomnitrix.utils.bot
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 
@@ -20,7 +21,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
                 println("qq或者密码为空，请先在配置文件里添加")
                 return@runBlocking
             }
-            val bot = BotFactory.newBot(qq, password) {
+            bot = BotFactory.newBot(qq, password) {
                 protocol = BotConfiguration.MiraiProtocol.IPAD
                 fileBasedDeviceInfo("device.json")
             }
