@@ -14,7 +14,7 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.getFormCache
 import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
-import org.hff.miraiomnitrix.utils.getQqImg
+import org.hff.miraiomnitrix.utils.Util.getQqImg
 import java.io.ByteArrayInputStream
 import java.io.File
 

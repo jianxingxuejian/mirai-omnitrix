@@ -13,7 +13,7 @@ import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
-import org.hff.miraiomnitrix.utils.getBilibiliUserInfo
+import org.hff.miraiomnitrix.utils.Util.getBilibiliUserInfo
 
 @Command(name = ["直播", "live"])
 class Live(private val liveService: LiveService) : GroupCommand {

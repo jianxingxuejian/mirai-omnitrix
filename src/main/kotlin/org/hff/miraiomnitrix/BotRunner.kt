@@ -7,7 +7,7 @@ import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.listener.AnyListener
 import org.hff.miraiomnitrix.listener.FriendListener
 import org.hff.miraiomnitrix.listener.GroupListener
-import org.hff.miraiomnitrix.utils.bot
+import org.hff.miraiomnitrix.utils.Util.bot
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 
