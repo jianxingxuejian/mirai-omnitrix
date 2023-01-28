@@ -18,6 +18,7 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
+import org.hff.miraiomnitrix.utils.JsonUtil.getAsStrOrNull
 
 @Command(name = ["搜图", "soutu", "st"], isNeedHeader = false)
 class Search(accountProperties: AccountProperties) : AnyCommand {
@@ -62,8 +63,8 @@ class Search(accountProperties: AccountProperties) : AnyCommand {
             .append("标题：").append(data.getAsStr("title")).append("\n")
             .append(urlsText)
             .append("作者：").append(
-                data.getAsStr("member_name") ?: data.getAsStr("user_name")
-                ?: data.getAsStr("creator") ?: data.getAsStr("jp_name")
+                data.getAsStrOrNull("member_name") ?: data.getAsStrOrNull("user_name")
+                ?: data.getAsStrOrNull("creator") ?: data.getAsStr("jp_name")
             )
             .append("\n")
         return result(builder.build())

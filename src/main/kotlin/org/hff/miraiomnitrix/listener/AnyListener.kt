@@ -24,7 +24,7 @@ object AnyListener : SimpleListenerHost() {
         if (first is PlainText) {
             if (first.content == "error") {
                 val error = errorCache.getIfPresent(subject.id) ?: return
-                subject.sendMessage(error.stackTrace.toString())
+                subject.sendMessage(error.stackTraceToString())
                 return
             } else Chat.chat(first.content, subject)
         }
