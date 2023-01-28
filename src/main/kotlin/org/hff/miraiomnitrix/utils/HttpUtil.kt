@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.utils
 
-import cn.hutool.json.JSONUtil
 import org.hff.miraiomnitrix.config.HttpProperties
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
@@ -66,7 +65,7 @@ object HttpUtil {
         url: String,
         data: Map<String, String?>,
         headers: Map<String, String>? = null
-    ): String{
+    ): String {
         val res = proxyClient?.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
         return tryGetRightRes(res)
     }
@@ -84,7 +83,7 @@ object HttpUtil {
 
     private fun requestPostBuilder(url: String, data: Map<String, String?>) =
         HttpRequest.newBuilder(URI.create(url))
-            .POST(HttpRequest.BodyPublishers.ofString(JSONUtil.parse(data).toString()))
+            .POST(HttpRequest.BodyPublishers.ofString(JsonUtil.parse(data)))
 
     private fun requestPost(url: String, data: Map<String, String?>, headers: Map<String, String>?) =
         if (headers == null) {

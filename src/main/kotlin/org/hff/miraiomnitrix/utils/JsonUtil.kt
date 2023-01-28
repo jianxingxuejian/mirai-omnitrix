@@ -30,6 +30,8 @@ object JsonUtil {
 
     fun <T : Any> fromJson(json: JsonElement, clazz: KClass<T>): T = gson.fromJson(json, clazz.java)
 
+    fun parse(data: Map<String, String?>) = gson.toJson(data).toString()
+
     fun JsonObject.getAsStr(key: String): String = this.get(key).asString
 
     fun JsonElement.get(key: String): JsonElement = this.asJsonObject.get(key)
