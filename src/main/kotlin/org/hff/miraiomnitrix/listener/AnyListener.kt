@@ -7,7 +7,8 @@ import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.source
 import org.hff.miraiomnitrix.command.core.CommandManager
-import org.hff.miraiomnitrix.event.Chat.chat
+import org.hff.miraiomnitrix.command.core.CommandManager.errorCache
+import org.hff.miraiomnitrix.event.Chat
 import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
 import kotlin.coroutines.CoroutineContext
 
@@ -20,7 +21,13 @@ object AnyListener : SimpleListenerHost() {
     @EventHandler
     suspend fun MessageEvent.onMessage() {
         val first = message[1]
-        if (first is PlainText) chat(first.content, subject)
+        if (first is PlainText) {
+            if (first.content == "error") {
+                val error = errorCache.getIfPresent(subject.id) ?: return
+                subject.sendMessage(error.stackTrace.toString())
+                return
+            } else Chat.chat(first.content, subject)
+        }
 
         val image = message[Image.Key]
         if (image != null) {

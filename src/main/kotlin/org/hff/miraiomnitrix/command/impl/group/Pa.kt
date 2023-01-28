@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.command.impl.group
 
-import cn.hutool.core.util.RandomUtil
 import com.sksamuel.scrimage.ImmutableImage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Group
@@ -20,6 +19,7 @@ import java.awt.RenderingHints
 import java.awt.geom.Ellipse2D
 import java.awt.image.BufferedImage
 import java.io.File
+import java.util.concurrent.ThreadLocalRandom
 
 
 @Command(name = ["爬"], isNeedHeader = false)
@@ -63,12 +63,12 @@ class Pa(
         if (permissionProperties.admin.isNotEmpty() && permissionProperties.admin.contains(qq)) {
             val files = File(tieDir).listFiles()
             if (files == null || files.isEmpty()) return null
-            val randomInt = RandomUtil.randomInt(files.size)
+            val randomInt = ThreadLocalRandom.current().nextInt(files.size)
             return files[randomInt]
         } else {
             val files = File(paDir).listFiles()
             if (files == null || files.isEmpty()) return null
-            val randomInt = RandomUtil.randomInt(files.size)
+            val randomInt = ThreadLocalRandom.current().nextInt(files.size)
             return files[randomInt]
         }
     }

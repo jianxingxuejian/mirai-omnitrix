@@ -1,5 +1,6 @@
 package org.hff.miraiomnitrix.command.core
 
+import com.google.common.cache.CacheBuilder
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.type.AnyCommand
@@ -11,6 +12,7 @@ import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
 import java.net.http.HttpTimeoutException
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
 import kotlin.reflect.full.findAnnotation
 
@@ -22,6 +24,8 @@ object CommandManager {
     private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
     private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
     private val noCommands: ArrayList<String> = arrayListOf()
+
+    val errorCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Long, Exception>()
 
     init {
         getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
@@ -83,7 +87,7 @@ object CommandManager {
     }
 
     private suspend fun sendCommandError(e: Exception, subject: Contact): Nothing? {
-        e.printStackTrace()
+        errorCache.put(subject.id, e)
         when (e) {
             is SSLException -> subject.sendMessage("梯子挂了")
             is HttpTimeoutException -> subject.sendMessage("连接超时")
