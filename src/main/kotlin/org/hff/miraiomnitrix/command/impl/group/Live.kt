@@ -1,8 +1,7 @@
 package org.hff.miraiomnitrix.command.impl.group
 
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.getMember
@@ -29,7 +28,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
             if (list.isEmpty()) return result("尚未添加主播/n使用live help指令获取使用方法")
 
             val liveStates = mutableListOf<String>()
-            runBlocking(Dispatchers.IO) {
+            coroutineScope {
                 list.forEach {
                     val uid = it.uid
                     val qq = it.qq

@@ -7,6 +7,7 @@ import org.hff.miraiomnitrix.utils.Util.bot
 import org.hff.miraiomnitrix.utils.Util.getBilibiliUserInfo
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
+import java.util.concurrent.ThreadLocalRandom
 
 @Component
 class LivePush(val liveService: LiveService) : CommandLineRunner {
@@ -30,7 +31,8 @@ class LivePush(val liveService: LiveService) : CommandLineRunner {
                     }
                     livesCache[it.qq] = liveRoom.liveStatus
                 }
-                delay(10 * 1000)
+                val time = ThreadLocalRandom.current().nextLong(60) + 60
+                delay(time * 1000)
             }
         }
     }
