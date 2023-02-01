@@ -2,7 +2,7 @@ package org.hff.miraiomnitrix.command.impl.group
 
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
-import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.*
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.result.ResultMessage
@@ -17,12 +17,27 @@ class Echo : GroupCommand {
         args: List<String>
     ): ResultMessage? {
         if (args.isEmpty()) return null
-
-        var first = args[0]
+        val first = args[0]
         if (first.startsWith("我是")) {
-            first = first.replaceFirst("我", sender.nick)
+            return result(first.replaceFirst("我", sender.nick))
         }
-        if (args.size == 1) return result(first)
+
+        val forwardBuilder = ForwardMessageBuilder(group)
+        var qq: Long? = null
+        args.forEach {
+            if (it.startsWith("@")) {
+                qq = it.substring(1).toLong()
+            } else {
+                try {
+                    qq = it.toLong()
+                } catch (_: NumberFormatException) {
+                    if (qq == null) return@forEach
+                    val member = group[qq!!] ?: return@forEach
+                    forwardBuilder.add(member.id, member.nick, PlainText(it))
+                }
+            }
+        }
+        if (forwardBuilder.size > 0) return result(forwardBuilder.build().toMessageChain())
 
         return result(first + " " + args.slice(1 until args.size).joinToString(" "))
     }
