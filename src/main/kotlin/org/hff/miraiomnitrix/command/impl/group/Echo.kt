@@ -2,6 +2,7 @@ package org.hff.miraiomnitrix.command.impl.group
 
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.message.data.*
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
@@ -33,7 +34,7 @@ class Echo : GroupCommand {
                 } catch (_: NumberFormatException) {
                     if (qq == null) return@forEach
                     val member = group[qq!!] ?: return@forEach
-                    forwardBuilder.add(member.id, member.nick, PlainText(it))
+                    forwardBuilder.add(member.id, member.nameCardOrNick, PlainText(it))
                 }
             }
         }
