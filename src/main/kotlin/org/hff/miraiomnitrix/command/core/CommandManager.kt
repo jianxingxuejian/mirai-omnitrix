@@ -8,7 +8,7 @@ import org.hff.miraiomnitrix.command.type.FriendCommand
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.exception.MyException
-import org.hff.miraiomnitrix.result.ResultMessage
+import org.hff.miraiomnitrix.handler.core.HandlerManger
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
 import java.net.http.HttpTimeoutException
@@ -39,23 +39,28 @@ object CommandManager {
         }
     }
 
-    suspend fun executeAnyCommand(sender: User, message: MessageChain, subject: Contact): ResultMessage? {
-        val (command, args) = if (subject is Friend) {
-            getCommandByFriend(message, anyCommands) ?: return null
-        } else {
-            getCommand(message, anyCommands) ?: return null
+    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group) {
+        val (commandName, args) = getCommandName(message) ?: return HandlerManger.groupHandle(message, group)
+        val anyCommand = anyCommands[commandName]
+        if (anyCommand != null) {
+            return anyCommand.tryExecute(sender, message, group, args)
         }
-        return command.tryExecute(sender, message, subject, args)
+        val groupCommand = groupCommands[commandName]
+        if (groupCommand != null) {
+            return groupCommand.tryExecute(sender, message, group, args)
+        }
     }
 
-    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group): ResultMessage? {
-        val (command, args) = getCommand(message, groupCommands) ?: return null
-        return command.tryExecute(sender, message, group, args)
-    }
-
-    suspend fun executeFriendCommand(sender: Friend, message: MessageChain): ResultMessage? {
-        val (command, args) = getCommandByFriend(message, friendCommands) ?: return null
-        return command.tryExecute(sender, message, args)
+    suspend fun executeFriendCommand(sender: Friend, message: MessageChain) {
+        val (commandName, args) = getCommandName(message) ?: return HandlerManger.friendHandle(message, sender)
+        val anyCommand = anyCommands[commandName]
+        if (anyCommand != null) {
+            return anyCommand.tryExecute(sender, message, sender, args)
+        }
+        val friendCommand = friendCommands[commandName]
+        if (friendCommand != null) {
+            return friendCommand.tryExecute(sender, message, args)
+        }
     }
 
     private suspend fun AnyCommand.tryExecute(
@@ -63,10 +68,13 @@ object CommandManager {
         message: MessageChain,
         subject: Contact,
         args: List<String>
-    ) = try {
-        this.execute(sender, message, subject, args)
-    } catch (e: Exception) {
-        sendCommandError(e, subject)
+    ) {
+        try {
+            val (msg, msgChain) = this.execute(sender, message, subject, args) ?: return
+            subject.sendMessage(msg, msgChain)
+        } catch (e: Exception) {
+            sendCommandError(e, subject)
+        }
     }
 
     private suspend fun GroupCommand.tryExecute(
@@ -74,19 +82,30 @@ object CommandManager {
         message: MessageChain,
         group: Group,
         args: List<String>
-    ) = try {
-        this.execute(sender, message, group, args)
-    } catch (e: Exception) {
-        sendCommandError(e, group)
+    ) {
+        try {
+            val (msg, msgChain) = this.execute(sender, message, group, args) ?: return
+            group.sendMessage(msg, msgChain)
+        } catch (e: Exception) {
+            sendCommandError(e, group)
+        }
     }
 
-    private suspend fun FriendCommand.tryExecute(sender: Friend, message: MessageChain, args: List<String>) = try {
-        this.execute(sender, message, args)
-    } catch (e: Exception) {
-        sendCommandError(e, sender)
+    private suspend fun FriendCommand.tryExecute(sender: Friend, message: MessageChain, args: List<String>) {
+        try {
+            val (msg, msgChain) = this.execute(sender, message, args) ?: return
+            sender.sendMessage(msg, msgChain)
+        } catch (e: Exception) {
+            sendCommandError(e, sender)
+        }
     }
 
-    private suspend fun sendCommandError(e: Exception, subject: Contact): Nothing? {
+    private suspend fun Contact.sendMessage(msg: String?, msgChain: MessageChain?) {
+        if (msg != null) this.sendMessage(msg)
+        if (msgChain != null) this.sendMessage(msgChain)
+    }
+
+    private suspend fun sendCommandError(e: Exception, subject: Contact) {
         errorCache.put(subject.id, e)
         when (e) {
             is SSLException -> subject.sendMessage("梯子挂了")
@@ -94,41 +113,23 @@ object CommandManager {
             is MyException -> subject.sendMessage(e.message)
             else -> subject.sendMessage("未知错误")
         }
-        return null
     }
 
-
-    private fun <T> getCommand(message: MessageChain, commands: HashMap<String, T>): Pair<T, MutableList<String>>? {
-        val string = message.contentToString()
-        val (hasHeader, msg) = commandHeads.any { string.startsWith(it) }
-            .let {
-                if (it) Pair(true, string.substring(1))
-                else if (botProperties != null && string.contains("@" + botProperties.qq))
-                    Pair(true, string.replace("@" + botProperties.qq, ""))
-                else Pair(false, string)
+    private fun getCommandName(message: MessageChain): Pair<String, List<String>>? {
+        var string = message.contentToString()
+        var hasHead = commandHeads.any { string.startsWith(it) }
+        if (hasHead) {
+            string = string.substring(1)
+        } else if (botProperties != null) {
+            val atBot = "@" + botProperties.qq
+            if (string.contains(atBot)) {
+                hasHead = true
+                string = string.replace(atBot, "")
             }
-        val args = msg.trim().split(Regex("\\s+|\\[图片]")).toMutableList()
-        for ((index, arg) in args.withIndex()) {
-            if (!noCommands.contains(arg) && !hasHeader) continue
-            val command = commands[arg] ?: continue
-            args.removeAt(index)
-            return Pair(command, args)
         }
-        return null
-    }
-
-    private fun <T> getCommandByFriend(
-        message: MessageChain,
-        commands: HashMap<String, T>
-    ): Pair<T, MutableList<String>>? {
-        val string = message.contentToString()
-        val args = string.trim().split(Regex("\\s+|\\[图片]")).toMutableList()
-        for ((index, arg) in args.withIndex()) {
-            val command = commands[arg] ?: continue
-            args.removeAt(index)
-            return Pair(command, args)
-        }
-        return null
+        if (!hasHead) return null
+        val args = string.trim().split(Regex("\\s+|\\[图片]"))
+        return Pair(args[0], args.slice(1 until args.size))
     }
 
 }

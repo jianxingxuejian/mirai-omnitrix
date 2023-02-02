@@ -2,7 +2,7 @@ package org.hff.miraiomnitrix.result
 
 import net.mamoe.mirai.message.data.MessageChain
 
-data class ResultMessage(val msg: String?, val message: MessageChain?)
+data class ResultMessage(val msg: String?, val msgChain: MessageChain?)
 
 fun ok() = ResultMessage("操作成功", null)
 

@@ -1,20 +1,30 @@
-package org.hff.miraiomnitrix.event
+package org.hff.miraiomnitrix.handler.impl
 
 import com.google.common.collect.EvictingQueue
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.config.PermissionProperties
+import org.hff.miraiomnitrix.handler.type.GroupHandler
+import org.hff.miraiomnitrix.utils.SpringUtil
 import java.util.*
 
-object Repeat {
+
+object Repect : GroupHandler {
+
+    private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
     private val groupMsgMap = GroupListener.groupMsgMap
     private val random = Random()
     private val breaks = arrayOf("break", "打断")
     private val bound = breaks.size
+    override suspend fun handle(message: MessageChain, group: Group): Boolean {
+        val excludeGroup = permissionProperties?.repeatExcludeGroup
+        if (!excludeGroup.isNullOrEmpty() && excludeGroup.contains(group.id)) {
+            return false
+        }
 
-    suspend fun breakRepeat(group: Group, message: MessageChain) {
         var text = message.contentToString()
-        if (text.isBlank()) return
+        if (text.isBlank()) return true
 
         var isImage = false
         val image = message[Image.Key]
@@ -31,7 +41,7 @@ object Repeat {
 
         if (stringQueue.count() < 3) {
             stringQueue.add(text)
-            return
+            return true
         }
 
         val last = stringQueue.toList().takeLast(3)
@@ -48,6 +58,8 @@ object Repeat {
         } else {
             stringQueue.add(text)
         }
-
+        return false
     }
+
+
 }

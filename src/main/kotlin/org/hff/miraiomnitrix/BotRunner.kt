@@ -4,9 +4,7 @@ import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.BotFactory
 import net.mamoe.mirai.utils.BotConfiguration
 import org.hff.miraiomnitrix.config.BotProperties
-import org.hff.miraiomnitrix.listener.AnyListener
-import org.hff.miraiomnitrix.listener.FriendListener
-import org.hff.miraiomnitrix.listener.GroupListener
+import org.hff.miraiomnitrix.listener.MyListener
 import org.hff.miraiomnitrix.utils.Util.bot
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
@@ -26,9 +24,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
                 fileBasedDeviceInfo("device.json")
             }
             bot.login()
-            bot.eventChannel.registerListenerHost(GroupListener)
-            bot.eventChannel.registerListenerHost(FriendListener)
-            bot.eventChannel.registerListenerHost(AnyListener)
+            bot.eventChannel.registerListenerHost(MyListener)
         }
     }
 }
