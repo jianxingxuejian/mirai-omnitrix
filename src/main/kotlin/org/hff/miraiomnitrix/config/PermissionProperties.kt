@@ -8,6 +8,6 @@ import org.springframework.boot.context.properties.ConstructorBinding
 data class PermissionProperties(
     /** 管理员qq号 */
     val admin: List<Long>,
-    /** 复读功能排除的群号 */
+    /** 排除复读功能的群号 */
     val repeatExcludeGroup: List<Long>
 )

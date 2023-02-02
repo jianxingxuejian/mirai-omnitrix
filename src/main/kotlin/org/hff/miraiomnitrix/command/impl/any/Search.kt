@@ -20,7 +20,7 @@ import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStrOrNull
 
-@Command(name = ["搜图", "soutu", "st"], isNeedHeader = false)
+@Command(name = ["搜图", "soutu", "st"])
 class Search(accountProperties: AccountProperties) : AnyCommand {
 
     private val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="

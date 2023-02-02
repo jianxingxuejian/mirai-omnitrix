@@ -6,11 +6,11 @@ import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.app.service.CharacterService
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
-import org.hff.miraiomnitrix.event.Chat.characterCache
-import org.hff.miraiomnitrix.event.Chat.characterName
-import org.hff.miraiomnitrix.event.Chat.chatting
-import org.hff.miraiomnitrix.event.Chat.concatId
-import org.hff.miraiomnitrix.event.Chat.token
+import org.hff.miraiomnitrix.event.impl.any.Chat.characterCache
+import org.hff.miraiomnitrix.event.impl.any.Chat.characterName
+import org.hff.miraiomnitrix.event.impl.any.Chat.chatting
+import org.hff.miraiomnitrix.event.impl.any.Chat.concatId
+import org.hff.miraiomnitrix.event.impl.any.Chat.token
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.HttpUtil.postStringByProxy

@@ -1,18 +1,16 @@
-package org.hff.miraiomnitrix.command.impl.group
+package org.hff.miraiomnitrix.event.impl.group
 
 import com.sksamuel.scrimage.ImmutableImage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.core.Command
-import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.event.type.GroupHandler
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
+import org.hff.miraiomnitrix.utils.SpringUtil
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.RenderingHints
@@ -21,33 +19,28 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.util.concurrent.ThreadLocalRandom
 
+object Pa : GroupHandler {
 
-@Command(name = ["爬"], isNeedHeader = false)
-class Pa(
-    private val permissionProperties: PermissionProperties,
-    private val botProperties: BotProperties
-) : GroupCommand {
+    private val botProperties = SpringUtil.getBean(BotProperties::class)
+    private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
 
-    private val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
+    private const val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
-    private val paDir = "./img/pa"
-    private val tieDir = "./img/tie"
+    private const val paDir = "./img/pa"
+    private const val tieDir = "./img/tie"
 
-    override suspend fun execute(
-        sender: Member,
-        message: MessageChain,
-        group: Group,
-        args: List<String>
-    ): ResultMessage? {
+    override suspend fun handle(sender: Member, message: MessageChain, group: Group, args: List<String>): Boolean {
+        if (!args.any { it.endsWith("爬") }) return false
         var qq = args.find { it.startsWith("@") }?.substring(1)?.toLong()
         if (qq == null) {
+            if (botProperties == null) return false
             if (message.contentToString().contains("@" + botProperties.qq)) {
                 qq = sender.id
             } else {
-                return null
+                return false
             }
         }
-        val file = getFileByQQ(qq) ?: return result("获取qq头像失败")
+        val file = getFileByQQ(qq) ?: return true
 
         val qqImg = HttpUtil.getInputStream(url + qq)
 
@@ -56,11 +49,11 @@ class Pa(
         val imageC = transformAvatar(imageB)
         val overlay = ImageUtil.overlay(imageA, imageC, 5, 320)
         group.sendImage(overlay)
-        return null
+        return true
     }
 
     private fun getFileByQQ(qq: Long): File? {
-        if (permissionProperties.admin.isNotEmpty() && permissionProperties.admin.contains(qq)) {
+        if (permissionProperties?.admin?.isNotEmpty() == true && permissionProperties.admin.contains(qq)) {
             val files = File(tieDir).listFiles()
             if (files == null || files.isEmpty()) return null
             val randomInt = ThreadLocalRandom.current().nextInt(files.size)
@@ -92,5 +85,4 @@ class Pa(
 
         return ImmutableImage.fromAwt(bufferedImage)
     }
-
 }

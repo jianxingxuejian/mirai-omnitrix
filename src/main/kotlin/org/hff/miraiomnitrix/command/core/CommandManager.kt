@@ -7,8 +7,8 @@ import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.command.type.FriendCommand
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
+import org.hff.miraiomnitrix.event.core.HandlerManger
 import org.hff.miraiomnitrix.exception.MyException
-import org.hff.miraiomnitrix.handler.core.HandlerManger
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
 import java.net.http.HttpTimeoutException
@@ -23,14 +23,12 @@ object CommandManager {
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
     private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
     private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
-    private val noCommands: ArrayList<String> = arrayListOf()
 
-    val errorCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Long, Exception>()
+    private val errorCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Long, Exception>()
 
     init {
         getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
             val annotation = command::class.findAnnotation<Command>()!!
-            if (!annotation.isNeedHeader) annotation.name.forEach { noCommands.add(it) }
             when (command) {
                 is AnyCommand -> annotation.name.forEach { anyCommands[it] = command }
                 is FriendCommand -> annotation.name.forEach { friendCommands[it] = command }
@@ -40,7 +38,10 @@ object CommandManager {
     }
 
     suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group) {
-        val (commandName, args) = getCommandName(message) ?: return HandlerManger.groupHandle(message, group)
+        val (commandName, args) = getCommandName(message)
+        if (commandName == null) {
+            return HandlerManger.groupHandle(sender, message, group, args)
+        }
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
             return anyCommand.tryExecute(sender, message, group, args)
@@ -49,10 +50,14 @@ object CommandManager {
         if (groupCommand != null) {
             return groupCommand.tryExecute(sender, message, group, args)
         }
+        HandlerManger.groupHandle(sender, message, group, listOf(commandName))
     }
 
     suspend fun executeFriendCommand(sender: Friend, message: MessageChain) {
-        val (commandName, args) = getCommandName(message) ?: return HandlerManger.friendHandle(message, sender)
+        val (commandName, args) = getCommandName(message)
+        if (commandName == null) {
+            return HandlerManger.friendHandle(sender, message, args)
+        }
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
             return anyCommand.tryExecute(sender, message, sender, args)
@@ -61,6 +66,7 @@ object CommandManager {
         if (friendCommand != null) {
             return friendCommand.tryExecute(sender, message, args)
         }
+        HandlerManger.friendHandle(sender, message, listOf(commandName))
     }
 
     private suspend fun AnyCommand.tryExecute(
@@ -115,7 +121,7 @@ object CommandManager {
         }
     }
 
-    private fun getCommandName(message: MessageChain): Pair<String, List<String>>? {
+    private fun getCommandName(message: MessageChain): Pair<String?, List<String>> {
         var string = message.contentToString()
         var hasHead = commandHeads.any { string.startsWith(it) }
         if (hasHead) {
@@ -127,8 +133,8 @@ object CommandManager {
                 string = string.replace(atBot, "")
             }
         }
-        if (!hasHead) return null
         val args = string.trim().split(Regex("\\s+|\\[图片]"))
+        if (!hasHead) return Pair(null, args)
         return Pair(args[0], args.slice(1 until args.size))
     }
 

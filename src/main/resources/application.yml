@@ -17,6 +17,7 @@ bot:
 
 permission:
   admin:
+  repeatExcludeGroup:
 
 http:
   proxy:

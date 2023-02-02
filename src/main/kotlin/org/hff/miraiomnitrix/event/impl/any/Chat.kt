@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.event
+package org.hff.miraiomnitrix.event.impl.any
 
 import net.mamoe.mirai.contact.Contact
 import org.hff.miraiomnitrix.config.AccountProperties

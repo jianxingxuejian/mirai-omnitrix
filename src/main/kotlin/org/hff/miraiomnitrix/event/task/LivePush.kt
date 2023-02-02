@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.event
+package org.hff.miraiomnitrix.event.task
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
