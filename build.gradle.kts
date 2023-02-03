@@ -48,7 +48,9 @@ dependencies {
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.google.code.gson:gson:2.10.1")
-
+    implementation(platform("com.aallam.openai:openai-client-bom:2.1.3"))
+    implementation ("com.aallam.openai:openai-client")
+    implementation ("io.ktor:ktor-client-okhttp")
 }
 
 tasks.withType<KotlinCompile> {
