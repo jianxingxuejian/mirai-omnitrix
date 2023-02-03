@@ -18,22 +18,23 @@ object BiliBili : AnyHandler {
         if (args.isEmpty()) return false
 
         val first = args[0]
-        if (first.length < 30 && VIDEO_REGEX matches args[0]) {
-            val json = HttpUtil.getString(VIDEO_API, mapOf("bvid" to first))
-            val data = JsonUtil.getObj(json, "data")
-            val title = data.getAsStr("title")
-            val picUrl = data.getAsStr("pic")
-            val pic = subject.uploadImage(HttpUtil.getInputStream(picUrl))
-            val desc = data.getAsStr("desc")
-            val share = MessageChainBuilder()
-                .append("哔哩哔哩链接解析：\n")
-                .append("标题：$title\n")
-                .append(pic)
-                .append("简介：$desc\n")
-                .append("链接：https://www.bilibili.com/video/$first")
-                .build()
-            subject.sendMessage(share)
+        if (first.length > 30 || !(VIDEO_REGEX matches args[0])) return false
 
+        val json = HttpUtil.getString(VIDEO_API, mapOf("bvid" to first))
+        val data = JsonUtil.getObj(json, "data")
+        val title = data.getAsStr("title")
+        val picUrl = data.getAsStr("pic")
+        val pic = subject.uploadImage(HttpUtil.getInputStream(picUrl))
+        val desc = data.getAsStr("desc")
+        val share = MessageChainBuilder()
+            .append("哔哩哔哩链接解析：\n")
+            .append("标题：$title\n")
+            .append(pic)
+            .append("简介：$desc\n")
+            .append("链接：https://www.bilibili.com/video/$first")
+            .build()
+        subject.sendMessage(share)
+        return false
 //            val share = RichMessage.Key.share(
 //                "https://www.bilibili.com/video/$first",
 //                "哔哩哔哩",
@@ -45,8 +46,6 @@ object BiliBili : AnyHandler {
 //            val meta = Meta(detail)
 //            val info = BiliVideoInfo(meta = meta)
 //            val share = LightApp(JsonUtil.toJson(info))
-        }
-        return false
     }
 
 //    data class BiliVideoInfo(

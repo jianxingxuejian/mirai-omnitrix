@@ -11,14 +11,16 @@ import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.config.AccountProperties
+import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 
 @Command(["chat", "聊天"])
-class Chat(accountProperties: AccountProperties) : AnyCommand {
+class Chat(accountProperties: AccountProperties, permissionProperties: PermissionProperties) : AnyCommand {
 
     private lateinit var openAI: OpenAI
     private var model: Model? = null
+    private val chatIncludeGroup = permissionProperties.chatIncludeGroup
 
     init {
         val apiKey = accountProperties.openaiApiKey
@@ -35,6 +37,9 @@ class Chat(accountProperties: AccountProperties) : AnyCommand {
     ): ResultMessage? {
         if (args.isEmpty()) {
             return result("使用openai开始聊天，通过回复机器人来衔接上下文")
+        }
+        if (chatIncludeGroup.isNotEmpty()) {
+            if (chatIncludeGroup.contains(subject.id)) return null
         }
 
         if (model == null) {

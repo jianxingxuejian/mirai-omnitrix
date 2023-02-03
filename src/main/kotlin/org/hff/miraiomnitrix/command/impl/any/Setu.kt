@@ -25,7 +25,6 @@ import java.util.regex.Pattern
 class Setu : AnyCommand {
 
     private val url1 = "https://api.lolicon.app/setu/v2?"
-
     private val url2 = "https://image.anosu.top/pixiv/json?size=regular&"
 
     override suspend fun execute(
@@ -60,30 +59,16 @@ class Setu : AnyCommand {
         val json = HttpUtil.getString(url)
         val forwardBuilder = ForwardMessageBuilder(subject)
 
-        suspend fun uploadImg(imgUrl: String) {
-            try {
-                val result = HttpUtil.getInputStreamByProxy(imgUrl)
-                val image = subject.uploadImage(result)
-                forwardBuilder.add(subject.bot, image)
-            } catch (_: Exception) {
-            }
-        }
-
         coroutineScope {
-            if (type == 1) {
-                val data = JsonUtil.getArray(json, "data")
-                data.forEach {
-                    launch {
-                        val imgUrl = it.get("urls").get("original").asString
-                        uploadImg(imgUrl)
-                    }
-                }
-            } else {
-                val data = JsonUtil.getArray(json)
-                data.forEach {
-                    launch {
-                        val imgUrl = it.getAsStr("url")
-                        uploadImg(imgUrl)
+            val data = if (type == 1) JsonUtil.getArray(json, "data").map { it.get("urls").getAsStr("original") }
+            else JsonUtil.getArray(json).map { it.getAsStr("url") }
+            data.forEach {
+                launch {
+                    try {
+                        val result = HttpUtil.getInputStreamByProxy(it)
+                        val image = subject.uploadImage(result)
+                        forwardBuilder.add(subject.bot, image)
+                    } catch (_: Exception) {
                     }
                 }
             }

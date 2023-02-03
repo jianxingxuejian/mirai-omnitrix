@@ -10,7 +10,7 @@ import org.hff.miraiomnitrix.event.type.GroupHandler
 import org.hff.miraiomnitrix.utils.SpringUtil
 import java.util.*
 
-object Repect : GroupHandler {
+object Repeat : GroupHandler {
 
     private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
     private val groupMsgMap = mutableMapOf<Long, Queue<String>>()

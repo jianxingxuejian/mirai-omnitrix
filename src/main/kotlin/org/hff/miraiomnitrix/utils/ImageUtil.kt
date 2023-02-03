@@ -21,8 +21,8 @@ object ImageUtil {
     fun scaleTo(inputStream: InputStream, width: Int, height: Int): ImmutableImage =
         loader.fromStream(inputStream).scaleTo(width, height)
 
-    fun overlay(imageA: ImmutableImage, imageB: ImmutableImage, x: Int, y: Int) =
-        ByteArrayInputStream(imageA.overlay(imageB, x, y).bytes(PngWriter()))
+    fun ImmutableImage.overlayToStream(image: ImmutableImage, x: Int, y: Int) =
+        ByteArrayInputStream(this.overlay(image, x, y).bytes(PngWriter()))
 
     fun getFormCache(message: MessageChain): Image? {
         val quote = message[QuoteReply.Key]

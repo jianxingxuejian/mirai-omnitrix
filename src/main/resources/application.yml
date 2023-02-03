@@ -18,6 +18,7 @@ bot:
 permission:
   admin:
   repeatExcludeGroup:
+  chatIncludeGroup:
 
 http:
   proxy:

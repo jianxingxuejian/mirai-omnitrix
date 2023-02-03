@@ -8,16 +8,18 @@ import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.event.type.AnyHandler
+import org.hff.miraiomnitrix.exception.MyException
+import org.hff.miraiomnitrix.utils.FileUtil
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
+import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
 import org.hff.miraiomnitrix.utils.Util
 import java.io.ByteArrayInputStream
-import java.io.File
 
 object Img : AnyHandler {
 
-    private const val path1 = "./img/other/jjgw.jpg"
-    private const val path2 = "./img/other/always.png"
+    private const val path1 = "/img/other/jjgw.jpg"
+    private const val path2 = "/img/other/always.png"
 
     override suspend fun handle(sender: User, message: MessageChain, subject: Contact, args: List<String>): Boolean {
         if (args.isEmpty()) return false
@@ -25,15 +27,17 @@ object Img : AnyHandler {
         when (args[0]) {
             "急急国王" -> {
                 val qqImg = Util.getQqImg(args, sender)
-                val imageA = ImageUtil.scaleTo(File(path1), 400, 400)
+                val file = FileUtil.getInputStream(path1) ?: throw MyException("未找到图片")
+                val imageA = ImageUtil.scaleTo(file, 400, 400)
                 val imageB = ImageUtil.scaleTo(qqImg, 100, 125)
-                val overlay = ImageUtil.overlay(imageA, imageB, 190, 5)
+                val overlay = imageA.overlayToStream(imageB, 190, 5)
                 subject.sendImage(overlay)
                 return true
             }
 
             "一直" -> {
-                val imageA = ImageUtil.scaleTo(File(path2), 400, 470)
+                val file = FileUtil.getInputStream(path2) ?: throw MyException("未找到图片")
+                val imageA = ImageUtil.scaleTo(file, 400, 470)
                 val image = ImageUtil.getFormCache(message)
                 val imageB = if (image == null) {
                     val qqImg = Util.getQqImg(args, sender)

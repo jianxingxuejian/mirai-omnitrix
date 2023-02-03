@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.getMember
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.app.entity.Live
 import org.hff.miraiomnitrix.app.service.LiveService
@@ -13,6 +14,7 @@ import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.result.ResultMessage
 import org.hff.miraiomnitrix.result.result
 import org.hff.miraiomnitrix.utils.Util.getBilibiliUserInfo
+import org.hff.miraiomnitrix.utils.Util.getQq
 
 @Command(name = ["直播", "live"])
 class Live(private val liveService: LiveService) : GroupCommand {
@@ -30,11 +32,9 @@ class Live(private val liveService: LiveService) : GroupCommand {
             val liveStates = mutableListOf<String>()
             coroutineScope {
                 list.forEach {
-                    val uid = it.uid
-                    val qq = it.qq
-                    val member = group.getMember(qq) ?: return@forEach
+                    val member = group.getMember(it.qq) ?: return@forEach
                     launch {
-                        val liveState = getLiveState(uid) ?: return@launch
+                        val liveState = getLiveState(it.uid) ?: return@launch
                         liveStates.add(member.nick + "：" + liveState)
                     }
                 }
@@ -47,12 +47,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
             "帮助", "help" -> {}
             "添加", "add", "save" -> {
                 if (args.size < 3) return result("参数错误")
-                val second = args[1]
-                val qq = if (second.startsWith("@")) {
-                    second.substring(1).toLong()
-                } else {
-                    second.toLong()
-                }
+                val qq = getQq(args[1])
                 val member = group.getMember(qq) ?: return result("未找到成员")
                 val count = liveService.ktQuery().eq(Live::qq, qq).eq(Live::groupId, group.id).count()
                 if (count != 0L) return result("人员重复")
@@ -62,11 +57,18 @@ class Live(private val liveService: LiveService) : GroupCommand {
                     ?: return result("未找到直播间信息")
                 val save = liveService.save(live)
                 if (!save) return result("保存失败")
-                return result("已添加${member.nick}的数据")
+                return result("已添加${member.nameCardOrNick}的数据")
             }
 //            "订阅", "subscribe" -> {}
 //            "更新", "update" -> {}
-            "移除", "del", "remove" -> {}
+            "移除", "del", "remove" -> {
+                if (args.size < 2) return result("参数错误")
+                val qq = getQq(args[1])
+                val member = group.getMember(qq) ?: return result("未找到成员")
+                val remove = liveService.removeById(qq)
+                if (!remove) return result("删除失败")
+                return result("已添加${member.nameCardOrNick}的数据")
+            }
         }
         return null
     }

@@ -1,9 +1,9 @@
-package org.hff.miraiomnitrix.event.task
+package org.hff.miraiomnitrix.task
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.hff.miraiomnitrix.BotRunner.Companion.bot
 import org.hff.miraiomnitrix.app.service.LiveService
-import org.hff.miraiomnitrix.utils.Util.bot
 import org.hff.miraiomnitrix.utils.Util.getBilibiliUserInfo
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
