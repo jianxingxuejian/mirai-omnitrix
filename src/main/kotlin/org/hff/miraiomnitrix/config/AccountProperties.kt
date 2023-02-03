@@ -11,5 +11,7 @@ data class AccountProperties(
     /** saucenao api key */
     val saucenaoKey: String?,
     /** bangumi web cookie */
-    val bgmCookie: String?
+    val bgmCookie: String?,
+    /** openai api key */
+    val openaiApiKey:String?
 )

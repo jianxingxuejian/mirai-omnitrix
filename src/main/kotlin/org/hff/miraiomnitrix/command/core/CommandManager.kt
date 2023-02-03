@@ -54,7 +54,7 @@ object CommandManager {
     }
 
     suspend fun executeFriendCommand(sender: Friend, message: MessageChain) {
-        val (commandName, args) = getCommandName(message)
+        val (commandName, args) = getCommandName(message, false)
         if (commandName == null) {
             return HandlerManger.friendHandle(sender, message, args)
         }
@@ -121,20 +121,22 @@ object CommandManager {
         }
     }
 
-    private fun getCommandName(message: MessageChain): Pair<String?, List<String>> {
+    private fun getCommandName(message: MessageChain, needHead: Boolean = true): Pair<String?, List<String>> {
         var string = message.contentToString()
         var hasHead = commandHeads.any { string.startsWith(it) }
-        if (hasHead) {
-            string = string.substring(1)
-        } else if (botProperties != null) {
-            val atBot = "@" + botProperties.qq
-            if (string.contains(atBot)) {
-                hasHead = true
-                string = string.replace(atBot, "")
+        if (needHead) {
+            if (hasHead) {
+                string = string.substring(1)
+            } else if (botProperties != null) {
+                val atBot = "@" + botProperties.qq
+                if (string.contains(atBot)) {
+                    hasHead = true
+                    string = string.replace(atBot, "")
+                }
             }
         }
         val args = string.trim().split(Regex("\\s+|\\[图片]"))
-        if (!hasHead) return Pair(null, args)
+        if (needHead && !hasHead) return Pair(null, args)
         return Pair(args[0], args.slice(1 until args.size))
     }
 

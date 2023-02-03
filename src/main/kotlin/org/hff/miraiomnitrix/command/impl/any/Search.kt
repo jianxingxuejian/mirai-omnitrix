@@ -52,21 +52,21 @@ class Search(accountProperties: AccountProperties) : AnyCommand {
         val thumbnailImg = HttpUtil.getInputStreamByProxy(thumbnail)
         val urls = data.getAsJsonArray("ext_urls")
         val urlsText = if (urls.size() == 1) {
-            "链接: " + urls[0] + "\n"
+            "链接: " + urls[0]
         } else {
-            urls.mapIndexed { index, url -> "链接${index + 1}：$url\n" }.joinToString("")
+            urls.mapIndexed { index, url -> "链接${index + 1}：$url" }.joinToString("")
         }
-        val builder = MessageChainBuilder()
-        builder.append("搜图结果：\n")
+        val chain = MessageChainBuilder()
+            .append("搜图结果：\n")
             .append(subject.uploadImage(thumbnailImg))
-            .append("相似度：").append(header.getAsStr("similarity")).append("\n")
+            .append("相似度：" + header.getAsStr("similarity") + "\n")
             .append("标题：").append(data.getAsStrOrNull("title")).append("\n")
-            .append(urlsText)
+            .append(urlsText + "\n")
             .append("作者：").append(
                 data.getAsStrOrNull("member_name") ?: data.getAsStrOrNull("user_name")
                 ?: data.getAsStrOrNull("creator") ?: data.getAsStrOrNull("jp_name")
             )
-            .append("\n")
-        return result(builder.build())
+            .build()
+        return result(chain)
     }
 }
