@@ -39,7 +39,7 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
             return result("使用openai开始聊天，通过回复机器人来衔接上下文")
         }
         if (chatIncludeGroup.isNotEmpty()) {
-            if (chatIncludeGroup.contains(subject.id)) return null
+            if (!chatIncludeGroup.contains(subject.id)) return null
         }
 
         if (model == null) {

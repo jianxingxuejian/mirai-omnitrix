@@ -8,11 +8,11 @@ import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.type.GroupHandler
-import org.hff.miraiomnitrix.utils.FileUtil
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
 import org.hff.miraiomnitrix.utils.SpringUtil
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.RenderingHints
@@ -20,7 +20,6 @@ import java.awt.geom.Ellipse2D
 import java.awt.image.BufferedImage
 import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
-import kotlin.io.path.inputStream
 
 object Pa : GroupHandler {
 
@@ -29,11 +28,12 @@ object Pa : GroupHandler {
 
     private const val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
-    private const val paDir = "/img/pa"
-    private const val tieDir = "/img/tie"
+    private const val paDir = "/img/pa/*"
+    private const val tieDir = "/img/tie/*"
 
     override suspend fun handle(sender: Member, message: MessageChain, group: Group, args: List<String>): Boolean {
         if (!args.any { it.endsWith("爬") }) return false
+
         var qq = args.find { it.startsWith("@") }?.substring(1)?.toLong()
         if (qq == null) {
             if (botProperties == null) return false
@@ -43,7 +43,7 @@ object Pa : GroupHandler {
                 return false
             }
         }
-        val file = getFileByQQ(qq) ?: return true
+        val file = getFileByQQ(qq)
 
         val qqImg = HttpUtil.getInputStream(url + qq)
         val imageA = ImageUtil.scaleTo(file, 400, 400)
@@ -54,12 +54,12 @@ object Pa : GroupHandler {
         return true
     }
 
-    private fun getFileByQQ(qq: Long): InputStream? {
+    private fun getFileByQQ(qq: Long): InputStream {
         val admin = permissionProperties?.admin
         val path = if (admin?.isNotEmpty() == true && admin.contains(qq)) tieDir else paDir
-        val files = FileUtil.getFileList(path) ?: return null
+        val files = PathMatchingResourcePatternResolver().getResources(path)
         val randomInt = ThreadLocalRandom.current().nextInt(files.size)
-        return files[randomInt].inputStream()
+        return files[randomInt].inputStream
     }
 
     private fun transformAvatar(avatar: ImmutableImage): ImmutableImage {

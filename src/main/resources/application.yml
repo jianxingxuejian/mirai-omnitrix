@@ -19,6 +19,7 @@ permission:
   admin:
   repeatExcludeGroup:
   chatIncludeGroup:
+  bvIncludeGroup:
 
 http:
   proxy:

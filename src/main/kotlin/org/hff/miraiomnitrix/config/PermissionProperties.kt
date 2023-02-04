@@ -11,5 +11,7 @@ data class PermissionProperties(
     /** 排除复读功能的群号 */
     val repeatExcludeGroup: List<Long>,
     /** 能使用聊天机器人的群号 */
-    val chatIncludeGroup: List<Long>
+    val chatIncludeGroup: List<Long>,
+    /** 能使用bv解析的群号 */
+    val bvIncludeGroup: List<Long>
 )

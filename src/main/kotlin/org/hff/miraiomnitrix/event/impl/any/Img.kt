@@ -8,12 +8,11 @@ import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.event.type.AnyHandler
-import org.hff.miraiomnitrix.exception.MyException
-import org.hff.miraiomnitrix.utils.FileUtil
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
 import org.hff.miraiomnitrix.utils.Util
+import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayInputStream
 
 object Img : AnyHandler {
@@ -27,7 +26,7 @@ object Img : AnyHandler {
         when (args[0]) {
             "急急国王" -> {
                 val qqImg = Util.getQqImg(args, sender)
-                val file = FileUtil.getInputStream(path1) ?: throw MyException("未找到图片")
+                val file = ClassPathResource(path1).inputStream
                 val imageA = ImageUtil.scaleTo(file, 400, 400)
                 val imageB = ImageUtil.scaleTo(qqImg, 100, 125)
                 val overlay = imageA.overlayToStream(imageB, 190, 5)
@@ -36,7 +35,7 @@ object Img : AnyHandler {
             }
 
             "一直" -> {
-                val file = FileUtil.getInputStream(path2) ?: throw MyException("未找到图片")
+                val file = ClassPathResource(path2).inputStream
                 val imageA = ImageUtil.scaleTo(file, 400, 470)
                 val image = ImageUtil.getFormCache(message)
                 val imageB = if (image == null) {
