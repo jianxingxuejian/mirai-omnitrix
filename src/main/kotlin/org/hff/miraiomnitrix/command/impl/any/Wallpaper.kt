@@ -3,6 +3,7 @@ package org.hff.miraiomnitrix.command.impl.any
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
@@ -36,7 +37,8 @@ class Wallpaper : AnyCommand {
         sender: User,
         message: MessageChain,
         subject: Contact,
-        args: List<String>
+        args: List<String>,
+        event: MessageEvent
     ): ResultMessage? {
         var sort = "random"
         args.forEach {

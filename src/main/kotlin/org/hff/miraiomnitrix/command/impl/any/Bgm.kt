@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import org.hff.miraiomnitrix.app.entity.Bgm
@@ -29,7 +30,8 @@ class Bgm(private val bgmService: BgmService, accountProperties: AccountProperti
         sender: User,
         message: MessageChain,
         subject: Contact,
-        args: List<String>
+        args: List<String>,
+        event: MessageEvent
     ): ResultMessage? {
         if (args.size == 1 && (args[0] == "init" || args[0] == "初始化")) return init()
 

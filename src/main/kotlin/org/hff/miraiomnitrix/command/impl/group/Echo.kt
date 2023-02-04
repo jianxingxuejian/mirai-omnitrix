@@ -3,7 +3,11 @@ package org.hff.miraiomnitrix.command.impl.group
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.nameCardOrNick
-import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.message.data.ForwardMessageBuilder
+import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.result.ResultMessage
@@ -11,11 +15,13 @@ import org.hff.miraiomnitrix.result.result
 
 @Command(name = ["复读", "说", "echo"])
 class Echo : GroupCommand {
+
     override suspend fun execute(
         sender: Member,
         message: MessageChain,
         group: Group,
-        args: List<String>
+        args: List<String>,
+        event: GroupMessageEvent
     ): ResultMessage? {
         if (args.isEmpty()) return null
         val first = args[0]

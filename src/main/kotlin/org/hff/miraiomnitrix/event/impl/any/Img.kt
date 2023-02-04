@@ -23,8 +23,9 @@ object Img : AnyHandler {
     override suspend fun handle(sender: User, message: MessageChain, subject: Contact, args: List<String>): Boolean {
         if (args.isEmpty()) return false
 
-        when (args[0]) {
-            "急急国王" -> {
+        val first = args[0]
+        when {
+            first.startsWith("急急国王") || first.endsWith("急急国王") -> {
                 val qqImg = Util.getQqImg(args, sender)
                 val file = ClassPathResource(path1).inputStream
                 val imageA = ImageUtil.scaleTo(file, 400, 400)
@@ -34,20 +35,20 @@ object Img : AnyHandler {
                 return true
             }
 
-            "一直" -> {
+            first.startsWith("一直") || first.endsWith("一直") -> {
                 val file = ClassPathResource(path2).inputStream
-                val imageA = ImageUtil.scaleTo(file, 400, 470)
+                val imageA = ImageUtil.scaleTo(file, 400, 500)
                 val image = ImageUtil.getFormCache(message)
                 val imageB = if (image == null) {
                     val qqImg = Util.getQqImg(args, sender)
-                    ImageUtil.scaleTo(qqImg, 340, 340)
+                    ImageUtil.scaleTo(qqImg, 400, 400)
                 } else {
                     val img = HttpUtil.getInputStream(image.queryUrl())
-                    ImageUtil.scaleTo(img, 340, 340)
+                    ImageUtil.scaleTo(img, 400, 400)
                 }
                 val imageC = imageB.copy().scaleTo(60, 60)
-                val overlayA = imageA.overlay(imageB, 30, 30)
-                val overlayB = overlayA.overlay(imageC, 230, 390)
+                val overlayA = imageA.overlay(imageB, 0, 0)
+                val overlayB = overlayA.overlay(imageC, 230, 420)
                 val inputStream = ByteArrayInputStream(overlayB.bytes(PngWriter()))
                 val upload = subject.uploadImage(inputStream)
                 val send = subject.sendMessage(upload)
@@ -55,6 +56,7 @@ object Img : AnyHandler {
                 return true
             }
         }
+
         return false
     }
 

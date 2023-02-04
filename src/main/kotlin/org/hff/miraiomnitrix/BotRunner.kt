@@ -44,9 +44,11 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
         }
 
         @EventHandler
-        suspend fun GroupMessageEvent.onMessage() = CommandManager.executeGroupCommand(sender, message, group)
+        suspend fun GroupMessageEvent.onMessage() = CommandManager.executeGroupCommand(
+            sender, message, group, this
+        )
 
         @EventHandler
-        suspend fun FriendMessageEvent.onMessage() = CommandManager.executeFriendCommand(sender, message)
+        suspend fun FriendMessageEvent.onMessage() = CommandManager.executeFriendCommand(sender, message, this)
     }
 }

@@ -2,6 +2,7 @@ package org.hff.miraiomnitrix.command.type
 
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.result.ResultMessage
 
@@ -15,7 +16,14 @@ interface AnyCommand {
      * @param message 消息
      * @param subject 联系人
      * @param args 追加参数
+     * @param event 消息事件
      */
-    suspend fun execute(sender: User, message: MessageChain, subject: Contact, args: List<String>): ResultMessage?
+    suspend fun execute(
+        sender: User,
+        message: MessageChain,
+        subject: Contact,
+        args: List<String>,
+        event: MessageEvent
+    ): ResultMessage?
 
 }

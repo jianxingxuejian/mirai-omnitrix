@@ -3,6 +3,7 @@ package org.hff.miraiomnitrix.command.impl.any
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.MessageChain
@@ -30,7 +31,8 @@ class Search(accountProperties: AccountProperties) : AnyCommand {
         sender: User,
         message: MessageChain,
         subject: Contact,
-        args: List<String>
+        args: List<String>,
+        event: MessageEvent
     ): ResultMessage? {
         if (key == null) return result("请配置saucenao api的key")
 

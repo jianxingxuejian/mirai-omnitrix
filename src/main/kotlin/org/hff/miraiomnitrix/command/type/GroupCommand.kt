@@ -2,6 +2,7 @@ package org.hff.miraiomnitrix.command.type
 
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.result.ResultMessage
 
@@ -16,7 +17,14 @@ interface GroupCommand {
      * @param message 消息
      * @param group 群
      * @param args 追加参数
+     * @param event 群消息事件
      */
-    suspend fun execute(sender: Member, message: MessageChain, group: Group, args: List<String>): ResultMessage?
+    suspend fun execute(
+        sender: Member,
+        message: MessageChain,
+        group: Group,
+        args: List<String>,
+        event: GroupMessageEvent
+    ): ResultMessage?
 
 }

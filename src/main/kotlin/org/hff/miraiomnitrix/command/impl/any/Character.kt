@@ -2,6 +2,7 @@ package org.hff.miraiomnitrix.command.impl.any
 
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.app.service.CharacterService
 import org.hff.miraiomnitrix.command.core.Command
@@ -26,7 +27,8 @@ class Character(private val characterService: CharacterService) : AnyCommand {
         sender: User,
         message: MessageChain,
         subject: Contact,
-        args: List<String>
+        args: List<String>,
+        event: MessageEvent
     ): ResultMessage? {
         if (args.isEmpty()) {
             return result(characterService.getCharactersName() + "\n" + "请使用指令+角色名开始聊天" + "\n" + "增删改查格式为 add/del/edit 角色名 角色external_id(add/edit操作)")

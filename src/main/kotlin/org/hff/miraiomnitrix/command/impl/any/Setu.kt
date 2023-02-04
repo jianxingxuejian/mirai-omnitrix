@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.toMessageChain
@@ -31,7 +32,8 @@ class Setu : AnyCommand {
         sender: User,
         message: MessageChain,
         subject: Contact,
-        args: List<String>
+        args: List<String>,
+        event: MessageEvent
     ): ResultMessage? {
         var r18 = 0
         var num = 1

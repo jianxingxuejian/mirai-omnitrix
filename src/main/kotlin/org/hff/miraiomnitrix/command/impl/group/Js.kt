@@ -4,6 +4,7 @@ import delight.nashornsandbox.NashornSandboxes
 import delight.nashornsandbox.exceptions.ScriptCPUAbuseException
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
@@ -31,7 +32,8 @@ class Js : GroupCommand {
         sender: Member,
         message: MessageChain,
         group: Group,
-        args: List<String>
+        args: List<String>,
+        event: GroupMessageEvent
     ): ResultMessage? {
         val command = args.joinToString(" ")
         return try {

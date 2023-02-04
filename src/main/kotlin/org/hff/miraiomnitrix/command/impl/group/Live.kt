@@ -6,6 +6,7 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.getMember
 import net.mamoe.mirai.contact.nameCardOrNick
+import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.app.entity.Live
 import org.hff.miraiomnitrix.app.service.LiveService
@@ -23,7 +24,8 @@ class Live(private val liveService: LiveService) : GroupCommand {
         sender: Member,
         message: MessageChain,
         group: Group,
-        args: List<String>
+        args: List<String>,
+        event: GroupMessageEvent
     ): ResultMessage? {
         if (args.isEmpty()) {
             val list = liveService.ktQuery().eq(Live::groupId, group.id).list()

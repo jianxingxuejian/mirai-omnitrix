@@ -2,6 +2,9 @@ package org.hff.miraiomnitrix.command.core
 
 import com.google.common.cache.CacheBuilder
 import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.event.events.FriendMessageEvent
+import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.command.type.FriendCommand
@@ -37,34 +40,34 @@ object CommandManager {
         }
     }
 
-    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group) {
+    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group, event: GroupMessageEvent) {
         val (commandName, args) = getCommandName(message)
         if (commandName == null) {
             return HandlerManger.groupHandle(sender, message, group, args)
         }
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
-            return anyCommand.tryExecute(sender, message, group, args)
+            return anyCommand.tryExecute(sender, message, group, args, event)
         }
         val groupCommand = groupCommands[commandName]
         if (groupCommand != null) {
-            return groupCommand.tryExecute(sender, message, group, args)
+            return groupCommand.tryExecute(sender, message, group, args, event)
         }
         HandlerManger.groupHandle(sender, message, group, listOf(commandName))
     }
 
-    suspend fun executeFriendCommand(sender: Friend, message: MessageChain) {
+    suspend fun executeFriendCommand(sender: Friend, message: MessageChain, event: FriendMessageEvent) {
         val (commandName, args) = getCommandName(message, false)
         if (commandName == null) {
             return HandlerManger.friendHandle(sender, message, args)
         }
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
-            return anyCommand.tryExecute(sender, message, sender, args)
+            return anyCommand.tryExecute(sender, message, sender, args, event)
         }
         val friendCommand = friendCommands[commandName]
         if (friendCommand != null) {
-            return friendCommand.tryExecute(sender, message, args)
+            return friendCommand.tryExecute(sender, message, args, event)
         }
         HandlerManger.friendHandle(sender, message, listOf(commandName))
     }
@@ -73,10 +76,11 @@ object CommandManager {
         sender: User,
         message: MessageChain,
         subject: Contact,
-        args: List<String>
+        args: List<String>,
+        event: MessageEvent
     ) {
         try {
-            val (msg, msgChain) = this.execute(sender, message, subject, args) ?: return
+            val (msg, msgChain) = this.execute(sender, message, subject, args, event) ?: return
             subject.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, subject)
@@ -87,19 +91,25 @@ object CommandManager {
         sender: Member,
         message: MessageChain,
         group: Group,
-        args: List<String>
+        args: List<String>,
+        event: GroupMessageEvent
     ) {
         try {
-            val (msg, msgChain) = this.execute(sender, message, group, args) ?: return
+            val (msg, msgChain) = this.execute(sender, message, group, args, event) ?: return
             group.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, group)
         }
     }
 
-    private suspend fun FriendCommand.tryExecute(sender: Friend, message: MessageChain, args: List<String>) {
+    private suspend fun FriendCommand.tryExecute(
+        sender: Friend,
+        message: MessageChain,
+        args: List<String>,
+        event: FriendMessageEvent
+    ) {
         try {
-            val (msg, msgChain) = this.execute(sender, message, args) ?: return
+            val (msg, msgChain) = this.execute(sender, message, args, event) ?: return
             sender.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, sender)
@@ -112,6 +122,7 @@ object CommandManager {
     }
 
     private suspend fun sendCommandError(e: Exception, subject: Contact) {
+        e.printStackTrace()
         errorCache.put(subject.id, e)
         when (e) {
             is SSLException -> subject.sendMessage("梯子挂了")
