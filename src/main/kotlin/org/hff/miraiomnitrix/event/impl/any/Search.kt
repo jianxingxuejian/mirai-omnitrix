@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.command.impl.any
+package org.hff.miraiomnitrix.event.impl.any
 
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
@@ -9,44 +9,45 @@ import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.QuoteReply
-import org.hff.miraiomnitrix.command.core.Command
-import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.config.AccountProperties
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.fail
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.event.type.AnyEvent
+import org.hff.miraiomnitrix.result.EventResult
+import org.hff.miraiomnitrix.result.EventResult.Companion.next
+import org.hff.miraiomnitrix.result.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
+import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStrOrNull
+import org.hff.miraiomnitrix.utils.SpringUtil
 
-@Command(name = ["搜图", "soutu", "st"])
-class Search(accountProperties: AccountProperties) : AnyCommand {
+object Search : AnyEvent {
 
-    private val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
-    private val key = accountProperties.saucenaoKey
-
-    override suspend fun execute(
+    private const val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
+    private val key = SpringUtil.getBean(AccountProperties::class)?.saucenaoKey
+    private val commands = listOf("st", "搜图", "soutu")
+    override suspend fun handle(
         sender: User,
         message: MessageChain,
         subject: Contact,
         args: List<String>,
         event: MessageEvent
-    ): ResultMessage? {
-        if (key == null) return result("请配置saucenao api的key")
+    ): EventResult {
+        if (args.isEmpty()) return next()
 
+        if (!args.any { arg -> commands.any { arg.startsWith(it) || arg.endsWith(it) } }) return next()
         val quote = message[QuoteReply.Key]
         val image = if (quote != null) {
-            val imageId = imageCache.getIfPresent(quote.source.internalIds[0]) ?: return result("请发送一张图片")
+            val imageId =
+                ImageUtil.imageCache.getIfPresent(quote.source.internalIds[0]) ?: return next()
             Image(imageId)
         } else {
-            message[Image.Key] ?: return result("请发送一张图片")
+            message[Image.Key] ?: return next()
         }
 
         val apiResult = HttpUtil.getStringByProxy("$url$key&url=${image.queryUrl()}")
         val array = JsonUtil.getArray(apiResult, "results")
-        if (array.isEmpty) return fail()
+        if (array.isEmpty) return stop()
         val result = array[0].asJsonObject
         val header = result.getAsJsonObject("header")
         val data = result.getAsJsonObject("data")
@@ -56,7 +57,7 @@ class Search(accountProperties: AccountProperties) : AnyCommand {
         val urlsText = if (urls.size() == 1) {
             "链接: " + urls[0]
         } else {
-            urls.mapIndexed { index, url -> "链接${index + 1}：$url" }.joinToString("")
+            urls.mapIndexed { index, url -> "链接${index + 1}：$url" }.joinToString("\n")
         }
         val chain = MessageChainBuilder()
             .append("搜图结果：\n")
@@ -69,6 +70,6 @@ class Search(accountProperties: AccountProperties) : AnyCommand {
                 ?: data.getAsStrOrNull("creator") ?: data.getAsStrOrNull("jp_name")
             )
             .build()
-        return result(chain)
+        return stop(chain)
     }
 }

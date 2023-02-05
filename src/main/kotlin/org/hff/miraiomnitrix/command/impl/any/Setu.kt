@@ -11,8 +11,8 @@ import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.get
@@ -34,7 +34,7 @@ class Setu : AnyCommand {
         subject: Contact,
         args: List<String>,
         event: MessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         var r18 = 0
         var num = 1
         var type = 1

@@ -12,8 +12,8 @@ import org.hff.miraiomnitrix.event.impl.any.Character.characterName
 import org.hff.miraiomnitrix.event.impl.any.Character.chatting
 import org.hff.miraiomnitrix.event.impl.any.Character.concatId
 import org.hff.miraiomnitrix.event.impl.any.Character.token
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.HttpUtil.postStringByProxy
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
@@ -29,7 +29,7 @@ class Character(private val characterService: CharacterService) : AnyCommand {
         subject: Contact,
         args: List<String>,
         event: MessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         if (args.isEmpty()) {
             return result(characterService.getCharactersName() + "\n" + "请使用指令+角色名开始聊天" + "\n" + "增删改查格式为 add/del/edit 角色名 角色external_id(add/edit操作)")
         }

@@ -14,8 +14,8 @@ import org.hff.miraiomnitrix.app.service.BgmService
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.config.AccountProperties
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.jsoup.Jsoup
 import java.util.regex.Pattern
@@ -32,7 +32,7 @@ class Bgm(private val bgmService: BgmService, accountProperties: AccountProperti
         subject: Contact,
         args: List<String>,
         event: MessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         if (args.size == 1 && (args[0] == "init" || args[0] == "初始化")) return init()
 
         var num: Short = 1
@@ -67,7 +67,7 @@ class Bgm(private val bgmService: BgmService, accountProperties: AccountProperti
         return null
     }
 
-    fun init(): ResultMessage? {
+    fun init(): CommandResult? {
         if (cookie == null) return result("请配置bangumi网页的cookie")
         val headers = mapOf("cookie" to cookie)
         for (i in 1..300) {

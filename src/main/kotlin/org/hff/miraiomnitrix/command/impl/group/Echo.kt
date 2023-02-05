@@ -10,8 +10,8 @@ import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 
 @Command(name = ["复读", "说", "echo"])
 class Echo : GroupCommand {
@@ -22,7 +22,7 @@ class Echo : GroupCommand {
         group: Group,
         args: List<String>,
         event: GroupMessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         if (args.isEmpty()) return null
         val first = args[0]
         if (first.startsWith("我是")) {

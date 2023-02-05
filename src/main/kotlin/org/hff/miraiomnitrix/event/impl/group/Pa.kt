@@ -4,10 +4,14 @@ import com.sksamuel.scrimage.ImmutableImage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
-import org.hff.miraiomnitrix.event.type.GroupHandler
+import org.hff.miraiomnitrix.event.type.GroupEvent
+import org.hff.miraiomnitrix.result.EventResult
+import org.hff.miraiomnitrix.result.EventResult.Companion.next
+import org.hff.miraiomnitrix.result.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
@@ -21,7 +25,7 @@ import java.awt.image.BufferedImage
 import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
 
-object Pa : GroupHandler {
+object Pa : GroupEvent {
 
     private val botProperties = SpringUtil.getBean(BotProperties::class)
     private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
@@ -31,16 +35,22 @@ object Pa : GroupHandler {
     private const val paDir = "/img/pa/*"
     private const val tieDir = "/img/tie/*"
 
-    override suspend fun handle(sender: Member, message: MessageChain, group: Group, args: List<String>): Boolean {
-        if (!args.any { it.endsWith("爬") }) return false
+    override suspend fun handle(
+        sender: Member,
+        message: MessageChain,
+        group: Group,
+        args: List<String>,
+        event: GroupMessageEvent
+    ): EventResult {
+        if (!args.any { it.endsWith("爬") }) return next()
 
         var qq = args.find { it.startsWith("@") }?.substring(1)?.toLong()
         if (qq == null) {
-            if (botProperties == null) return false
+            if (botProperties == null) return next()
             if (message.contentToString().contains("@" + botProperties.qq)) {
                 qq = sender.id
             } else {
-                return false
+                return next()
             }
         }
         val file = getFileByQQ(qq)
@@ -51,7 +61,7 @@ object Pa : GroupHandler {
         val imageC = transformAvatar(imageB)
         val overlay = imageA.overlayToStream(imageC, 5, 320)
         group.sendImage(overlay)
-        return true
+        return stop()
     }
 
     private fun getFileByQQ(qq: Long): InputStream {

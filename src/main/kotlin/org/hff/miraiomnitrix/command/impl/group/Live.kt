@@ -12,8 +12,8 @@ import org.hff.miraiomnitrix.app.entity.Live
 import org.hff.miraiomnitrix.app.service.LiveService
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.Util.getBilibiliUserInfo
 import org.hff.miraiomnitrix.utils.Util.getQq
 
@@ -26,7 +26,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
         group: Group,
         args: List<String>,
         event: GroupMessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         if (args.isEmpty()) {
             val list = liveService.ktQuery().eq(Live::groupId, group.id).list()
             if (list.isEmpty()) return result("尚未添加主播/n使用live help指令获取使用方法")

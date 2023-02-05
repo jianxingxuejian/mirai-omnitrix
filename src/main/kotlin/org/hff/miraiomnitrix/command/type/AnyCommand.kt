@@ -4,7 +4,7 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.result.ResultMessage
+import org.hff.miraiomnitrix.result.CommandResult
 
 /** 适用于所有消息指令接口 */
 interface AnyCommand {
@@ -24,6 +24,6 @@ interface AnyCommand {
         subject: Contact,
         args: List<String>,
         event: MessageEvent
-    ): ResultMessage?
+    ): CommandResult?
 
 }

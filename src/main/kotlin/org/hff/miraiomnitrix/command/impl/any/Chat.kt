@@ -2,9 +2,11 @@ package org.hff.miraiomnitrix.command.impl.any
 
 import com.aallam.openai.api.completion.CompletionRequest
 import com.aallam.openai.api.exception.OpenAIHttpException
+import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.Model
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
+import com.aallam.openai.client.OpenAIConfig
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
@@ -14,6 +16,7 @@ import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.nextMessage
@@ -21,8 +24,8 @@ import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 
 @Command(["chat", "聊天"])
 class Chat(accountProperties: AccountProperties, permissionProperties: PermissionProperties) : AnyCommand {
@@ -31,11 +34,12 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
     private var model: Model? = null
     private val chatIncludeGroup = permissionProperties.chatIncludeGroup
     private val initModel = "text-davinci-003"
+    private val historyCache = mutableMapOf<Long, Long>()
 
     init {
         val apiKey = accountProperties.openaiApiKey
         if (apiKey != null) {
-            openAI = OpenAI(apiKey)
+            openAI = OpenAI(OpenAIConfig(apiKey, logLevel = LogLevel.Body))
         }
     }
 
@@ -45,7 +49,7 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         subject: Contact,
         args: List<String>,
         event: MessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         if (args.isEmpty()) {
             return result("使用openai进行聊天，通过`开始`、`start`指令开启聊天，需要@机器人，群成员与机器人的交流是独立的")
         }
@@ -55,7 +59,10 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
 
         when (args[0]) {
             "开始聊天", "start" -> {
-                subject.sendMessage("${sender.nameCardOrNick}你好，我是openai的${model?.id?.id ?: initModel}模型")
+                val cache = historyCache[subject.id]
+                if (cache == null) historyCache[subject.id] = sender.id
+                else if (cache == sender.id) return result(At(sender) + "问答进程已启动，请@机器人进行问答")
+                subject.sendMessage("${sender.nameCardOrNick}你好，我是openai的${model?.id?.id ?: initModel}模型，现在开始问答，请@我并输入你要问的问题")
                 if (args.size < 2) chat(event, null)
                 else chat(event, args.slice(1 until args.size).joinToString("\n"))
                 return null
@@ -81,29 +88,32 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
     }
 
     private suspend fun chat(event: MessageEvent, text: String?) {
-        val name = event.sender.nameCardOrNick
-        val buffer = if (text == null) StringBuffer()
-        else {
-            val buffer = StringBuffer(text + "\n")
-            val reply = completion(buffer, name)
-            event.subject.sendMessage(event.message.quote() + reply.removePrefix("\n\n"))
-            buffer
-        }
         try {
+            val name = event.sender.nameCardOrNick
+            val buffer = if (text == null) StringBuffer()
+            else {
+                val buffer = StringBuffer("$text\n")
+                val reply = completion(buffer, name)
+                buffer.insert(0, "Human: ")
+                event.subject.sendMessage(event.message.quote() + reply.removePrefix("\n\n"))
+                buffer
+            }
             coroutineScope {
                 while (isActive) {
-                    val next = event.nextMessage(300_000L, EventPriority.HIGH)
+                    val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
                     val content = next.contentToString()
-                    if (!content.startsWith("@" + event.bot.id)) continue
-                    buffer.append("Human: $content\n")
+                    val at = "@" + event.bot.id
+                    if (!content.startsWith(at)) continue
+                    buffer.append("Human: ${content.replace(at, "")}\n")
                     val reply = completion(buffer, name)
                     event.subject.sendMessage(next.quote() + reply.removePrefix("\n\n"))
                 }
             }
         } catch (_: TimeoutCancellationException) {
-            event.subject.sendMessage("超时，聊天已结束")
         } catch (_: OpenAIHttpException) {
-            event.subject.sendMessage("网络错误")
+            event.subject.sendMessage(At(event.sender.id) + "网络错误，问答已结束")
+        } finally {
+            historyCache.remove(event.subject.id)
         }
     }
 
@@ -119,7 +129,7 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         )
         val choices = openAI.completion(completionRequest).choices
         val replay = choices.joinToString("\n") { it.text.split("\n\n").joinToString("\n") }
-        buffer.append("AI: $replay\n")
+        buffer.append("$replay\n")
         return replay
     }
 

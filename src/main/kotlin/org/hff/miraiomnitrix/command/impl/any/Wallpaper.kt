@@ -7,8 +7,8 @@ import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.AnyCommand
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.fail
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.fail
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
 import org.hff.miraiomnitrix.utils.JsonUtil
@@ -39,7 +39,7 @@ class Wallpaper : AnyCommand {
         subject: Contact,
         args: List<String>,
         event: MessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         var sort = "random"
         args.forEach {
             when (it) {

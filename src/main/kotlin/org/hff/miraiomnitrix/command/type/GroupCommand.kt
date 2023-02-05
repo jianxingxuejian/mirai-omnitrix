@@ -4,7 +4,7 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.result.ResultMessage
+import org.hff.miraiomnitrix.result.CommandResult
 
 /** 适用于群消息指令接口 */
 interface GroupCommand {
@@ -25,6 +25,6 @@ interface GroupCommand {
         group: Group,
         args: List<String>,
         event: GroupMessageEvent
-    ): ResultMessage?
+    ): CommandResult?
 
 }

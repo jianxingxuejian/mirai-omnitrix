@@ -8,8 +8,8 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.core.Command
 import org.hff.miraiomnitrix.command.type.GroupCommand
-import org.hff.miraiomnitrix.result.ResultMessage
-import org.hff.miraiomnitrix.result.result
+import org.hff.miraiomnitrix.result.CommandResult
+import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror
 import java.util.concurrent.Executors
 import javax.script.ScriptException
@@ -34,7 +34,7 @@ class Js : GroupCommand {
         group: Group,
         args: List<String>,
         event: GroupMessageEvent
-    ): ResultMessage? {
+    ): CommandResult? {
         val command = args.joinToString(" ")
         return try {
             val result = sandbox.eval(command) ?: return result("null")

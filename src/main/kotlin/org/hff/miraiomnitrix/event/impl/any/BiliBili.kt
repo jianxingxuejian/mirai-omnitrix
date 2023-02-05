@@ -3,22 +3,32 @@ package org.hff.miraiomnitrix.event.impl.any
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
-import org.hff.miraiomnitrix.event.type.AnyHandler
+import org.hff.miraiomnitrix.event.type.AnyEvent
+import org.hff.miraiomnitrix.result.EventResult
+import org.hff.miraiomnitrix.result.EventResult.Companion.next
+import org.hff.miraiomnitrix.result.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 
-object BiliBili : AnyHandler {
+object BiliBili : AnyEvent {
 
     private const val VIDEO_API = "https://api.bilibili.com/x/web-interface/view"
     private val VIDEO_REGEX = """(?i)(?<!\w)(?:av(\d+)|(BV1[1-9A-NP-Za-km-z]{9}))""".toRegex()
-    override suspend fun handle(sender: User, message: MessageChain, subject: Contact, args: List<String>): Boolean {
-        if (args.isEmpty()) return false
+    override suspend fun handle(
+        sender: User,
+        message: MessageChain,
+        subject: Contact,
+        args: List<String>,
+        event: MessageEvent
+    ): EventResult {
+        if (args.isEmpty()) return next()
 
         val first = args[0]
-        if (first.length > 30 || !(VIDEO_REGEX matches args[0])) return false
+        if (first.length > 30 || !(VIDEO_REGEX matches args[0])) return next()
 
         val json = HttpUtil.getString(VIDEO_API, mapOf("bvid" to first))
         val data = JsonUtil.getObj(json, "data")
@@ -33,8 +43,7 @@ object BiliBili : AnyHandler {
             .append("简介：$desc\n")
             .append("链接：https://www.bilibili.com/video/$first")
             .build()
-        subject.sendMessage(share)
-        return false
+        return stop(share)
 //            val share = RichMessage.Key.share(
 //                "https://www.bilibili.com/video/$first",
 //                "哔哩哔哩",

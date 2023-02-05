@@ -10,7 +10,7 @@ import org.hff.miraiomnitrix.command.type.AnyCommand
 import org.hff.miraiomnitrix.command.type.FriendCommand
 import org.hff.miraiomnitrix.command.type.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
-import org.hff.miraiomnitrix.event.core.HandlerManger
+import org.hff.miraiomnitrix.event.core.EventManger
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.SpringUtil.getBean
 import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
@@ -43,7 +43,7 @@ object CommandManager {
     suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group, event: GroupMessageEvent) {
         val (commandName, args) = getCommandName(message)
         if (commandName == null) {
-            return HandlerManger.groupHandle(sender, message, group, args)
+            return EventManger.groupHandle(sender, message, group, args, event)
         }
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
@@ -53,13 +53,13 @@ object CommandManager {
         if (groupCommand != null) {
             return groupCommand.tryExecute(sender, message, group, args, event)
         }
-        HandlerManger.groupHandle(sender, message, group, listOf(commandName))
+        EventManger.groupHandle(sender, message, group, listOf(commandName), event)
     }
 
     suspend fun executeFriendCommand(sender: Friend, message: MessageChain, event: FriendMessageEvent) {
         val (commandName, args) = getCommandName(message, false)
         if (commandName == null) {
-            return HandlerManger.friendHandle(sender, message, args)
+            return EventManger.friendHandle(sender, message, args, event)
         }
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
@@ -69,7 +69,7 @@ object CommandManager {
         if (friendCommand != null) {
             return friendCommand.tryExecute(sender, message, args, event)
         }
-        HandlerManger.friendHandle(sender, message, listOf(commandName))
+        EventManger.friendHandle(sender, message, listOf(commandName), event)
     }
 
     private suspend fun AnyCommand.tryExecute(
@@ -146,7 +146,7 @@ object CommandManager {
                 }
             }
         }
-        val args = string.trim().split(Regex("\\s+|\\[图片]"))
+        val args = string.trim().split(Regex("\\s+|\\[图片]|\\[动画表情]"))
         if (needHead && !hasHead) return Pair(null, args)
         return Pair(args[0], args.slice(1 until args.size))
     }
