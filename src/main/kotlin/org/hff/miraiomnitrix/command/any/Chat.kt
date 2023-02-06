@@ -89,28 +89,33 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
     }
 
     private suspend fun chat(event: MessageEvent, text: String?) {
+        val sender = event.sender.nameCardOrNick
+        val buffer = StringBuffer("$sender：你是ChatGPT，一个由openAI训练的大型语言模型，现在开始交流。\n")
+        if (text != null) {
+            buffer.append("$text\n")
+            val reply = completion(buffer, sender)
+            event.subject.sendMessage(event.message.quote() + reply.removePrefix("\n\n"))
+        }
         try {
-            val sender = event.sender.nameCardOrNick
-            val buffer = StringBuffer("$sender：你是ChatGPT，一个由openAI训练的大型语言模型，现在开始交流。\n")
-            if (text != null) {
-                buffer.append("$text\n")
-                val reply = completion(buffer, sender)
-                event.subject.sendMessage(event.message.quote() + reply.removePrefix("\n\n"))
-            }
             coroutineScope {
                 while (isActive) {
                     val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
                     val content = next.contentToString()
                     val at = "@" + event.bot.id
                     if (!content.startsWith(at)) continue
+                    val temp = buffer.length
                     buffer.append("$sender：${content.replace(at, "")}\n")
-                    val reply = completion(buffer, sender)
-                    event.subject.sendMessage(next.quote() + reply.removePrefix("\n\n"))
+                    try {
+                        val reply = completion(buffer, sender)
+                        event.subject.sendMessage(next.quote() + reply.removePrefix("\n\n"))
+                    } catch (_: OpenAIHttpException) {
+                        event.subject.sendMessage(At(event.sender.id) + "网络错误，请重试")
+                        buffer.setLength(temp)
+                    }
                 }
             }
         } catch (_: TimeoutCancellationException) {
-        } catch (_: OpenAIHttpException) {
-            event.subject.sendMessage(At(event.sender.id) + "网络错误，问答已结束")
+            event.subject.sendMessage(At(event.sender.id) + "超时，问答已结束")
         } finally {
             historyCache.invalidate(event.subject.id)
         }

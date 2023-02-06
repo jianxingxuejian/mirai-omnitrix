@@ -113,7 +113,6 @@ class Character(private val characterService: CharacterService, private val acco
         param: Map<String, String>
     ) {
         try {
-            println(headers)
             val info = HttpUtil.getStringByProxy("$url/character/info-cached/$characterExternalId/", headers)
             val history = HttpUtil.postStringByProxy("$url/history/create/", param, headers)
             val character = JsonUtil.getObj(info, "character")
@@ -142,7 +141,7 @@ class Character(private val characterService: CharacterService, private val acco
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            event.subject.sendMessage(At(event.sender.id) + "网络错误，问答已结束")
+            event.subject.sendMessage(At(event.sender.id) + "网络错误，聊天已结束")
         } finally {
             historyCache.invalidate(event.subject.id)
         }
