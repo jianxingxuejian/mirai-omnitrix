@@ -8,7 +8,7 @@ import net.mamoe.mirai.event.SimpleListenerHost
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.utils.BotConfiguration
-import org.hff.miraiomnitrix.command.core.CommandManager
+import org.hff.miraiomnitrix.command.CommandManager
 import org.hff.miraiomnitrix.config.BotProperties
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
