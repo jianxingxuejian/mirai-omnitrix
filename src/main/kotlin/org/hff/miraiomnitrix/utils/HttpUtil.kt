@@ -42,6 +42,12 @@ object HttpUtil {
         return tryGetRightRes(res)
     }
 
+    fun getStringByProxy(url: String, headers: Map<String, String>): String {
+        val res = proxyClient?.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
+            ?: throw RuntimeException()
+        return tryGetRightRes(res)
+    }
+
     fun getInputStream(url: String): InputStream {
         val res = httpClient.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
         return tryGetRightRes(res)
@@ -51,6 +57,7 @@ object HttpUtil {
         val res = proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
         return tryGetRightRes(res)
     }
+
 
     fun postString(
         url: String,

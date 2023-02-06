@@ -51,6 +51,7 @@ dependencies {
     implementation(platform("com.aallam.openai:openai-client-bom:2.1.3"))
     implementation ("com.aallam.openai:openai-client")
     implementation ("io.ktor:ktor-client-okhttp")
+    implementation("org.seleniumhq.selenium:selenium-java:4.8.0")
 }
 
 tasks.withType<KotlinCompile> {

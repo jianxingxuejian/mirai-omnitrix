@@ -6,12 +6,12 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConstructorBinding
 @ConfigurationProperties("account")
 data class AccountProperties(
-    /** character AI token  */
+    /** https://beta.character.ai 登陆后F12查看请求头的authorization */
     val characterAiToken: String?,
-    /** saucenao api key */
+    /** saucenao搜图api_key https://saucenao.com/user.php?page=search-api */
     val saucenaoKey: String?,
-    /** bangumi web cookie */
+    /** bangumi番组计划网页cookie https://bgm.tv */
     val bgmCookie: String?,
-    /** openai api key */
-    val openaiApiKey:String?
+    /** https://platform.openai.com/account/api-keys */
+    val openaiApiKey: String?
 )

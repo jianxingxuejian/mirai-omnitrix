@@ -1,27 +1,31 @@
 package org.hff.miraiomnitrix.command.any
 
+import com.google.common.cache.CacheBuilder
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.app.service.CharacterService
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.event.any.Character.characterCache
-import org.hff.miraiomnitrix.event.any.Character.characterName
-import org.hff.miraiomnitrix.event.any.Character.chatting
-import org.hff.miraiomnitrix.event.any.Character.concatId
-import org.hff.miraiomnitrix.event.any.Character.token
+import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.result.CommandResult
 import org.hff.miraiomnitrix.result.CommandResult.Companion.result
-import org.hff.miraiomnitrix.utils.HttpUtil.postStringByProxy
+import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
+import java.util.concurrent.TimeUnit
 
 @Command(name = ["character", "角色"])
-class Character(private val characterService: CharacterService) : AnyCommand {
+class Character(private val characterService: CharacterService, private val accountProperties: AccountProperties) :
+    AnyCommand {
 
-    private val url = "https://beta.character.ai/chat/"
-
+    private val url = "https://beta.character.ai/chat"
+    private val historyCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build<Long, Long>()
     override suspend fun execute(
         sender: User,
         message: MessageChain,
@@ -71,33 +75,77 @@ class Character(private val characterService: CharacterService) : AnyCommand {
                     result("角色编辑失败")
                 }
             }
+
         }
 
-        if (chatting) return null
+        val cache = historyCache.getIfPresent(subject.id)
+        if (cache == null) historyCache.put(subject.id, sender.id)
+        else if (cache == sender.id) return result(At(sender) + "角色进程已启动，请@机器人进行问答")
 
-        val name = args[0]
-        if (characterCache[name] != null) return null
-
-        val entity = characterService.get(name) ?: return result(" 角色不存在")
-
-        if (token == null) return result("无token")
-        val headers = mapOf("token" to token)
-        val param = mapOf("external_id" to entity.externalId)
-        val info = postStringByProxy(url + "character/info/", param, headers)
-        val history = postStringByProxy(url + "history/create/", param, headers)
-
-        val character = JsonUtil.getObj(info, "character")
-        val identifier = character.getAsStr("identifier").replace("id", "internal_id")
-        val greeting = character.getAsStr("greeting").replace("{{user}}", sender.nick)
-        val historyExternalId = JsonUtil.getStr(history, "external_id")
-
-        characterCache[name] = Triple(historyExternalId, entity.externalId!!, identifier)
-        subject.sendMessage(greeting)
-        chatting = true
-        concatId = subject.id
-        characterName = name
-
+        val entity = characterService.get(args[0]) ?: return result(" 角色不存在")
+        val token = accountProperties.characterAiToken ?: return result("无token")
+        val headers = mapOf("authorization" to token)
+        val param = mapOf("character_external_id" to entity.externalId!!)
+        chat(entity.externalId!!, event, headers, param)
         return null
+//        val name = args[0]
+//        if (characterCache[name] != null) return null
+//
+//        val info = HttpUtil.postStringByProxy(url + "character/info/", param, headers)
+//        val history = HttpUtil.postStringByProxy(url + "history/create/", param, headers)
+//
+//        val character = JsonUtil.getObj(info, "character")
+//        val identifier = character.getAsStr("identifier").replace("id", "internal_id")
+//        val greeting = character.getAsStr("greeting").replace("{{user}}", sender.nick)
+//        val historyExternalId = JsonUtil.getStr(history, "external_id")
+//
+//        characterCache[name] = Triple(historyExternalId, entity.externalId!!, identifier)
+//        subject.sendMessage(greeting)
+//        chatting = true
+//        concatId = subject.id
+//        characterName = name
+    }
+
+    suspend fun chat(
+        characterExternalId: String,
+        event: MessageEvent,
+        headers: Map<String, String>,
+        param: Map<String, String>
+    ) {
+        try {
+            println(headers)
+            val info = HttpUtil.getStringByProxy("$url/character/info-cached/$characterExternalId/", headers)
+            val history = HttpUtil.postStringByProxy("$url/history/create/", param, headers)
+            val character = JsonUtil.getObj(info, "character")
+            val identifier = character.getAsStr("identifier").replace("id", "internal_id")
+            val greeting = character.getAsStr("greeting").replace("{{user}}", event.sender.nick)
+            val historyExternalId = JsonUtil.getStr(history, "external_id")
+            event.subject.sendMessage(At(event.sender.id) + greeting)
+
+            coroutineScope {
+                while (isActive) {
+                    val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
+                    val content = next.contentToString()
+                    val at = "@" + event.bot.id
+                    if (!content.startsWith(at)) continue
+                    val chatParams = mapOf(
+                        "history_external_id" to historyExternalId,
+                        "character_external_id" to characterExternalId,
+                        "text" to content,
+                        "tgt" to identifier
+                    )
+                    val result = HttpUtil.postStringByProxy(url + "streaming/", chatParams, headers)
+                    val replies = JsonUtil.getArray(result, "replies")
+                        .joinToString("\n") { JsonUtil.getStr(it, "text") }
+                    event.subject.sendMessage(replies)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            event.subject.sendMessage(At(event.sender.id) + "网络错误，问答已结束")
+        } finally {
+            historyCache.invalidate(event.subject.id)
+        }
     }
 
 }
