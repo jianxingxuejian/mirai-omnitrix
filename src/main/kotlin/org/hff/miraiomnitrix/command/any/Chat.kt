@@ -1,16 +1,6 @@
 package org.hff.miraiomnitrix.command.any
 
-import com.aallam.openai.api.completion.CompletionRequest
-import com.aallam.openai.api.exception.OpenAIHttpException
-import com.aallam.openai.api.logging.LogLevel
-import com.aallam.openai.api.model.Model
-import com.aallam.openai.api.model.ModelId
-import com.aallam.openai.client.OpenAI
-import com.aallam.openai.client.OpenAIConfig
-import com.google.common.cache.CacheBuilder
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.*
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.User
@@ -24,25 +14,23 @@ import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
+import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.result.CommandResult
 import org.hff.miraiomnitrix.result.CommandResult.Companion.result
-import java.util.concurrent.TimeUnit
+import org.hff.miraiomnitrix.utils.HttpUtil
+import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
+import java.time.LocalDate
 
 @Command(["chat", "聊天"])
 class Chat(accountProperties: AccountProperties, permissionProperties: PermissionProperties) : AnyCommand {
 
-    private lateinit var openAI: OpenAI
-    private var model: Model? = null
     private val chatIncludeGroup = permissionProperties.chatIncludeGroup
-    private val initModel = "text-davinci-003"
-    private val historyCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build<Long, Long>()
-
-    init {
-        val apiKey = accountProperties.openaiApiKey
-        if (apiKey != null) {
-            openAI = OpenAI(OpenAIConfig(apiKey, logLevel = LogLevel.Body))
-        }
-    }
+    private val stateCache = mutableMapOf<Long, MutableSet<Long>>()
+    private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
+    private var model = "text-chat-davinci-002-20221122"
+    private var maxTokens = 3200
+    private var temperature = 0.5
 
     override suspend fun execute(
         sender: User,
@@ -51,90 +39,63 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         args: List<String>,
         event: MessageEvent
     ): CommandResult? {
-        if (args.isEmpty()) {
-            return result("使用openai进行聊天，通过`开始`、`start`指令开启聊天，需要@机器人，群成员与机器人的交流是独立的")
-        }
         if (subject is Group && chatIncludeGroup.isNotEmpty()) {
             if (!chatIncludeGroup.contains(subject.id)) return null
         }
 
-        when (args[0]) {
-            "开始聊天", "start" -> {
-                val cache = historyCache.getIfPresent(subject.id)
-                if (cache == null) historyCache.put(subject.id, sender.id)
-                else if (cache == sender.id) return result(At(sender) + "问答进程已启动，请@机器人进行问答")
-                subject.sendMessage("${sender.nameCardOrNick}你好，我是openai的${model?.id?.id ?: initModel}模型，现在开始问答，请@我并输入你要问的问题")
-                if (args.size < 2) chat(event, null)
-                else chat(event, args.slice(1 until args.size).joinToString("\n"))
-                return null
-            }
+        val cache = stateCache[sender.id]
+        if (cache == null) stateCache[sender.id] = mutableSetOf(subject.id)
+        else if (cache.contains(subject.id)) return result("问答线程已经开始，请@我并说出你的问题")
 
-            "所有模型", "models" -> {
-                val models = openAI.models()
-                println(models)
-                val list = models.mapIndexed { index, model -> "${index + 1}、${model.id.id}" }.joinToString("\n")
-                val text = if (model?.id != null) "当前使用的模型为${model!!.id}" else "当前没有模型"
-                return result(list + "\n$text")
-            }
-
-            "选择模型", "select" -> {
-                if (args.size < 2) return result("参数错误")
-                model = openAI.model(ModelId(args[1]))
-                return result("模型更改成功")
-            }
-        }
-
-        return null
-
-    }
-
-    private suspend fun chat(event: MessageEvent, text: String?) {
-        val sender = event.sender.nameCardOrNick
-        val buffer = StringBuffer("$sender：你是ChatGPT，一个由openAI训练的大型语言模型，现在开始交流。\n")
-        if (text != null) {
-            buffer.append("$text\n")
-            val reply = completion(buffer, sender)
-            event.subject.sendMessage(event.message.quote() + reply.removePrefix("\n\n"))
-        }
+        val name = sender.nameCardOrNick
         try {
-            coroutineScope {
+            CoroutineScope(Dispatchers.IO).launch {
+                val buffer =
+                    StringBuffer("$name: 你是ChatGPT, 一个由OpenAI训练的大型语言模型。现在的时间是:${LocalDate.now()}，开始问答式交流。")
+                if (args.isEmpty()) subject.sendMessage("你好，我是ChatGPT，现在开始问答，请@我并说出你的问题")
+                else {
+                    buffer.append("${args.joinToString("\n")}\n\n")
+                    val reply = completion(buffer, name)
+                    subject.sendMessage(At(sender) + reply)
+                }
                 while (isActive) {
                     val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
                     val content = next.contentToString()
+                    if (arrayOf("退出", "结束", "停止", "exit", "stop").contains(content)) {
+                        subject.sendMessage(At(sender) + "本次聊天已结束")
+                        break
+                    }
                     val at = "@" + event.bot.id
                     if (!content.startsWith(at)) continue
-                    val temp = buffer.length
-                    buffer.append("$sender：${content.replace(at, "")}\n")
-                    try {
-                        val reply = completion(buffer, sender)
-                        event.subject.sendMessage(next.quote() + reply.removePrefix("\n\n"))
-                    } catch (_: OpenAIHttpException) {
-                        event.subject.sendMessage(At(event.sender.id) + "网络错误，请重试")
-                        buffer.setLength(temp)
-                    }
+                    buffer.append("$name：${content.replace(at, "")}\n\n")
+                    val reply = completion(buffer, sender.nameCardOrNick)
+                    subject.sendMessage(message.quote() + reply)
                 }
             }
         } catch (_: TimeoutCancellationException) {
-            event.subject.sendMessage(At(event.sender.id) + "超时，问答已结束")
+            subject.sendMessage(At(event.sender.id) + "超时，问答已结束")
         } finally {
-            historyCache.invalidate(event.subject.id)
+            stateCache[sender.id]?.remove(subject.id)
         }
+
+        return null
     }
 
-    private suspend fun completion(buffer: StringBuffer, user: String): String {
-        if (model == null) {
-            model = openAI.model(ModelId(initModel))
-        }
-        val completionRequest = CompletionRequest(
-            model = model!!.id,
-            user = user,
-            prompt = buffer.toString(),
-            maxTokens = 1024
+    fun completion(buffer: StringBuffer, user: String): String {
+        if (apiKey == null) throw MyException("未配置apikey")
+        val headers = mapOf("Authorization" to apiKey)
+        val params = mapOf(
+            "model" to model,
+            "prompt" to buffer.toString(),
+            "max_tokens" to maxTokens,
+            "temperature" to temperature
         )
-        val choices = openAI.completion(completionRequest).choices
-        val replay = choices.joinToString("\n") { it.text.split("\n\n").joinToString("\n") }
-        buffer.append("$replay\n")
-        return replay
+        val json = HttpUtil.postStringByProxy("https://api.openai.com/v1/completions", params, headers)
+        val choices = JsonUtil.getArray(json, "choices")
+        if (choices.isEmpty) throw MyException("choices为空")
+        val text = choices[0].getAsStr("text").removePrefix("\n\n").replace("<|im_end|>", "")
+        buffer.append("$text\n\n")
+        return text.replace("ChatGPT:", "").trim().split("\n\n").joinToString("\n")
     }
 
 }

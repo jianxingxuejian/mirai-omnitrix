@@ -70,7 +70,7 @@ object HttpUtil {
 
     fun postStringByProxy(
         url: String,
-        data: Map<String, String?>,
+        data: Map<String, Any?>,
         headers: Map<String, String>? = null
     ): String {
         val res = proxyClient?.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
@@ -88,11 +88,12 @@ object HttpUtil {
             builder.build()
         }
 
-    private fun requestPostBuilder(url: String, data: Map<String, String?>) =
+    private fun requestPostBuilder(url: String, data: Map<String, Any?>) =
         HttpRequest.newBuilder(URI.create(url))
             .POST(HttpRequest.BodyPublishers.ofString(JsonUtil.parse(data)))
+            .header("Content-Type", "application/json")
 
-    private fun requestPost(url: String, data: Map<String, String?>, headers: Map<String, String>?) =
+    private fun requestPost(url: String, data: Map<String, Any?>, headers: Map<String, String>?) =
         if (headers == null) {
             requestPostBuilder(url, data).build()
         } else {

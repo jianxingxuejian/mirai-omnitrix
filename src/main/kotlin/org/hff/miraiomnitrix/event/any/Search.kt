@@ -34,7 +34,7 @@ object Search : AnyEvent {
     ): EventResult {
         if (args.isEmpty()) return next()
 
-        if (!args.any { arg -> commands.any { arg.startsWith(it) || arg.endsWith(it) } }) return next()
+        if (!commands.contains(args[0])) return next()
         val quote = message[QuoteReply.Key]
         val image = if (quote != null) {
             val imageId =

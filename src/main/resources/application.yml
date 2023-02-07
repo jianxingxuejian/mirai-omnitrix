@@ -10,6 +10,8 @@ spring:
     url:
     username:
     password:
+#      url: jdbc:sqlite::resource:db/omnitrix.db
+#      driver-class-name: org.sqlite.JDBC
 
 bot:
   qq:

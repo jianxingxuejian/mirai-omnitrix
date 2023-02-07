@@ -52,6 +52,7 @@ dependencies {
     implementation ("com.aallam.openai:openai-client")
     implementation ("io.ktor:ktor-client-okhttp")
     implementation("org.seleniumhq.selenium:selenium-java:4.8.0")
+    implementation("org.xerial:sqlite-jdbc:3.40.1.0")
 }
 
 tasks.withType<KotlinCompile> {
