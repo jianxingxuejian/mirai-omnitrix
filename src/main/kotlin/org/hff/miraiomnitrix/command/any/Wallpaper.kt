@@ -6,10 +6,10 @@ import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.result.CommandResult
 import org.hff.miraiomnitrix.result.CommandResult.Companion.fail
 import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.ImageUtil.imageCache
 import org.hff.miraiomnitrix.utils.JsonUtil
 import java.io.InputStream
 
@@ -83,6 +83,6 @@ class Wallpaper : AnyCommand {
     suspend fun sendImage(subject: Contact, inputStream: InputStream) {
         val image = subject.uploadImage(inputStream)
         val send = subject.sendMessage(image)
-        imageCache.put(send.source.internalIds[0], image.imageId)
+        Cache.imageCache.put(send.source.internalIds[0], image.imageId)
     }
 }

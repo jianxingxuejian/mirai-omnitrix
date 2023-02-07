@@ -7,12 +7,12 @@ import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.SpringUtil
 
 object Character {
-    val token = SpringUtil.getBean(AccountProperties::class)?.characterAiToken
+    private val token = SpringUtil.getBean(AccountProperties::class)?.characterAiToken
     private const val url = "https://beta.character.ai/chat/streaming/"
-    val characterCache = mutableMapOf<String, Triple<String, String, String>>()
-    var chatting = false
-    var concatId: Long? = null
-    var characterName: String? = null
+    private val characterCache = mutableMapOf<String, Triple<String, String, String>>()
+    private var chatting = false
+    private var concatId: Long? = null
+    private var characterName: String? = null
 
     suspend fun chat(text: String, subject: Contact) {
         if (subject.id != concatId) return

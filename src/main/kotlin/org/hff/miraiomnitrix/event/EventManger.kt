@@ -6,15 +6,16 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.event.any.BiliBili
+import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.event.any.Img
 import org.hff.miraiomnitrix.event.any.Search
+import org.hff.miraiomnitrix.event.friend.FriendEvent
 import org.hff.miraiomnitrix.event.group.Pa
 import org.hff.miraiomnitrix.event.group.Repeat
-import org.hff.miraiomnitrix.event.friend.FriendEvent
 
 object EventManger {
 
-    private val anyChain = listOf(BiliBili, Img, Search)
+    private val anyChain = listOf(BiliBili, Cache, Img, Search)
     private val groupChain = listOf(Pa, Repeat)
     private val friendChain = listOf<FriendEvent>()
 

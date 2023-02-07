@@ -14,7 +14,6 @@ import org.hff.miraiomnitrix.result.EventResult
 import org.hff.miraiomnitrix.result.EventResult.Companion.next
 import org.hff.miraiomnitrix.result.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStrOrNull
@@ -37,12 +36,9 @@ object Search : AnyEvent {
         if (!commands.contains(args[0])) return next()
         val quote = message[QuoteReply.Key]
         val image = if (quote != null) {
-            val imageId =
-                ImageUtil.imageCache.getIfPresent(quote.source.internalIds[0]) ?: return next()
+            val imageId = Cache.imageCache.getIfPresent(quote.source.internalIds[0]) ?: return next()
             Image(imageId)
-        } else {
-            message[Image.Key] ?: return next()
-        }
+        } else message[Image.Key] ?: return next()
 
         val apiResult = HttpUtil.getStringByProxy("$url$key&url=${image.queryUrl()}")
         val array = JsonUtil.getArray(apiResult, "results")

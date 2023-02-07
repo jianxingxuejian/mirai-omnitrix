@@ -47,7 +47,7 @@ object Img : AnyEvent {
             first.startsWith("一直[") || first.endsWith("]一直") -> {
                 val file = ClassPathResource(path2).inputStream
                 val imageA = ImageUtil.scaleTo(file, 400, 500)
-                val image = ImageUtil.getFormCache(message)
+                val image = Cache.getImgFromCache(message)
                 val imageB = if (image == null) {
                     val qqImg = Util.getQqImg(args, sender)
                     ImageUtil.scaleTo(qqImg, 400, 400)
@@ -61,7 +61,7 @@ object Img : AnyEvent {
                 val inputStream = ByteArrayInputStream(overlayB.bytes(PngWriter()))
                 val upload = subject.uploadImage(inputStream)
                 val send = subject.sendMessage(upload)
-                ImageUtil.imageCache.put(send.source.internalIds[0], upload.imageId)
+                Cache.imageCache.put(send.source.internalIds[0], upload.imageId)
                 return stop()
             }
         }
