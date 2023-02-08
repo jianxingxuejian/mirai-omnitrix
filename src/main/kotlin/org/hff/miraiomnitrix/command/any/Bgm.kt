@@ -44,7 +44,7 @@ class Bgm(private val bgmService: BgmService, accountProperties: AccountProperti
                 else -> wrapper.like(Bgm::name, "%$it%")
             }
         }
-        val list = wrapper.last("ORDER BY RAND() LIMIT $num").list()
+        val list = wrapper.last("ORDER BY RANDOM() LIMIT $num").list()
 
         list.forEach {
             GlobalScope.launch {
