@@ -14,7 +14,7 @@ class LivePush(val liveService: LiveService) {
 
     val livesCache = mutableMapOf<Long, Int>()
 
-    @Scheduled(initialDelay = 10_000, fixedDelay = 90_000)
+    @Scheduled(initialDelay = 60_000, fixedDelay = 90_000)
     fun listen() {
         runBlocking {
             val lives = liveService.list()

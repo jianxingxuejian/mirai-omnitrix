@@ -7,11 +7,15 @@ spring:
   profiles:
     active: local
   datasource:
-    url:
-    username:
-    password:
-#      url: jdbc:sqlite::resource:db/omnitrix.db
-#      driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:omnitrix.db
+    driver-class-name: org.sqlite.JDBC
+  sql:
+    init:
+      schema-locations:
+        - classpath:sql/init.sql
+      mode: always
+      platform: sqlite
+      encoding: UTF-8
 
 bot:
   qq:

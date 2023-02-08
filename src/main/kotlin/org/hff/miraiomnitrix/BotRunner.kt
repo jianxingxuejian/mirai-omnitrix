@@ -50,5 +50,6 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
 
         @EventHandler
         suspend fun FriendMessageEvent.onMessage() = CommandManager.executeFriendCommand(sender, message, this)
+
     }
 }

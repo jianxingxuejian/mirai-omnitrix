@@ -27,7 +27,7 @@ object Repeat : GroupEvent {
         event: GroupMessageEvent
     ): EventResult {
         if (args.isEmpty()) return next()
-        var content = args[0]
+        var content = message.contentToString()
         val excludeGroup = permissionProperties?.repeatExcludeGroup
         if (!excludeGroup.isNullOrEmpty() && excludeGroup.contains(group.id)) return next()
 
@@ -58,7 +58,7 @@ object Repeat : GroupEvent {
             } else if (isImage) {
                 group.sendMessage(Image(content))
             } else {
-                group.sendMessage(content)
+                group.sendMessage(message)
             }
         } else {
             stringQueue.add(content)

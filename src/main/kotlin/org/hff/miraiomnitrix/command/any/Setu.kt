@@ -78,7 +78,7 @@ class Setu : AnyCommand {
         if (forwardBuilder.size > 0) {
             val forward = forwardBuilder.build().toMessageChain()
             val send = subject.sendMessage(forward)
-            if (r18 == 1) send.recallIn(5 * 60 * 1000)
+            if (r18 == 1) send.recallIn(90 * 1000)
             return null
         }
         return result("没有找到符合条件的涩图")

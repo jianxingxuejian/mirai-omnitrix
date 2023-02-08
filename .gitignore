@@ -8,6 +8,7 @@ build/
 MyGenerator.kt
 device.json
 cache/
+*.db
 
 ### STS ###
 .apt_generated

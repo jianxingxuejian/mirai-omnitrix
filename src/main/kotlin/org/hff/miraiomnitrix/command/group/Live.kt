@@ -28,7 +28,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
     ): CommandResult? {
         if (args.isEmpty()) {
             val list = liveService.ktQuery().eq(Live::groupId, group.id).list()
-            if (list.isEmpty()) return result("尚未添加主播/n使用live help指令获取使用方法")
+            if (list.isEmpty()) return result("尚未添加主播\n使用live help指令获取使用方法")
 
             val liveStates = mutableListOf<String>()
             coroutineScope {
@@ -45,7 +45,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
         }
 
         when (args[0]) {
-            "帮助", "help" -> {}
+            "帮助", "help" -> return result("使用add、添加命令来添加主播，格式为add qq号 b站uid\n使用del、移除命令移除主播，格式为del qq号")
             "添加", "add", "save" -> {
                 if (args.size < 3) return result("参数错误")
                 val qq = getQq(args[1])

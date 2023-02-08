@@ -48,10 +48,7 @@ dependencies {
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation(platform("com.aallam.openai:openai-client-bom:2.1.3"))
-    implementation ("com.aallam.openai:openai-client")
-    implementation ("io.ktor:ktor-client-okhttp")
-    implementation("org.seleniumhq.selenium:selenium-java:4.8.0")
+//    implementation("org.seleniumhq.selenium:selenium-java:4.8.0")
     implementation("org.xerial:sqlite-jdbc:3.40.1.0")
 }
 
