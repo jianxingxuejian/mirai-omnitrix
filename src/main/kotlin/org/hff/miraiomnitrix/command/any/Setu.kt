@@ -18,7 +18,6 @@ import org.hff.miraiomnitrix.utils.JsonUtil.get
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.util.regex.Pattern
 
 
 @Command(name = ["涩图", "色图", "setu"])
@@ -38,15 +37,15 @@ class Setu : AnyCommand {
         var num = 1
         var type = 1
         val keywords = mutableListOf<String>()
-        args.forEach {
-            it.lowercase()
+        args.forEach { arg ->
+            arg.lowercase()
             when {
-                it == "r" -> r18 = 1
-                it.startsWith("n") || it.startsWith("num") ->
-                    num = Pattern.compile("[^0-9]").matcher(it).replaceAll("").toInt()
+                arg == "r" || arg == "r18" -> r18 = 1
+                arg.matches(Regex("^n[0-9]+$")) || arg.matches(Regex("^num[0-9]+$")) ->
+                    arg.filter { char -> char.isDigit() }.takeIf { it.isNotEmpty() }?.toInt()?.let { num = it }
 
-                it == "b" -> type = 2
-                else -> keywords.add(it)
+                arg == "b" -> type = 2
+                else -> keywords.add(arg)
             }
         }
         val url = (if (type == 1) {
