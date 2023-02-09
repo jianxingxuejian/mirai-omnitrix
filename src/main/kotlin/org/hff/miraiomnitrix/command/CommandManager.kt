@@ -146,7 +146,7 @@ object CommandManager {
                 }
             }
         }
-        val args = string.trim().split(Regex("\\s+|\\[图片]|\\[动画表情]"))
+        val args = string.replace("[图片]", "").replace("[动画表情]", "").trim().split(Regex("\\s+"))
         if (needHead && !hasHead) return Pair(null, args)
         return Pair(args[0], args.slice(1 until args.size))
     }

@@ -44,7 +44,7 @@ object Img : AnyEvent {
                 return stop()
             }
 
-            first.startsWith("一直[") || first.endsWith("]一直") -> {
+            first == "一直" -> {
                 val file = ClassPathResource(path2).inputStream
                 val imageA = ImageUtil.scaleTo(file, 400, 500)
                 val image = Cache.getImgFromCache(message)
