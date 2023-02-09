@@ -20,9 +20,7 @@ import org.jsoup.Jsoup
 import java.util.regex.Pattern
 
 @Command(name = ["番剧推荐", "bgm"])
-class Bgm(private val bgmService: BgmService, accountProperties: AccountProperties) : AnyCommand {
-
-    private val cookie = accountProperties.bgmCookie
+class Bgm(private val bgmService: BgmService, private val accountProperties: AccountProperties) : AnyCommand {
 
     @OptIn(DelicateCoroutinesApi::class)
     override suspend fun execute(
@@ -67,7 +65,8 @@ class Bgm(private val bgmService: BgmService, accountProperties: AccountProperti
     }
 
     fun init(): CommandResult? {
-        if (cookie == null) return result("请配置bangumi网页的cookie")
+        val cookie = accountProperties.bgmCookie
+        if (cookie.isNullOrBlank()) return result("请配置bangumi网页的cookie")
         val headers = mapOf("cookie" to cookie)
         for (i in 1..300) {
             val result = HttpUtil.getString("https://bgm.tv/anime/browser?sort=rank&page=$i", headers)

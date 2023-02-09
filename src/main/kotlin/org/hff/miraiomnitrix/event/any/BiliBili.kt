@@ -7,20 +7,19 @@ import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import org.hff.miraiomnitrix.config.PermissionProperties
+import org.hff.miraiomnitrix.event.Event
 import org.hff.miraiomnitrix.result.EventResult
 import org.hff.miraiomnitrix.result.EventResult.Companion.next
 import org.hff.miraiomnitrix.result.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
-import org.hff.miraiomnitrix.utils.SpringUtil
 
-object BiliBili : AnyEvent {
+@Event(priority = 1)
+class BiliBili(private val permissionProperties: PermissionProperties) : AnyEvent {
 
-    private val include = SpringUtil.getBean(PermissionProperties::class)?.bvIncludeGroup
-
-    private const val VIDEO_API = "https://api.bilibili.com/x/web-interface/view"
-    private val VIDEO_REGEX = """(?i)(?<!\w)(?:av(\d+)|(BV1[1-9A-NP-Za-km-z]{9}))""".toRegex()
+    private val videoUrl = "https://api.bilibili.com/x/web-interface/view"
+    private val videoRegex = """(?i)(?<!\w)(?:av(\d+)|(BV1[1-9A-NP-Za-km-z]{9}))""".toRegex()
     override suspend fun handle(
         sender: User,
         message: MessageChain,
@@ -30,12 +29,12 @@ object BiliBili : AnyEvent {
     ): EventResult {
         if (args.isEmpty()) return next()
 
-        if (include != null && !include.contains(subject.id)) return next()
+        if (!permissionProperties.bvIncludeGroup.contains(subject.id)) return next()
 
         val first = args[0]
-        if (first.length > 30 || !(VIDEO_REGEX matches args[0])) return next()
+        if (first.length > 30 || !(videoRegex matches args[0])) return next()
 
-        val json = HttpUtil.getString(VIDEO_API, mapOf("bvid" to first))
+        val json = HttpUtil.getString(videoUrl, mapOf("bvid" to first))
         val data = JsonUtil.getObj(json, "data")
         val title = data.getAsStr("title")
         val picUrl = data.getAsStr("pic")

@@ -8,13 +8,13 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
+import org.hff.miraiomnitrix.event.Event
 import org.hff.miraiomnitrix.result.EventResult
 import org.hff.miraiomnitrix.result.EventResult.Companion.next
 import org.hff.miraiomnitrix.result.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
-import org.hff.miraiomnitrix.utils.SpringUtil
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
 import java.awt.Color
@@ -24,15 +24,14 @@ import java.awt.image.BufferedImage
 import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
 
-object Pa : GroupEvent {
+@Event(priority = 1)
+class Pa(private val botProperties: BotProperties, private val permissionProperties: PermissionProperties) :
+    GroupEvent {
 
-    private val botProperties = SpringUtil.getBean(BotProperties::class)
-    private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
+    private val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
-    private const val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
-
-    private const val paDir = "/img/pa/*"
-    private const val tieDir = "/img/tie/*"
+    private val paDir = "/img/pa/*"
+    private val tieDir = "/img/tie/*"
 
     override suspend fun handle(
         sender: Member,
@@ -45,7 +44,6 @@ object Pa : GroupEvent {
 
         var qq = args.find { it.startsWith("@") }?.substring(1)?.toLong()
         if (qq == null) {
-            if (botProperties == null) return next()
             if (message.contentToString().contains("@" + botProperties.qq)) {
                 qq = sender.id
             } else {
@@ -64,8 +62,8 @@ object Pa : GroupEvent {
     }
 
     private fun getFileByQQ(qq: Long): InputStream {
-        val admin = permissionProperties?.admin
-        val path = if (admin?.isNotEmpty() == true && admin.contains(qq)) tieDir else paDir
+        val admin = permissionProperties.admin
+        val path = if (admin.isNotEmpty() && admin.contains(qq)) tieDir else paDir
         val files = PathMatchingResourcePatternResolver().getResources(path)
         val randomInt = ThreadLocalRandom.current().nextInt(files.size)
         return files[randomInt].inputStream

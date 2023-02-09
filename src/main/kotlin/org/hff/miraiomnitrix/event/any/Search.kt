@@ -10,6 +10,7 @@ import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.QuoteReply
 import org.hff.miraiomnitrix.config.AccountProperties
+import org.hff.miraiomnitrix.event.Event
 import org.hff.miraiomnitrix.result.EventResult
 import org.hff.miraiomnitrix.result.EventResult.Companion.next
 import org.hff.miraiomnitrix.result.EventResult.Companion.stop
@@ -17,12 +18,11 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStrOrNull
-import org.hff.miraiomnitrix.utils.SpringUtil
 
-object Search : AnyEvent {
+@Event(priority = 4)
+class Search(private val accountProperties: AccountProperties) : AnyEvent {
 
-    private const val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
-    private val key = SpringUtil.getBean(AccountProperties::class)?.saucenaoKey
+    private val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
     private val commands = listOf("st", "搜图", "soutu")
     override suspend fun handle(
         sender: User,
@@ -40,7 +40,7 @@ object Search : AnyEvent {
             Image(imageId)
         } else message[Image.Key] ?: return next()
 
-        val apiResult = HttpUtil.getStringByProxy("$url$key&url=${image.queryUrl()}")
+        val apiResult = HttpUtil.getStringByProxy("$url${accountProperties.saucenaoKey}&url=${image.queryUrl()}")
         val array = JsonUtil.getArray(apiResult, "results")
         if (array.isEmpty) return stop()
         val result = array[0].asJsonObject

@@ -12,8 +12,7 @@ import org.hff.miraiomnitrix.command.group.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.event.EventManger
 import org.hff.miraiomnitrix.exception.MyException
-import org.hff.miraiomnitrix.utils.SpringUtil.getBean
-import org.hff.miraiomnitrix.utils.SpringUtil.getBeansWithAnnotation
+import org.hff.miraiomnitrix.utils.SpringUtil
 import java.net.http.HttpTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
@@ -21,7 +20,7 @@ import kotlin.reflect.full.findAnnotation
 
 object CommandManager {
     private val commandHeads = arrayOf("|", "\\", ",", ".", "，", "。")
-    private val botProperties = getBean(BotProperties::class)
+    private val botProperties = SpringUtil.getBean(BotProperties::class)
 
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
     private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
@@ -30,12 +29,12 @@ object CommandManager {
     private val errorCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Long, Exception>()
 
     init {
-        getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
-            val annotation = command::class.findAnnotation<Command>()!!
+        SpringUtil.getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
+            val annotation = command::class.findAnnotation<Command>()
             when (command) {
-                is AnyCommand -> annotation.name.forEach { anyCommands[it] = command }
-                is FriendCommand -> annotation.name.forEach { friendCommands[it] = command }
-                is GroupCommand -> annotation.name.forEach { groupCommands[it] = command }
+                is AnyCommand -> annotation?.name?.forEach { anyCommands[it] = command }
+                is FriendCommand -> annotation?.name?.forEach { friendCommands[it] = command }
+                is GroupCommand -> annotation?.name?.forEach { groupCommands[it] = command }
             }
         }
     }

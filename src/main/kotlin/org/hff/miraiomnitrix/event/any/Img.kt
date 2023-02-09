@@ -8,6 +8,7 @@ import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.event.Event
 import org.hff.miraiomnitrix.result.EventResult
 import org.hff.miraiomnitrix.result.EventResult.Companion.next
 import org.hff.miraiomnitrix.result.EventResult.Companion.stop
@@ -18,10 +19,11 @@ import org.hff.miraiomnitrix.utils.Util
 import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayInputStream
 
-object Img : AnyEvent {
+@Event(priority = 3)
+class Img : AnyEvent {
 
-    private const val path1 = "/img/other/jjgw.jpg"
-    private const val path2 = "/img/other/always.png"
+    private val path1 = "/img/other/jjgw.jpg"
+    private val path2 = "/img/other/always.png"
 
     override suspend fun handle(
         sender: User,

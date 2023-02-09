@@ -5,19 +5,32 @@ import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.event.any.BiliBili
-import org.hff.miraiomnitrix.event.any.Cache
-import org.hff.miraiomnitrix.event.any.Img
-import org.hff.miraiomnitrix.event.any.Search
+import org.hff.miraiomnitrix.event.any.AnyEvent
 import org.hff.miraiomnitrix.event.friend.FriendEvent
-import org.hff.miraiomnitrix.event.group.Pa
-import org.hff.miraiomnitrix.event.group.Repeat
+import org.hff.miraiomnitrix.event.group.GroupEvent
+import org.hff.miraiomnitrix.utils.SpringUtil
 
 object EventManger {
 
-    private val anyChain = listOf(BiliBili, Cache, Img, Search)
-    private val groupChain = listOf(Pa, Repeat)
-    private val friendChain = listOf<FriendEvent>()
+    private val anyChain = mutableListOf<AnyEvent>()
+    private val groupChain = mutableListOf<GroupEvent>()
+    private val friendChain = mutableListOf<FriendEvent>()
+
+    init {
+        SpringUtil.getBeansWithAnnotation(Event::class)?.values?.forEach {
+            when (it) {
+                is AnyEvent -> anyChain.add(it)
+                is GroupEvent -> groupChain.add(it)
+                is FriendEvent -> friendChain.add(it)
+            }
+        }
+        sortByPriority(anyChain)
+        sortByPriority(groupChain)
+        sortByPriority(friendChain)
+    }
+
+    private fun sortByPriority(chain: MutableList<out Any>) =
+        chain.sortBy { it.javaClass.getAnnotation(Event::class.java).priority }
 
     suspend fun groupHandle(
         sender: Member,

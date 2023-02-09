@@ -7,12 +7,14 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.config.PermissionProperties
+import org.hff.miraiomnitrix.event.Event
 import org.hff.miraiomnitrix.result.EventResult
 import org.hff.miraiomnitrix.result.EventResult.Companion.next
 import org.hff.miraiomnitrix.utils.SpringUtil
 import java.util.*
 
-object Repeat : GroupEvent {
+@Event(priority = 2)
+class Repeat() : GroupEvent {
 
     private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
     private val groupMsgMap = mutableMapOf<Long, Queue<String>>()
