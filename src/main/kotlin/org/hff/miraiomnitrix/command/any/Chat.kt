@@ -74,13 +74,13 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         val cache = stateCache[sender.id]
         if (cache == null) stateCache[sender.id] = mutableSetOf(subject.id)
         else {
-            if (cache.contains(subject.id)) return result("问答线程已经开始，请@我并说出你的问题")
+            if (cache.contains(subject.id)) return null
             else stateCache[sender.id]?.add(subject.id)
         }
 
         val name = sender.nameCardOrNick
         try {
-            CoroutineScope(Dispatchers.IO).launch {
+            coroutineScope {
                 val buffer =
                     StringBuffer("$name: 你是${models[index].name}, 一个由OpenAI训练的大型语言模型。现在的时间是:${LocalDate.now()}，开始问答式交流。")
                 if (args.isEmpty()) subject.sendMessage(name + "你好，我是${models[index].name}，现在开始问答，请@我并说出你的问题")
@@ -124,10 +124,6 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
             }
         } catch (_: TimeoutCancellationException) {
             subject.sendMessage(At(event.sender.id) + "超时，问答已结束")
-        } catch (_: MyException) {
-            if (index == models.size - 1) index = 0
-            else index++
-            subject.sendMessage("出现错误，切换模型为${models[index].name}")
         } catch (_: Exception) {
             subject.sendMessage(At(event.sender.id) + "出现错误，请重试")
         } finally {
