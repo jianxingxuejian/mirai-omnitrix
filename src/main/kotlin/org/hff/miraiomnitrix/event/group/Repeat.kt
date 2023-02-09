@@ -14,7 +14,7 @@ import org.hff.miraiomnitrix.utils.SpringUtil
 import java.util.*
 
 @Event(priority = 2)
-class Repeat() : GroupEvent {
+class Repeat : GroupEvent {
 
     private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
     private val groupMsgMap = mutableMapOf<Long, Queue<String>>()
