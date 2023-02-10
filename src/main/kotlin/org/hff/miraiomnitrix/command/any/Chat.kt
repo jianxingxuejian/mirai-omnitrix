@@ -82,7 +82,7 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         try {
             coroutineScope {
                 val buffer =
-                    StringBuffer("$name: 你是${models[index].name}, 一个由OpenAI训练的大型语言模型。现在的时间是:${LocalDate.now()}，开始问答式交流。")
+                    StringBuffer("Human: 你是${models[index].name}, 一个由OpenAI训练的大型语言模型。现在的时间是:${LocalDate.now()}，开始问答式交流。")
                 if (args.isEmpty()) subject.sendMessage(name + "你好，我是${models[index].name}，现在开始问答，请@我并说出你的问题")
                 else {
                     subject.sendMessage(name + "你好，我是${models[index].name}，问答即将开始")
