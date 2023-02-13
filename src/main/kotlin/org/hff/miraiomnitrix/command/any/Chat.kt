@@ -148,7 +148,10 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         if (choices.isEmpty) throw MyException("choices为空")
         val text = choices[0].getAsStr("text").removePrefix("\n\n").replace("<|im_end|>", "")
         buffer.append("$text\n\n")
-        return text.trim().removePrefix("${models[index].name}: ").split("\n\n").joinToString("\n")
+        return text.trim().removePrefix("AI: ")
+            .removePrefix("AI：")
+            .removePrefix("${models[index].name}: ")
+            .split("\n\n").joinToString("\n")
     }
 
 }
