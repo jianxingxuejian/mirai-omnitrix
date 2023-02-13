@@ -103,12 +103,11 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
                         content.replace(at, "")
                     } else {
                         val isChat = content.length > 4 && content.slice(1..4) == "chat"
-                        if (isChat) {
-                            if (content.length <= 5) {
-                                subject.sendMessage(At(sender) + "请输入")
-                                continue
-                            } else content.substring(5)
-                        } else continue
+                        if (!isChat) continue
+                        if (content.length <= 5) {
+                            subject.sendMessage(At(sender) + "请输入")
+                            continue
+                        } else content.substring(5)
                     }
                     val temp = buffer.length
                     buffer.append("Human: $content\n\n")
