@@ -124,8 +124,9 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
             }
         } catch (_: TimeoutCancellationException) {
             subject.sendMessage(At(event.sender.id) + "超时，问答已结束")
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             subject.sendMessage(At(event.sender.id) + "出现错误，请重试")
+            e.printStackTrace()
         } finally {
             stateCache[sender.id]?.remove(subject.id)
         }
