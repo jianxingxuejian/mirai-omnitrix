@@ -111,7 +111,7 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
                         } else continue
                     }
                     val temp = buffer.length
-                    buffer.append("$name：$content\n\n")
+                    buffer.append("Human: $content\n\n")
                     try {
                         val reply = completion(buffer, sender.nameCardOrNick)
                         println(buffer)
