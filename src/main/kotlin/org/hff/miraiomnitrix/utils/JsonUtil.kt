@@ -1,11 +1,12 @@
 package org.hff.miraiomnitrix.utils
 
 import com.google.gson.*
+import com.google.gson.reflect.TypeToken
 import org.hff.miraiomnitrix.exception.MyException
 import kotlin.reflect.KClass
 
 object JsonUtil {
-    private val gson = Gson()
+    val gson = Gson()
 
     fun getStr(json: String) = parse(json).asString
 
@@ -23,7 +24,7 @@ object JsonUtil {
 
     fun getArray(json: String, key: String): JsonArray = getKey(json, key).asJsonArray
 
-    fun <T : Any> fromJson(json: String, clazz: KClass<T>): T = gson.fromJson(json, clazz.java)
+    inline fun <reified T> fromJson(json: String): T = gson.fromJson(json, object : TypeToken<T>() {}.type)
 
     fun <T : Any> fromJson(json: String, key: String, clazz: KClass<T>): T =
         gson.fromJson(getObj(json, key), clazz.java)
