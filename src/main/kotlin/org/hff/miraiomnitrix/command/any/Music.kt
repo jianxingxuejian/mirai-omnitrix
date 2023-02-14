@@ -27,8 +27,8 @@ class Music : AnyCommand {
         event: MessageEvent
     ): CommandResult? {
         if (args.isEmpty()) return result("请输入歌曲名")
-        val first = args[0]
-        val encode = URLEncoder.encode(first, Charsets.UTF_8)
+        val name = args.joinToString(" ")
+        val encode = URLEncoder.encode(name, Charsets.UTF_8)
         val json = HttpUtil.getString(searchUrl + encode)
         val songs = JsonUtil.fromJson(json, "result", MusicResult::class).songs
         if (songs.isEmpty()) return result("未找到歌曲")

@@ -13,6 +13,9 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.springframework.core.io.ClassPathResource
 
+/**
+ * emoji合成，json数据来源于 https://github.com/xsalazar/emoji-kitchen
+ */
 @Event(priority = 5)
 class EmojiMix : AnyEvent {
 
@@ -52,8 +55,8 @@ class EmojiMix : AnyEvent {
         val emojiCodePoints = emojis.codePoints().toArray()
         val emojiHexStrings = emojiCodePoints.map { Integer.toHexString(it).removePrefix("U+") }
         val first = emojiHexStrings[0]
-        val cache = emojiCache[first] ?: return next()
         val second = emojiHexStrings[1]
+        val cache = emojiCache[first] ?: emojiCache[second] ?: return next()
         val data = cache[second] ?: return next()
         val inputStream = HttpUtil.getInputStream("$url/$data/u$first/u${first}_u$second.png")
         subject.sendImage(inputStream)
