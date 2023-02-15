@@ -19,7 +19,7 @@ class EmojiMix : AnyEvent {
 
     private val url = "https://www.gstatic.com/android/keyboard/emojikitchen"
 
-    private val emojiCache = hashMapOf<String, HashMap<String, String>>()
+    private val emojiCache = hashMapOf<String, HashMap<String, Emoji>>()
 
 
     init {
@@ -27,12 +27,12 @@ class EmojiMix : AnyEvent {
         val emojiMap: Map<String, List<Emoji>> = JsonUtil.fromJson(json)
         emojiMap.values.forEach {
             it.forEach { emoji ->
-                val (leftEmoji, rightEmoji, date) = emoji
+                val (leftEmoji, rightEmoji) = emoji
                 val cache = emojiCache[leftEmoji]
                 if (cache != null) {
-                    cache[rightEmoji] = date
+                    cache[rightEmoji] = emoji
                 } else {
-                    emojiCache[leftEmoji] = hashMapOf(rightEmoji to date)
+                    emojiCache[leftEmoji] = hashMapOf(rightEmoji to emoji)
                 }
             }
         }
@@ -55,8 +55,8 @@ class EmojiMix : AnyEvent {
         val first = emojiHexStrings[0]
         val second = emojiHexStrings[1]
         val cache = emojiCache[first] ?: emojiCache[second] ?: return next()
-        val data = cache[second] ?: cache[first] ?: return next()
-        val inputStream = HttpUtil.getInputStream("$url/$data/u$first/u${first}_u$second.png")
+        val (leftEmoji, rightEmoji, date) = cache[second] ?: cache[first] ?: return next()
+        val inputStream = HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
         subject.sendImage(inputStream)
         return stop()
     }
