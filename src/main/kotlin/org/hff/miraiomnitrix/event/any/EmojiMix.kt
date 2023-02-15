@@ -54,8 +54,8 @@ class EmojiMix : AnyEvent {
         val emojiHexStrings = emojiCodePoints.map { Integer.toHexString(it).removePrefix("U+") }
         val first = emojiHexStrings[0]
         val second = emojiHexStrings[1]
-        val cache = emojiCache[first] ?: emojiCache[second] ?: return next()
-        val (leftEmoji, rightEmoji, date) = cache[second] ?: cache[first] ?: return next()
+        val (leftEmoji, rightEmoji, date) = emojiCache[first]?.get(second) ?: emojiCache[second]?.get(first)
+        ?: return next()
         val inputStream = HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
         subject.sendImage(inputStream)
         return stop()
