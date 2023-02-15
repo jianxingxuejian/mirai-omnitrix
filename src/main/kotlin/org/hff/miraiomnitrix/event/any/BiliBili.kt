@@ -29,7 +29,7 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
     ): EventResult {
         if (args.isEmpty()) return next()
 
-        if (!permissionProperties.bvIncludeGroup.contains(subject.id)) return next()
+        if (permissionProperties.bvExcludeGroup.contains(subject.id)) return next()
 
         val first = args[0]
         if (first.length > 30 || !(videoRegex matches args[0])) return next()

@@ -10,8 +10,10 @@ data class PermissionProperties(
     val admin: List<Long>,
     /** 排除复读功能的群号 */
     val repeatExcludeGroup: List<Long>,
-    /** 能使用聊天机器人的群号 */
-    val chatIncludeGroup: List<Long>,
-    /** 能使用bv解析的群号 */
-    val bvIncludeGroup: List<Long>
+    /** 排除聊天功能的群号 */
+    val chatExcludeGroup: List<Long>,
+    /** 排除bv解析的群号 */
+    val bvExcludeGroup: List<Long>,
+    /** 排除合成emoji */
+    val emojiMixExcludeGroup: List<Long>
 )

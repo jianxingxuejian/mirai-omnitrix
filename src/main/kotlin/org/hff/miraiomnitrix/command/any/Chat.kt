@@ -25,7 +25,7 @@ import java.time.LocalDate
 @Command(["chat", "聊天"])
 class Chat(accountProperties: AccountProperties, permissionProperties: PermissionProperties) : AnyCommand {
 
-    private val chatIncludeGroup = permissionProperties.chatIncludeGroup
+    private val excludeGroup = permissionProperties.chatExcludeGroup
     private val stateCache = mutableMapOf<Long, MutableSet<Long>>()
     private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
 
@@ -44,8 +44,8 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         args: List<String>,
         event: MessageEvent
     ): CommandResult? {
-        if (subject is Group && chatIncludeGroup.isNotEmpty()) {
-            if (!chatIncludeGroup.contains(subject.id)) return null
+        if (subject is Group && excludeGroup.isNotEmpty()) {
+            if (excludeGroup.contains(subject.id)) return null
         }
 
         if (args.isNotEmpty() && admin.isNotEmpty() && admin.contains(sender.id)) {
@@ -60,22 +60,26 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
                     val newIndex = args[1].toInt() - 1
                     if (newIndex < 1 || newIndex >= models.size) return result("参数错误")
                     index = newIndex
-                    subject.sendMessage("模型更改为${models[index].name}")
+                    return result("模型更改为${models[index].name}")
                 }
 
                 "temperature" -> {
                     if (args.size < 2) return result("参数错误")
                     temperature = args[1].toDouble()
-                    subject.sendMessage("temperature更改成功")
+                    return result("temperature更改成功")
                 }
             }
         }
 
         val cache = stateCache[sender.id]
-        if (cache == null) stateCache[sender.id] = mutableSetOf(subject.id)
-        else {
-            if (cache.contains(subject.id)) return null
-            else stateCache[sender.id]?.add(subject.id)
+        if (cache == null) {
+            stateCache[sender.id] = mutableSetOf(subject.id)
+        } else {
+            if (cache.contains(subject.id)) {
+                return null
+            } else {
+                stateCache[sender.id]?.add(subject.id)
+            }
         }
 
         val name = sender.nameCardOrNick

@@ -21,16 +21,17 @@ bot:
   qq:
   password:
 
-permission:
-  admin:
-  repeatExcludeGroup:
-  chatIncludeGroup:
-  bvIncludeGroup:
-
 http:
   proxy:
     host: localhost
     port: 7890
+
+permission:
+  admin:
+  repeatExcludeGroup:
+  chatExcludeGroup:
+  bvExcludeGroup:
+  emojiMixExcludeGroup:
 
 account:
   characterAiToken:

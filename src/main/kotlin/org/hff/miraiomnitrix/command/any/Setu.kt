@@ -20,11 +20,11 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 
-@Command(name = ["涩图", "色图", "setu"])
+@Command(name = ["涩图", "setu"])
 class Setu : AnyCommand {
 
-    private val url1 = "https://api.lolicon.app/setu/v2?"
-    private val url2 = "https://image.anosu.top/pixiv/json?size=regular&"
+    private val api1 = "https://api.lolicon.app/setu/v2"
+    private val api2 = "https://image.anosu.top/pixiv/json"
 
     override suspend fun execute(
         sender: User,
@@ -35,51 +35,47 @@ class Setu : AnyCommand {
     ): CommandResult? {
         var r18 = 0
         var num = 1
-        var type = 1
         val keywords = mutableListOf<String>()
         args.forEach { arg ->
-            arg.lowercase()
             when {
                 arg == "r" || arg == "r18" -> r18 = 1
-                arg.matches(Regex("^n[0-9]+$")) || arg.matches(Regex("^num[0-9]+$")) ->
-                    arg.filter { char -> char.isDigit() }.takeIf { it.isNotEmpty() }?.toInt()?.let { num = it }
-
-                arg == "b" -> type = 2
-                else -> keywords.add(arg)
+                arg.matches(Regex("^(n|num)[0-9]+$")) -> num = arg.substringAfter("n", "num").toInt()
+                else -> keywords.add(arg.lowercase())
             }
         }
-        val url = (if (type == 1) {
-            val sb = StringBuilder()
-            keywords.forEach { sb.append("tag=").append(URLEncoder.encode(it, StandardCharsets.UTF_8)).append("&") }
-            url1 + sb
-        } else {
-            if (keywords.isEmpty()) url2
-            else url2 + "keyword=" + keywords.joinToString("|") + "&"
-        }) + "r18=" + r18 + "&num=" + num
-        val json = HttpUtil.getString(url)
         val forwardBuilder = ForwardMessageBuilder(subject)
 
         coroutineScope {
-            val data = if (type == 1) JsonUtil.getArray(json, "data").map { it.get("urls").getAsStr("original") }
-            else JsonUtil.getArray(json).map { it.getAsStr("url") }
-            data.forEach {
-                launch {
-                    try {
-                        val result = HttpUtil.getInputStreamByProxy(it)
-                        val image = subject.uploadImage(result)
-                        forwardBuilder.add(subject.bot, image)
-                    } catch (_: Exception) {
+            try {
+                val tags = keywords.joinToString("&tag=", "&tag=") { URLEncoder.encode(it, StandardCharsets.UTF_8) }
+                val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
+                JsonUtil.getArray(json, "data")
+                    .map { it.get("urls").getAsStr("original") }
+                    .forEach { launch { addForward(forwardBuilder, subject, it) } }
+            } catch (e: Exception) {
+                val json = HttpUtil.getString("$api2?r18=$r18&num=$num&keyword=${keywords.joinToString("|")}")
+                JsonUtil.getArray(json).map { it.getAsStr("url") }
+                    .forEach {
+                        try {
+                            launch { addForward(forwardBuilder, subject, it) }
+                        } catch (_: Exception) {
+                            return@forEach
+                        }
                     }
-                }
             }
         }
 
         if (forwardBuilder.size > 0) {
-            val forward = forwardBuilder.build().toMessageChain()
-            val send = subject.sendMessage(forward)
-            if (r18 == 1) send.recallIn(90 * 1000)
+            subject.sendMessage(forwardBuilder.build().toMessageChain()).apply { if (r18 == 1) recallIn(60 * 1000) }
             return null
         }
         return result("没有找到符合条件的涩图")
     }
+
+    suspend fun addForward(forwardBuilder: ForwardMessageBuilder, subject: Contact, imgUrl: String) {
+        val result = HttpUtil.getInputStreamByProxy(imgUrl)
+        val image = subject.uploadImage(result)
+        forwardBuilder.add(subject.bot, image)
+    }
+
 }
