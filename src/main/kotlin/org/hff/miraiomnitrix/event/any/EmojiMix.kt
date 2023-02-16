@@ -37,7 +37,7 @@ class EmojiMix : AnyEvent {
     }
 
     override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
-        if (args.isEmpty()) next()
+        if (args.isEmpty()) return next()
         val content = args[0]
         val regex = Regex("^(\\p{So}){2}") // 匹配以两个emoji开头的字符串
 
