@@ -1,21 +1,20 @@
 package org.hff.miraiomnitrix.event.any
 
 import com.sksamuel.scrimage.nio.PngWriter
-import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.event.AnyEvent
 import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.result.EventResult
-import org.hff.miraiomnitrix.result.EventResult.Companion.next
-import org.hff.miraiomnitrix.result.EventResult.Companion.stop
+import org.hff.miraiomnitrix.event.EventResult
+import org.hff.miraiomnitrix.event.EventResult.Companion.next
+import org.hff.miraiomnitrix.event.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
 import org.hff.miraiomnitrix.utils.Util
+import org.hff.miraiomnitrix.utils.getInfo
 import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayInputStream
 
@@ -25,16 +24,12 @@ class Img : AnyEvent {
     private val path1 = "/img/other/jjgw.jpg"
     private val path2 = "/img/other/always.png"
 
-    override suspend fun handle(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
         if (args.isEmpty()) return next()
 
         val first = args[0]
+        val (subject, sender, message) = event.getInfo()
+
         when {
             first.startsWith("急急国王") || first.endsWith("急急国王") -> {
                 val qqImg = Util.getQqImg(args, sender)

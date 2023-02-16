@@ -1,16 +1,14 @@
 package org.hff.miraiomnitrix.event.any
 
-import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import org.hff.miraiomnitrix.config.PermissionProperties
+import org.hff.miraiomnitrix.event.AnyEvent
 import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.result.EventResult
-import org.hff.miraiomnitrix.result.EventResult.Companion.next
-import org.hff.miraiomnitrix.result.EventResult.Companion.stop
+import org.hff.miraiomnitrix.event.EventResult
+import org.hff.miraiomnitrix.event.EventResult.Companion.next
+import org.hff.miraiomnitrix.event.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
@@ -20,15 +18,10 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
 
     private val videoUrl = "https://api.bilibili.com/x/web-interface/view"
     private val videoRegex = """(?i)(?<!\w)(?:av(\d+)|(BV1[1-9A-NP-Za-km-z]{9}))""".toRegex()
-    override suspend fun handle(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
         if (args.isEmpty()) return next()
 
+        val subject = event.subject
         if (permissionProperties.bvExcludeGroup.contains(subject.id)) return next()
 
         val first = args[0]

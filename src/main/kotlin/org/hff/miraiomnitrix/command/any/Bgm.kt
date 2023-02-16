@@ -3,18 +3,16 @@ package org.hff.miraiomnitrix.command.any
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
+import org.hff.miraiomnitrix.command.AnyCommand
+import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
+import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.db.entity.Bgm
 import org.hff.miraiomnitrix.db.service.BgmService
-import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.config.AccountProperties
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.jsoup.Jsoup
 import java.util.regex.Pattern
@@ -23,13 +21,7 @@ import java.util.regex.Pattern
 class Bgm(private val bgmService: BgmService, private val accountProperties: AccountProperties) : AnyCommand {
 
     @OptIn(DelicateCoroutinesApi::class)
-    override suspend fun execute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         if (args.size == 1 && (args[0] == "init" || args[0] == "初始化")) return init()
 
         var num: Short = 1
@@ -44,6 +36,7 @@ class Bgm(private val bgmService: BgmService, private val accountProperties: Acc
         }
         val list = wrapper.last("ORDER BY RANDOM() LIMIT $num").list()
 
+        val subject = event.subject
         list.forEach {
             GlobalScope.launch {
                 val msg = MessageChainBuilder()

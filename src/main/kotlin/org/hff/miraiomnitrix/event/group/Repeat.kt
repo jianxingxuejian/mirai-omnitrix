@@ -1,16 +1,15 @@
 package org.hff.miraiomnitrix.event.group
 
 import com.google.common.collect.EvictingQueue
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Image
-import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.result.EventResult
-import org.hff.miraiomnitrix.result.EventResult.Companion.next
+import org.hff.miraiomnitrix.event.EventResult
+import org.hff.miraiomnitrix.event.EventResult.Companion.next
+import org.hff.miraiomnitrix.event.GroupEvent
 import org.hff.miraiomnitrix.utils.SpringUtil
+import org.hff.miraiomnitrix.utils.getInfo
 import java.util.*
 
 @Event(priority = 2)
@@ -21,14 +20,9 @@ class Repeat : GroupEvent {
     private val random = Random()
     private val breaks = arrayOf("break", "打断")
     private val bound = breaks.size
-    override suspend fun handle(
-        sender: Member,
-        message: MessageChain,
-        group: Group,
-        args: List<String>,
-        event: GroupMessageEvent
-    ): EventResult {
+    override suspend fun handle(args: List<String>, event: GroupMessageEvent): EventResult {
         if (args.isEmpty()) return next()
+        val (group,_,message) = event.getInfo()
         var content = message.contentToString()
         val excludeGroup = permissionProperties?.repeatExcludeGroup
         if (!excludeGroup.isNullOrEmpty() && excludeGroup.contains(group.id)) return next()

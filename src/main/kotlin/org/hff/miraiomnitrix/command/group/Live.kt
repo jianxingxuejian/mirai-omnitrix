@@ -2,30 +2,31 @@ package org.hff.miraiomnitrix.command.group
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.Member
+import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.getMember
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.GroupMessageEvent
-import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.BotRunner
+import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.db.entity.Live
 import org.hff.miraiomnitrix.db.service.LiveService
-import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
-import org.hff.miraiomnitrix.utils.Util.getBilibiliUserInfo
+import org.hff.miraiomnitrix.utils.HttpUtil
+import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.Util.getQq
+import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.scheduling.annotation.Scheduled
 
+@EnableScheduling
 @Command(name = ["直播", "live"])
 class Live(private val liveService: LiveService) : GroupCommand {
 
-    override suspend fun execute(
-        sender: Member,
-        message: MessageChain,
-        group: Group,
-        args: List<String>,
-        event: GroupMessageEvent
-    ): CommandResult? {
+    private val infoApi = "https://api.bilibili.com/x/space/wbi/acc/info?mid="
+
+    override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
+        val group = event.group
         if (args.isEmpty()) {
             val list = liveService.ktQuery().eq(Live::groupId, group.id).list()
             if (list.isEmpty()) return result("尚未添加主播\n使用live help指令获取使用方法")
@@ -74,6 +75,27 @@ class Live(private val liveService: LiveService) : GroupCommand {
         return null
     }
 
+    val livesCache = mutableMapOf<Long, Int>()
+
+    @Scheduled(initialDelay = 60_000, fixedDelay = 90_000)
+    fun listen() {
+        runBlocking {
+            val lives = liveService.list()
+            lives.forEach {
+                val cache = livesCache[it.qq]
+                val userInfo = getBilibiliUserInfo(it.uid)
+                val liveRoom = userInfo.live_room ?: return@forEach
+                if (cache != null) {
+                    val group = BotRunner.bot.groups[it.groupId] ?: return@forEach
+                    if (cache == 0 && liveRoom.liveStatus == 1) {
+                        group.sendMessage("${userInfo.name}开始直播，地址:${liveRoom.url}")
+                    }
+                }
+                livesCache[it.qq] = liveRoom.liveStatus
+            }
+        }
+    }
+
     suspend fun getLiveState(uid: Long): String? {
         val userInfo = getBilibiliUserInfo(uid)
         val (liveStatus, roomStatus, _, title, url) = userInfo.live_room ?: return null
@@ -88,4 +110,19 @@ class Live(private val liveService: LiveService) : GroupCommand {
             str.slice(0 until index)
         } else str
     }
+
+    private fun getBilibiliUserInfo(uid: Long): UserInfo {
+        val apiResult = HttpUtil.getString(infoApi + uid)
+        return JsonUtil.fromJson(apiResult, "data", UserInfo::class)
+    }
+
+    data class UserInfo(val name: String, val live_room: LiveRoom?)
+
+    data class LiveRoom(
+        val liveStatus: Int,
+        val roomStatus: Int,
+        val roomid: Int,
+        val title: String,
+        val url: String
+    )
 }

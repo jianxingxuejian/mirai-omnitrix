@@ -6,13 +6,9 @@ import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.command.any.AnyCommand
-import org.hff.miraiomnitrix.command.friend.FriendCommand
-import org.hff.miraiomnitrix.command.group.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.SpringUtil
-import org.hff.miraiomnitrix.utils.Util.getInfo
 import java.net.http.HttpTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
@@ -77,9 +73,9 @@ object CommandManager {
     }
 
     private suspend fun AnyCommand.tryExecute(args: List<String>, event: MessageEvent) {
-        val (sender, message, subject) = getInfo(event)
+        val subject = event.subject
         try {
-            val (msg, msgChain) = this.execute(sender, message, subject, args, event) ?: return
+            val (msg, msgChain) = this.execute(args, event) ?: return
             subject.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, subject)
@@ -87,9 +83,9 @@ object CommandManager {
     }
 
     private suspend fun GroupCommand.tryExecute(args: List<String>, event: GroupMessageEvent) {
-        val (sender, message, group) = getInfo(event)
+        val group = event.group
         try {
-            val (msg, msgChain) = this.execute(sender, message, group, args, event) ?: return
+            val (msg, msgChain) = this.execute(args, event) ?: return
             group.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, group)
@@ -97,9 +93,9 @@ object CommandManager {
     }
 
     private suspend fun FriendCommand.tryExecute(args: List<String>, event: FriendMessageEvent) {
-        val (friend, message) = getInfo(event)
+        val friend = event.friend
         try {
-            val (msg, msgChain) = this.execute(friend, message, args, event) ?: return
+            val (msg, msgChain) = this.execute(args, event) ?: return
             friend.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, friend)

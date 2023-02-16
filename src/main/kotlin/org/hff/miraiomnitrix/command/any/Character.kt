@@ -3,36 +3,31 @@ package org.hff.miraiomnitrix.command.any
 import com.google.common.cache.CacheBuilder
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
-import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.nextMessage
-import org.hff.miraiomnitrix.db.service.CharacterService
+import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.config.AccountProperties
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
+import org.hff.miraiomnitrix.db.service.CharacterService
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
+import org.hff.miraiomnitrix.utils.getInfo
 import java.util.concurrent.TimeUnit
 
 @Command(name = ["character", "角色"])
-class Character(private val characterService: CharacterService, private val accountProperties: AccountProperties) :
-    AnyCommand {
+class Character(
+    private val characterService: CharacterService,
+    private val accountProperties: AccountProperties
+) : AnyCommand {
 
     private val url = "https://beta.character.ai/chat"
     private val historyCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build<Long, Long>()
-    override suspend fun execute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         if (args.isEmpty()) {
             return result(characterService.getCharactersName() + "\n" + "请使用指令+角色名开始聊天" + "\n" + "增删改查格式为 add/del/edit 角色名 角色external_id(add/edit操作)")
         }
@@ -77,6 +72,8 @@ class Character(private val characterService: CharacterService, private val acco
             }
 
         }
+
+        val (subject, sender) = event.getInfo()
 
         val cache = historyCache.getIfPresent(subject.id)
         if (cache == null) historyCache.put(subject.id, sender.id)

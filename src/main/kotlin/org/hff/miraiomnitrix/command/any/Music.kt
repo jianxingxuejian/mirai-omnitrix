@@ -1,15 +1,13 @@
 package org.hff.miraiomnitrix.command.any
 
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
 import net.mamoe.mirai.message.data.toMessageChain
+import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import java.net.URLEncoder
@@ -19,13 +17,7 @@ class Music : AnyCommand {
 
     private val searchUrl = "http://music.163.com/api/search/get?type=1&limit=20&s="
 
-    override suspend fun execute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         if (args.isEmpty()) return result("请输入歌曲名")
         val name = args.joinToString(" ")
         val encode = URLEncoder.encode(name, Charsets.UTF_8)

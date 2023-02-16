@@ -1,16 +1,15 @@
 package org.hff.miraiomnitrix.event.any
 
 import com.google.common.cache.CacheBuilder
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.QuoteReply
 import net.mamoe.mirai.message.data.source
+import org.hff.miraiomnitrix.event.AnyEvent
 import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.result.EventResult
-import org.hff.miraiomnitrix.result.EventResult.Companion.next
+import org.hff.miraiomnitrix.event.EventResult
+import org.hff.miraiomnitrix.event.EventResult.Companion.next
 import java.util.concurrent.TimeUnit
 
 @Event(priority = 2)
@@ -30,13 +29,8 @@ class Cache : AnyEvent {
         }
     }
 
-    override suspend fun handle(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
+        val message = event.message
         val image = message[Image.Key] ?: return next()
         imageCache.put(message.source.internalIds[0], image.imageId)
         return next()

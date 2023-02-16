@@ -8,7 +8,7 @@ import org.springframework.boot.runApplication
 //@EnableAspectJAutoProxy
 @SpringBootApplication
 @ConfigurationPropertiesScan
-@MapperScan("org.hff.miraiomnitrix.app.mapper")
+@MapperScan("org.hff.miraiomnitrix.db.mapper")
 class MiraiOmnitrixApplication
 
 fun main(args: Array<String>) {

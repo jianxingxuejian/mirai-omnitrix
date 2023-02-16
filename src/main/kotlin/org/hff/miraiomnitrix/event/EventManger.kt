@@ -5,11 +5,7 @@ import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.event.any.AnyEvent
-import org.hff.miraiomnitrix.event.friend.FriendEvent
-import org.hff.miraiomnitrix.event.group.GroupEvent
 import org.hff.miraiomnitrix.utils.SpringUtil
-import org.hff.miraiomnitrix.utils.Util.getInfo
 
 object EventManger {
 
@@ -33,6 +29,7 @@ object EventManger {
     private fun sortByPriority(chain: MutableList<out Any>) =
         chain.sortBy { it.javaClass.getAnnotation(Event::class.java).priority }
 
+    /** 非指令消息按照事件优先度进行处理 */
     suspend fun handle(args: List<String>, event: MessageEvent) {
         when (event) {
             is GroupMessageEvent -> groupHandle(args, event)
@@ -43,28 +40,25 @@ object EventManger {
     }
 
     private suspend fun groupHandle(args: List<String>, event: GroupMessageEvent) {
-        val (sender, message, group) = getInfo(event)
         for (handler in groupChain) {
-            val (stop, msg, msgChain) = handler.handle(sender, message, group, args, event)
-            handleMessage(group, msg, msgChain)
+            val (stop, msg, msgChain) = handler.handle(args, event)
+            handleMessage(event.group, msg, msgChain)
             if (stop) break
         }
     }
 
     private suspend fun friendHandle(args: List<String>, event: FriendMessageEvent) {
-        val (friend, message) = getInfo(event)
         for (handler in friendChain) {
-            val (stop, msg, msgChain) = handler.handle(friend, message, args, event)
-            handleMessage(friend, msg, msgChain)
+            val (stop, msg, msgChain) = handler.handle(args, event)
+            handleMessage(event.friend, msg, msgChain)
             if (stop) break
         }
     }
 
     private suspend fun anyHandle(args: List<String>, event: MessageEvent) {
-        val (sender, message, subject) = getInfo(event)
         for (handler in anyChain) {
-            val (stop, msg, msgChain) = handler.handle(sender, message, subject, args, event)
-            handleMessage(subject, msg, msgChain)
+            val (stop, msg, msgChain) = handler.handle(args, event)
+            handleMessage(event.subject, msg, msgChain)
             if (stop) break
         }
     }

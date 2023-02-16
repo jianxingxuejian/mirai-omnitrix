@@ -1,17 +1,17 @@
 package org.hff.miraiomnitrix.command.any
 
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
-import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.toMessageChain
+import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.get
@@ -26,13 +26,7 @@ class Setu : AnyCommand {
     private val api1 = "https://api.lolicon.app/setu/v2"
     private val api2 = "https://image.anosu.top/pixiv/json"
 
-    override suspend fun execute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         var r18 = 0
         var num = 1
         val keywords = mutableListOf<String>()
@@ -43,16 +37,20 @@ class Setu : AnyCommand {
                 else -> keywords.add(arg.lowercase())
             }
         }
+        val subject = event.subject
         val forwardBuilder = ForwardMessageBuilder(subject)
 
         coroutineScope {
-            try {
-                val tags = keywords.joinToString("&tag=", "&tag=") { URLEncoder.encode(it, StandardCharsets.UTF_8) }
-                val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
-                JsonUtil.getArray(json, "data")
-                    .map { it.get("urls").getAsStr("original") }
-                    .forEach { launch { addForward(forwardBuilder, subject, it) } }
-            } catch (e: Exception) {
+            val exceptionHandler = CoroutineExceptionHandler { _, _ ->
+                run {
+                    val tags = keywords.joinToString("&tag=", "&tag=") { URLEncoder.encode(it, StandardCharsets.UTF_8) }
+                    val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
+                    JsonUtil.getArray(json, "data")
+                        .map { it.get("urls").getAsStr("original") }
+                        .forEach { launch { addForward(forwardBuilder, subject, it) } }
+                }
+            }
+            launch(exceptionHandler) {
                 val json = HttpUtil.getString("$api2?r18=$r18&num=$num&keyword=${keywords.joinToString("|")}")
                 JsonUtil.getArray(json).map { it.getAsStr("url") }
                     .forEach {

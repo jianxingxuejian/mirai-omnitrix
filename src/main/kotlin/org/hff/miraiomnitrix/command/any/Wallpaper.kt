@@ -2,13 +2,12 @@ package org.hff.miraiomnitrix.command.any
 
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.event.any.Cache
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.fail
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import java.io.InputStream
@@ -32,13 +31,7 @@ class Wallpaper : AnyCommand {
         "rsetbgsekbjlghelkrabvfgheiv"
     )
 
-    override suspend fun execute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         var sort = "random"
         args.forEach {
             when (it) {
@@ -57,9 +50,11 @@ class Wallpaper : AnyCommand {
             }
         }
 
+        val subject = event.subject
+
         if (vip.contains(sort)) {
             val apiResult = HttpUtil.getString(vipUrl + sort)
-            if (apiResult.isBlank()) return fail()
+            if (apiResult.isBlank()) return result("api获取为空")
             val url = JsonUtil.getArray(apiResult, "pic")[0].asString
             val image = HttpUtil.getInputStream(url)
             sendImage(subject, image)
@@ -77,7 +72,7 @@ class Wallpaper : AnyCommand {
             return null
         }
 
-        return fail()
+        return result("执行失败")
     }
 
     suspend fun sendImage(subject: Contact, inputStream: InputStream) {

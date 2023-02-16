@@ -2,19 +2,18 @@ package org.hff.miraiomnitrix.event.group
 
 import com.sksamuel.scrimage.ImmutableImage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.events.GroupMessageEvent
-import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.result.EventResult
-import org.hff.miraiomnitrix.result.EventResult.Companion.next
-import org.hff.miraiomnitrix.result.EventResult.Companion.stop
+import org.hff.miraiomnitrix.event.EventResult
+import org.hff.miraiomnitrix.event.EventResult.Companion.next
+import org.hff.miraiomnitrix.event.EventResult.Companion.stop
+import org.hff.miraiomnitrix.event.GroupEvent
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
+import org.hff.miraiomnitrix.utils.getInfo
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
 import java.awt.Color
@@ -25,21 +24,18 @@ import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
 
 @Event(priority = 1)
-class Pa(private val botProperties: BotProperties, private val permissionProperties: PermissionProperties) :
-    GroupEvent {
+class Pa(
+    private val botProperties: BotProperties,
+    private val permissionProperties: PermissionProperties
+) : GroupEvent {
 
     private val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
     private val paDir = "/img/pa/*"
     private val tieDir = "/img/tie/*"
 
-    override suspend fun handle(
-        sender: Member,
-        message: MessageChain,
-        group: Group,
-        args: List<String>,
-        event: GroupMessageEvent
-    ): EventResult {
+    override suspend fun handle(args: List<String>, event: GroupMessageEvent): EventResult {
+        val (group, sender, message) = event.getInfo()
         if (!args.any { it.endsWith("爬") }) return next()
 
         var qq = args.find { it.startsWith("@") }?.substring(1)?.toLong()

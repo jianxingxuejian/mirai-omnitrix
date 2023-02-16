@@ -1,25 +1,24 @@
 package org.hff.miraiomnitrix.command.any
 
 import kotlinx.coroutines.*
-import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
-import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.nextMessage
+import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.exception.MyException
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
+import org.hff.miraiomnitrix.utils.getInfo
 import java.time.LocalDate
 
 @Command(["chat", "聊天"])
@@ -37,16 +36,10 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
 
     data class Model(val name: String, val value: String)
 
-    override suspend fun execute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): CommandResult? {
-        if (subject is Group && excludeGroup.isNotEmpty()) {
-            if (excludeGroup.contains(subject.id)) return null
-        }
+    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
+        val (subject, sender) = event.getInfo()
+
+        if (subject is Group && excludeGroup.isNotEmpty() && excludeGroup.contains(subject.id)) return null
 
         if (args.isNotEmpty() && admin.isNotEmpty() && admin.contains(sender.id)) {
             when (args[0]) {

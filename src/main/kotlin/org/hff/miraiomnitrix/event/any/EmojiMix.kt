@@ -1,14 +1,12 @@
 package org.hff.miraiomnitrix.event.any
 
-import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.event.AnyEvent
 import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.result.EventResult
-import org.hff.miraiomnitrix.result.EventResult.Companion.next
-import org.hff.miraiomnitrix.result.EventResult.Companion.stop
+import org.hff.miraiomnitrix.event.EventResult
+import org.hff.miraiomnitrix.event.EventResult.Companion.next
+import org.hff.miraiomnitrix.event.EventResult.Companion.stop
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.springframework.core.io.ClassPathResource
@@ -38,13 +36,7 @@ class EmojiMix : AnyEvent {
         }
     }
 
-    override suspend fun handle(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
         if (args.isEmpty()) next()
         val content = args[0]
         val regex = Regex("^(\\p{So}){2}") // 匹配以两个emoji开头的字符串
@@ -57,7 +49,7 @@ class EmojiMix : AnyEvent {
         val (leftEmoji, rightEmoji, date) = emojiCache[first]?.get(second) ?: emojiCache[second]?.get(first)
         ?: return next()
         val inputStream = HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
-        subject.sendImage(inputStream)
+        event.subject.sendImage(inputStream)
         return stop()
     }
 

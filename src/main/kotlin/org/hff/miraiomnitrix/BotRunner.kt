@@ -19,15 +19,13 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
     override fun run(args: Array<String>) {
         runBlocking {
             val (qq, password) = botProperties
-            if (qq == null || password == null) {
-                println("qq或者密码为空，请先在配置文件里添加")
-                return@runBlocking
-            }
+            if (qq == null || password == null) throw IllegalArgumentException("qq或者密码为空，请先在配置文件里添加")
             bot = BotFactory.newBot(qq, password) {
                 protocol = BotConfiguration.MiraiProtocol.IPAD
                 fileBasedDeviceInfo("device.json")
             }
             bot.login()
+            // 注册监听器进行监听
             bot.eventChannel.registerListenerHost(MyListener)
         }
     }

@@ -1,12 +1,10 @@
 package org.hff.miraiomnitrix.command.any
 
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 
 @Command(name = ["menu", "help", "菜单", "帮助"])
 class Menu : AnyCommand {
@@ -28,16 +26,8 @@ class Menu : AnyCommand {
         |3：B站链接解析
         |4：合成两个emoji
     """.trimMargin()
-    private final val result = result(text)
+    private final val resultMsg = result(text)
 
-    override suspend fun execute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ): CommandResult? {
-        return result
-    }
+    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? = resultMsg
 
 }

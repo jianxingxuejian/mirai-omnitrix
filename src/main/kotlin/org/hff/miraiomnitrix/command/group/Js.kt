@@ -2,13 +2,11 @@ package org.hff.miraiomnitrix.command.group
 
 import delight.nashornsandbox.NashornSandboxes
 import delight.nashornsandbox.exceptions.ScriptCPUAbuseException
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.events.GroupMessageEvent
-import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.result.CommandResult
-import org.hff.miraiomnitrix.result.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.GroupCommand
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror
 import java.util.concurrent.Executors
 import javax.script.ScriptException
@@ -27,13 +25,7 @@ class Js : GroupCommand {
         sandbox.executor = Executors.newSingleThreadExecutor()
     }
 
-    override suspend fun execute(
-        sender: Member,
-        message: MessageChain,
-        group: Group,
-        args: List<String>,
-        event: GroupMessageEvent
-    ): CommandResult? {
+    override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
         val command = args.joinToString(" ")
         return try {
             val result = sandbox.eval(command) ?: return result("null")
