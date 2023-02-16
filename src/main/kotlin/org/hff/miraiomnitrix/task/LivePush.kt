@@ -2,7 +2,7 @@ package org.hff.miraiomnitrix.task
 
 import kotlinx.coroutines.runBlocking
 import org.hff.miraiomnitrix.BotRunner
-import org.hff.miraiomnitrix.app.service.LiveService
+import org.hff.miraiomnitrix.db.service.LiveService
 import org.hff.miraiomnitrix.utils.Util
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling

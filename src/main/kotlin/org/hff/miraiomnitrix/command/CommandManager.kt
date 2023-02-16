@@ -1,7 +1,7 @@
 package org.hff.miraiomnitrix.command
 
 import com.google.common.cache.CacheBuilder
-import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
@@ -10,14 +10,19 @@ import org.hff.miraiomnitrix.command.any.AnyCommand
 import org.hff.miraiomnitrix.command.friend.FriendCommand
 import org.hff.miraiomnitrix.command.group.GroupCommand
 import org.hff.miraiomnitrix.config.BotProperties
-import org.hff.miraiomnitrix.event.EventManger
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.SpringUtil
+import org.hff.miraiomnitrix.utils.Util.getInfo
 import java.net.http.HttpTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
 import kotlin.reflect.full.findAnnotation
 
+/**
+ * 指令管理器，设置指令头(硬编码)，加载所有指令
+ *
+ * TODO: 指令头可配置
+ */
 object CommandManager {
     private val commandHeads = arrayOf("|", "\\", ",", ".", "，", "。")
     private val botProperties = SpringUtil.getBean(BotProperties::class)
@@ -28,6 +33,7 @@ object CommandManager {
 
     private val errorCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Long, Exception>()
 
+    /** 加载Command注解下的所有指令 */
     init {
         SpringUtil.getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
             val annotation = command::class.findAnnotation<Command>()
@@ -37,81 +43,69 @@ object CommandManager {
                 is GroupCommand -> annotation?.name?.forEach { groupCommands[it] = command }
             }
         }
+        if (anyCommands.isEmpty() && friendCommands.isEmpty() && groupCommands.isEmpty()) {
+            throw RuntimeException("指令加载失败")
+        }
     }
 
-    suspend fun executeGroupCommand(sender: Member, message: MessageChain, group: Group, event: GroupMessageEvent) {
-        val (commandName, args) = getCommandName(message)
-        if (commandName == null) {
-            return EventManger.groupHandle(sender, message, group, args, event)
-        }
+    suspend fun executeGroupCommand(event: GroupMessageEvent): Pair<Boolean, List<String>> {
+        val (commandName, args) = getCommandName(event.message)
+        if (commandName == null) return Pair(false, args)
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
-            return anyCommand.tryExecute(sender, message, group, args, event)
+            anyCommand.tryExecute(args, event)
+            return Pair(true, args)
         }
         val groupCommand = groupCommands[commandName]
         if (groupCommand != null) {
-            return groupCommand.tryExecute(sender, message, group, args, event)
+            groupCommand.tryExecute(args, event)
+            return Pair(true, args)
         }
-        EventManger.groupHandle(sender, message, group, listOf(commandName), event)
+        return Pair(false, listOf(commandName))
     }
 
-    suspend fun executeFriendCommand(sender: Friend, message: MessageChain, event: FriendMessageEvent) {
-        val (commandName, args) = getCommandName(message, false)
-        if (commandName == null) {
-            return EventManger.friendHandle(sender, message, args, event)
-        }
+    suspend fun executeFriendCommand(event: FriendMessageEvent): Pair<Boolean, List<String>> {
+        val (commandName, args) = getCommandName(event.message, false)
+        if (commandName == null)  return Pair(false, args)
         val anyCommand = anyCommands[commandName]
         if (anyCommand != null) {
-            return anyCommand.tryExecute(sender, message, sender, args, event)
+            anyCommand.tryExecute(args, event)
+            return Pair(true, args)
         }
         val friendCommand = friendCommands[commandName]
         if (friendCommand != null) {
-            return friendCommand.tryExecute(sender, message, args, event)
+            friendCommand.tryExecute(args, event)
+            return Pair(true, args)
         }
-        EventManger.friendHandle(sender, message, listOf(commandName), event)
+        return Pair(false, listOf(commandName))
     }
 
-    private suspend fun AnyCommand.tryExecute(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ) {
+    private suspend fun AnyCommand.tryExecute(args: List<String>, event: MessageEvent) {
         try {
-            val (msg, msgChain) = this.execute(sender, message, subject, args, event) ?: return
-            subject.sendMessage(msg, msgChain)
+            val (msg, msgChain) = this.execute(event.sender, event.message, event.subject, args, event) ?: return
+            event.subject.sendMessage(msg, msgChain)
         } catch (e: Exception) {
-            sendCommandError(e, subject)
+            sendCommandError(e, event.subject)
         }
     }
 
-    private suspend fun GroupCommand.tryExecute(
-        sender: Member,
-        message: MessageChain,
-        group: Group,
-        args: List<String>,
-        event: GroupMessageEvent
-    ) {
+    private suspend fun GroupCommand.tryExecute(args: List<String>, event: GroupMessageEvent) {
+        val (sender, message, group) = getInfo(event)
         try {
             val (msg, msgChain) = this.execute(sender, message, group, args, event) ?: return
-            group.sendMessage(msg, msgChain)
+            event.group.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, group)
         }
     }
 
-    private suspend fun FriendCommand.tryExecute(
-        sender: Friend,
-        message: MessageChain,
-        args: List<String>,
-        event: FriendMessageEvent
-    ) {
+    private suspend fun FriendCommand.tryExecute(args: List<String>, event: FriendMessageEvent) {
+        val (friend, message) = getInfo(event)
         try {
-            val (msg, msgChain) = this.execute(sender, message, args, event) ?: return
-            sender.sendMessage(msg, msgChain)
+            val (msg, msgChain) = this.execute(friend, message, args, event) ?: return
+            event.sender.sendMessage(msg, msgChain)
         } catch (e: Exception) {
-            sendCommandError(e, sender)
+            sendCommandError(e, friend)
         }
     }
 

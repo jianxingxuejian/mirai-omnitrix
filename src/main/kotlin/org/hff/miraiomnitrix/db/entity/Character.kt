@@ -1,4 +1,4 @@
-package org.hff.miraiomnitrix.app.entity
+package org.hff.miraiomnitrix.db.entity
 
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField

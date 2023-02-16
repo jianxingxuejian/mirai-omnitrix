@@ -1,10 +1,16 @@
 package org.hff.miraiomnitrix.utils
 
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.event.events.FriendMessageEvent
+import net.mamoe.mirai.event.events.GroupMessageEvent
 
 object Util {
     private const val QQ_URL = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
     private const val BILIBILI_INFO_API = "https://api.bilibili.com/x/space/wbi/acc/info?mid="
+
+    fun getInfo(event: GroupMessageEvent) = Triple(event.sender, event.message, event.group)
+
+    fun getInfo(event: FriendMessageEvent) = Pair(event.friend, event.message)
 
     fun getQq(args: List<String>) = args.find { it.startsWith("@") }?.substring(1)?.toLong()
 

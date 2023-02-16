@@ -9,8 +9,8 @@ import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
-import org.hff.miraiomnitrix.app.entity.Bgm
-import org.hff.miraiomnitrix.app.service.BgmService
+import org.hff.miraiomnitrix.db.entity.Bgm
+import org.hff.miraiomnitrix.db.service.BgmService
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.result.CommandResult

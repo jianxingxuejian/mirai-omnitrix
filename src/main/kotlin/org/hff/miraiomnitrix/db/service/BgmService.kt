@@ -1,8 +1,8 @@
-package org.hff.miraiomnitrix.app.service
+package org.hff.miraiomnitrix.db.service
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl
-import org.hff.miraiomnitrix.app.entity.Bgm
-import org.hff.miraiomnitrix.app.mapper.BgmMapper
+import org.hff.miraiomnitrix.db.entity.Bgm
+import org.hff.miraiomnitrix.db.mapper.BgmMapper
 import org.springframework.stereotype.Service
 
 @Service

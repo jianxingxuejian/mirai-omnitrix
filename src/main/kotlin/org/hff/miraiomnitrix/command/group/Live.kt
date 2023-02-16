@@ -8,8 +8,8 @@ import net.mamoe.mirai.contact.getMember
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
-import org.hff.miraiomnitrix.app.entity.Live
-import org.hff.miraiomnitrix.app.service.LiveService
+import org.hff.miraiomnitrix.db.entity.Live
+import org.hff.miraiomnitrix.db.service.LiveService
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.result.CommandResult
 import org.hff.miraiomnitrix.result.CommandResult.Companion.result

@@ -10,7 +10,7 @@ import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.nextMessage
-import org.hff.miraiomnitrix.app.service.CharacterService
+import org.hff.miraiomnitrix.db.service.CharacterService
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.result.CommandResult

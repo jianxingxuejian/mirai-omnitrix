@@ -1,6 +1,6 @@
-package org.hff.miraiomnitrix.app.mapper
+package org.hff.miraiomnitrix.db.mapper
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper
-import org.hff.miraiomnitrix.app.entity.Live
+import org.hff.miraiomnitrix.db.entity.Live
 
 interface LiveMapper: BaseMapper<Live>
