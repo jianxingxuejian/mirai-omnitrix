@@ -1,7 +1,6 @@
 package org.hff.miraiomnitrix.event
 
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
@@ -34,33 +33,35 @@ object EventManger {
     private fun sortByPriority(chain: MutableList<out Any>) =
         chain.sortBy { it.javaClass.getAnnotation(Event::class.java).priority }
 
-    suspend fun groupHandle(args: List<String>, event: GroupMessageEvent) {
+    suspend fun handle(args: List<String>, event: MessageEvent) {
+        when (event) {
+            is GroupMessageEvent -> groupHandle(args, event)
+            is FriendMessageEvent -> friendHandle(args, event)
+            else -> {}
+        }
+        anyHandle(args, event)
+    }
+
+    private suspend fun groupHandle(args: List<String>, event: GroupMessageEvent) {
         val (sender, message, group) = getInfo(event)
         for (handler in groupChain) {
             val (stop, msg, msgChain) = handler.handle(sender, message, group, args, event)
             handleMessage(group, msg, msgChain)
             if (stop) break
         }
-        anyHandle(sender, message, group, args, event)
     }
 
-    suspend fun friendHandle(args: List<String>, event: FriendMessageEvent) {
+    private suspend fun friendHandle(args: List<String>, event: FriendMessageEvent) {
         val (friend, message) = getInfo(event)
         for (handler in friendChain) {
             val (stop, msg, msgChain) = handler.handle(friend, message, args, event)
             handleMessage(friend, msg, msgChain)
             if (stop) break
         }
-        anyHandle(friend, message, friend, args, event)
     }
 
-    private suspend fun anyHandle(
-        sender: User,
-        message: MessageChain,
-        subject: Contact,
-        args: List<String>,
-        event: MessageEvent
-    ) {
+    private suspend fun anyHandle(args: List<String>, event: MessageEvent) {
+        val (sender, message, subject) = getInfo(event)
         for (handler in anyChain) {
             val (stop, msg, msgChain) = handler.handle(sender, message, subject, args, event)
             handleMessage(subject, msg, msgChain)

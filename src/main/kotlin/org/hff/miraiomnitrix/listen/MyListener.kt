@@ -4,6 +4,7 @@ import net.mamoe.mirai.event.EventHandler
 import net.mamoe.mirai.event.SimpleListenerHost
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.command.CommandManager
 import org.hff.miraiomnitrix.event.EventManger
 import kotlin.coroutines.CoroutineContext
@@ -16,15 +17,15 @@ object MyListener : SimpleListenerHost() {
     }
 
     @EventHandler
-    suspend fun GroupMessageEvent.onMessage() = CommandManager.handleGroupMessage(this)
+    suspend fun GroupMessageEvent.onMessage() = handleMessage(this)
 
     @EventHandler
-    suspend fun FriendMessageEvent.onMessage() = CommandManager.executeFriendCommand(this)
+    suspend fun FriendMessageEvent.onMessage() = handleMessage(this)
 
 }
 
-suspend fun handleGroupMessage(event: GroupMessageEvent){
-    val execute = CommandManager.executeGroupCommand(event)
-    if(execute)return
-    EventManger.groupHandle()
+suspend fun handleMessage(event: MessageEvent) {
+    val (execute, args) = CommandManager.handle(event)
+    if (execute) return
+    EventManger.handle(args, event)
 }

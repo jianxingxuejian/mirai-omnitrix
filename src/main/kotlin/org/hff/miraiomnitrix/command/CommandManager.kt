@@ -48,7 +48,8 @@ object CommandManager {
         }
     }
 
-    suspend fun executeGroupCommand(event: GroupMessageEvent): Pair<Boolean, List<String>> {
+    /** 处理消息，如果是指令则执行 */
+    suspend fun handle(event: MessageEvent): Pair<Boolean, List<String>> {
         val (commandName, args) = getCommandName(event.message)
         if (commandName == null) return Pair(false, args)
         val anyCommand = anyCommands[commandName]
@@ -56,36 +57,32 @@ object CommandManager {
             anyCommand.tryExecute(args, event)
             return Pair(true, args)
         }
-        val groupCommand = groupCommands[commandName]
-        if (groupCommand != null) {
-            groupCommand.tryExecute(args, event)
-            return Pair(true, args)
-        }
-        return Pair(false, listOf(commandName))
-    }
+        when (event) {
+            is GroupMessageEvent -> {
+                val groupCommand = groupCommands[commandName] ?: return Pair(false, args)
+                groupCommand.tryExecute(args, event)
+                return Pair(true, args)
+            }
 
-    suspend fun executeFriendCommand(event: FriendMessageEvent): Pair<Boolean, List<String>> {
-        val (commandName, args) = getCommandName(event.message, false)
-        if (commandName == null)  return Pair(false, args)
-        val anyCommand = anyCommands[commandName]
-        if (anyCommand != null) {
-            anyCommand.tryExecute(args, event)
-            return Pair(true, args)
-        }
-        val friendCommand = friendCommands[commandName]
-        if (friendCommand != null) {
-            friendCommand.tryExecute(args, event)
-            return Pair(true, args)
+            is FriendMessageEvent -> {
+                val friendCommand = friendCommands[commandName] ?: return Pair(false, args)
+                friendCommand.tryExecute(args, event)
+                return Pair(true, args)
+
+            }
+
+            else -> {}
         }
         return Pair(false, listOf(commandName))
     }
 
     private suspend fun AnyCommand.tryExecute(args: List<String>, event: MessageEvent) {
+        val (sender, message, subject) = getInfo(event)
         try {
-            val (msg, msgChain) = this.execute(event.sender, event.message, event.subject, args, event) ?: return
-            event.subject.sendMessage(msg, msgChain)
+            val (msg, msgChain) = this.execute(sender, message, subject, args, event) ?: return
+            subject.sendMessage(msg, msgChain)
         } catch (e: Exception) {
-            sendCommandError(e, event.subject)
+            sendCommandError(e, subject)
         }
     }
 
@@ -93,7 +90,7 @@ object CommandManager {
         val (sender, message, group) = getInfo(event)
         try {
             val (msg, msgChain) = this.execute(sender, message, group, args, event) ?: return
-            event.group.sendMessage(msg, msgChain)
+            group.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, group)
         }
@@ -103,7 +100,7 @@ object CommandManager {
         val (friend, message) = getInfo(event)
         try {
             val (msg, msgChain) = this.execute(friend, message, args, event) ?: return
-            event.sender.sendMessage(msg, msgChain)
+            friend.sendMessage(msg, msgChain)
         } catch (e: Exception) {
             sendCommandError(e, friend)
         }
@@ -125,6 +122,13 @@ object CommandManager {
         }
     }
 
+    /**
+     * 解析消息文本，判断是否含有指令头或者@机器人
+     *
+     * @param message 原始消息链
+     * @param needHead 是否需要指令头，默认值为true，如果是好友消息之类的则无需指令头
+     * @return Pair<指令名, 参数列表>
+     */
     private fun getCommandName(message: MessageChain, needHead: Boolean = true): Pair<String?, List<String>> {
         var string = message.contentToString()
         var hasHead = commandHeads.any { string.startsWith(it) }
