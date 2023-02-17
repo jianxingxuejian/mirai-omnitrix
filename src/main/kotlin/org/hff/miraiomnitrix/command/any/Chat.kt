@@ -11,7 +11,7 @@ import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.exception.MyException

@@ -4,7 +4,7 @@ import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.result
 
 @Command(name = ["menu", "help", "菜单", "帮助"])
 class Menu : AnyCommand {

@@ -3,9 +3,11 @@ package org.hff.miraiomnitrix
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.utils.BotConfiguration
+import org.hff.miraiomnitrix.command.CommandManager
 import org.hff.miraiomnitrix.config.BotProperties
-import org.hff.miraiomnitrix.listen.MyListener
+import org.hff.miraiomnitrix.event.EventManger
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 
@@ -25,9 +27,16 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
                 fileBasedDeviceInfo("device.json")
             }
             bot.login()
-            // 注册监听器进行监听
-            bot.eventChannel.registerListenerHost(MyListener)
+            // 监听所有消息
+            bot.eventChannel.subscribeAlways<MessageEvent> { handleMessage(this) }
         }
     }
 
+}
+
+/** 处理消息，首先解析指令并执行，如果不是指令则接着进行事件处理 */
+suspend fun handleMessage(event: MessageEvent) {
+    val (execute, args) = CommandManager.handle(event)
+    if (execute) return
+    EventManger.handle(args, event)
 }

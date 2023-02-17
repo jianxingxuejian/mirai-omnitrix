@@ -6,8 +6,8 @@ import net.mamoe.mirai.message.data.Image
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.Event
 import org.hff.miraiomnitrix.event.EventResult
-import org.hff.miraiomnitrix.event.EventResult.Companion.next
 import org.hff.miraiomnitrix.event.GroupEvent
+import org.hff.miraiomnitrix.event.next
 import org.hff.miraiomnitrix.utils.SpringUtil
 import org.hff.miraiomnitrix.utils.getInfo
 import java.util.*

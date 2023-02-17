@@ -4,16 +4,12 @@ import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import org.hff.miraiomnitrix.config.PermissionProperties
-import org.hff.miraiomnitrix.event.AnyEvent
-import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.event.EventResult
-import org.hff.miraiomnitrix.event.EventResult.Companion.next
-import org.hff.miraiomnitrix.event.EventResult.Companion.stop
+import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 
-@Event(priority = 1)
+@Event(priority = 2)
 class BiliBili(private val permissionProperties: PermissionProperties) : AnyEvent {
 
     private val videoUrl = "https://api.bilibili.com/x/web-interface/view"

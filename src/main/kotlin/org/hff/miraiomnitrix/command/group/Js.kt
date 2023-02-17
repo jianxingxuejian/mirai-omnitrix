@@ -5,8 +5,8 @@ import delight.nashornsandbox.exceptions.ScriptCPUAbuseException
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.command.GroupCommand
+import org.hff.miraiomnitrix.command.result
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror
 import java.util.concurrent.Executors
 import javax.script.ScriptException

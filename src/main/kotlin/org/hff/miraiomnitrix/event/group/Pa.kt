@@ -5,11 +5,7 @@ import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
-import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.event.EventResult
-import org.hff.miraiomnitrix.event.EventResult.Companion.next
-import org.hff.miraiomnitrix.event.EventResult.Companion.stop
-import org.hff.miraiomnitrix.event.GroupEvent
+import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream

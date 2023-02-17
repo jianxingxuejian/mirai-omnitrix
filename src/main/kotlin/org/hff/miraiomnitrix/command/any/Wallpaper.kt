@@ -6,7 +6,7 @@ import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil

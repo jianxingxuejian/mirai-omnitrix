@@ -9,8 +9,8 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.BotRunner
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.command.GroupCommand
+import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.db.entity.Live
 import org.hff.miraiomnitrix.db.service.LiveService
 import org.hff.miraiomnitrix.utils.HttpUtil

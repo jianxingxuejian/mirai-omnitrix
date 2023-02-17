@@ -1,17 +1,13 @@
 package org.hff.miraiomnitrix.command
 
-import com.google.common.cache.CacheBuilder
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.event.events.UserMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
+import org.hff.miraiomnitrix.common.check
 import org.hff.miraiomnitrix.config.BotProperties
-import org.hff.miraiomnitrix.exception.MyException
+import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.utils.SpringUtil
-import java.net.http.HttpTimeoutException
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLException
 import kotlin.reflect.full.findAnnotation
 
 /**
@@ -23,11 +19,10 @@ object CommandManager {
     private val commandHeads = arrayOf("|", "\\", ",", ".", "，", "。")
     private val botProperties = SpringUtil.getBean(BotProperties::class)
 
+    /** 指令容器 */
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
-    private val friendCommands: HashMap<String, FriendCommand> = hashMapOf()
     private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
-
-    private val errorCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Long, Exception>()
+    private val userCommands: HashMap<String, UserCommand> = hashMapOf()
 
     /** 加载Command注解下的所有指令 */
     init {
@@ -35,12 +30,9 @@ object CommandManager {
             val annotation = command::class.findAnnotation<Command>()
             when (command) {
                 is AnyCommand -> annotation?.name?.forEach { anyCommands[it] = command }
-                is FriendCommand -> annotation?.name?.forEach { friendCommands[it] = command }
+                is UserCommand -> annotation?.name?.forEach { userCommands[it] = command }
                 is GroupCommand -> annotation?.name?.forEach { groupCommands[it] = command }
             }
-        }
-        if (anyCommands.isEmpty() && friendCommands.isEmpty() && groupCommands.isEmpty()) {
-            throw RuntimeException("指令加载失败")
         }
     }
 
@@ -48,75 +40,37 @@ object CommandManager {
     suspend fun handle(event: MessageEvent): Pair<Boolean, List<String>> {
         val (commandName, args) = getCommandName(event.message)
         if (commandName == null) return Pair(false, args)
-        val anyCommand = anyCommands[commandName]
-        if (anyCommand != null) {
-            anyCommand.tryExecute(args, event)
-            return Pair(true, args)
+
+        val result = when (event) {
+            is GroupMessageEvent -> groupCommands[commandName]?.tryExecute(args, event)
+                ?: anyCommands[commandName]?.tryExecute(args, event)
+
+            is UserMessageEvent -> userCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
+                ?: anyCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
+
+            else -> null
         }
-        when (event) {
-            is GroupMessageEvent -> {
-                val groupCommand = groupCommands[commandName] ?: return Pair(false, args)
-                groupCommand.tryExecute(args, event)
-                return Pair(true, args)
-            }
-
-            is FriendMessageEvent -> {
-                val friendCommand = friendCommands[commandName] ?: return Pair(false, args)
-                friendCommand.tryExecute(args, event)
-                return Pair(true, args)
-
-            }
-
-            else -> {}
-        }
-        return Pair(false, listOf(commandName))
+        return result ?: Pair(false, listOf(commandName))
     }
 
-    private suspend fun AnyCommand.tryExecute(args: List<String>, event: MessageEvent) {
+    private suspend fun <T : MessageEvent> Execute<T>.tryExecute(
+        args: List<String>,
+        event: T
+    ): Pair<Boolean, List<String>> {
         val subject = event.subject
         try {
-            val (msg, msgChain) = this.execute(args, event) ?: return
-            subject.sendMessage(msg, msgChain)
+            this.execute(args, event)?.let { (msg, msgChain) ->
+                msg?.let { subject.sendMessage(it) }
+                msgChain?.let { subject.sendMessage(it) }
+            }
         } catch (e: Exception) {
-            sendCommandError(e, subject)
+            e.printStackTrace()
+            Cache.errorCache.put(subject.id, e)
+            subject.sendMessage(e.message ?: "未知错误")
         }
+        return Pair(true, args)
     }
 
-    private suspend fun GroupCommand.tryExecute(args: List<String>, event: GroupMessageEvent) {
-        val group = event.group
-        try {
-            val (msg, msgChain) = this.execute(args, event) ?: return
-            group.sendMessage(msg, msgChain)
-        } catch (e: Exception) {
-            sendCommandError(e, group)
-        }
-    }
-
-    private suspend fun FriendCommand.tryExecute(args: List<String>, event: FriendMessageEvent) {
-        val friend = event.friend
-        try {
-            val (msg, msgChain) = this.execute(args, event) ?: return
-            friend.sendMessage(msg, msgChain)
-        } catch (e: Exception) {
-            sendCommandError(e, friend)
-        }
-    }
-
-    private suspend fun Contact.sendMessage(msg: String?, msgChain: MessageChain?) {
-        if (msg != null) this.sendMessage(msg)
-        if (msgChain != null) this.sendMessage(msgChain)
-    }
-
-    private suspend fun sendCommandError(e: Exception, subject: Contact) {
-        e.printStackTrace()
-        errorCache.put(subject.id, e)
-        when (e) {
-            is SSLException -> subject.sendMessage("梯子挂了")
-            is HttpTimeoutException -> subject.sendMessage("连接超时")
-            is MyException -> subject.sendMessage(e.message)
-            else -> subject.sendMessage("未知错误")
-        }
-    }
 
     /**
      * 解析消息文本，判断是否含有指令头或者@机器人

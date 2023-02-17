@@ -7,8 +7,8 @@ import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.CommandResult.Companion.result
 import org.hff.miraiomnitrix.command.GroupCommand
+import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.getInfo
 
 @Command(name = ["复读", "说", "echo"])

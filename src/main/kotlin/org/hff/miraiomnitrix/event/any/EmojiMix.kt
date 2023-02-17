@@ -2,17 +2,13 @@ package org.hff.miraiomnitrix.event.any
 
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.MessageEvent
-import org.hff.miraiomnitrix.event.AnyEvent
-import org.hff.miraiomnitrix.event.Event
-import org.hff.miraiomnitrix.event.EventResult
-import org.hff.miraiomnitrix.event.EventResult.Companion.next
-import org.hff.miraiomnitrix.event.EventResult.Companion.stop
+import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.springframework.core.io.ClassPathResource
 
 /** emoji合成，json数据来源于 https://github.com/xsalazar/emoji-kitchen */
-@Event(priority = 5)
+@Event(priority = 1)
 class EmojiMix : AnyEvent {
 
     private val url = "https://www.gstatic.com/android/keyboard/emojikitchen"

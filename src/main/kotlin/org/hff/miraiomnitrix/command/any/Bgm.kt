@@ -6,10 +6,7 @@ import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MessageChainBuilder
-import org.hff.miraiomnitrix.command.AnyCommand
-import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.CommandResult.Companion.result
+import org.hff.miraiomnitrix.command.*
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.db.entity.Bgm
 import org.hff.miraiomnitrix.db.service.BgmService
