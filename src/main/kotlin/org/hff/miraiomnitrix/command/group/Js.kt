@@ -31,9 +31,7 @@ class Js : GroupCommand {
             val result = sandbox.eval(command) ?: return result("null")
             if (result is ScriptObjectMirror) {
                 if (result.isArray) {
-                    if (result.size == 0) {
-                        return result("[]")
-                    }
+                    if (result.size == 0) return result("[]")
                     return result(result.values.joinToString("\n"))
                 }
             }

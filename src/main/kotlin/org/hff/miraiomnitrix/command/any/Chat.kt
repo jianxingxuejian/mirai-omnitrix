@@ -1,7 +1,6 @@
 package org.hff.miraiomnitrix.command.any
 
 import kotlinx.coroutines.*
-import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
@@ -22,9 +21,8 @@ import org.hff.miraiomnitrix.utils.getInfo
 import java.time.LocalDate
 
 @Command(["chat", "聊天"])
-class Chat(accountProperties: AccountProperties, permissionProperties: PermissionProperties) : AnyCommand {
+class Chat(accountProperties: AccountProperties, private val permissionProperties: PermissionProperties) : AnyCommand {
 
-    private val excludeGroup = permissionProperties.chatExcludeGroup
     private val stateCache = mutableMapOf<Long, MutableSet<Long>>()
     private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
 
@@ -38,8 +36,7 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         val (subject, sender) = event.getInfo()
-
-        if (subject is Group && excludeGroup.isNotEmpty() && excludeGroup.contains(subject.id)) return null
+        if (permissionProperties.chatExcludeGroup.contains(subject.id)) return null
 
         if (args.isNotEmpty() && admin.isNotEmpty() && admin.contains(sender.id)) {
             when (args[0]) {
@@ -65,14 +62,10 @@ class Chat(accountProperties: AccountProperties, permissionProperties: Permissio
         }
 
         val cache = stateCache[sender.id]
-        if (cache == null) {
-            stateCache[sender.id] = mutableSetOf(subject.id)
-        } else {
-            if (cache.contains(subject.id)) {
-                return null
-            } else {
-                stateCache[sender.id]?.add(subject.id)
-            }
+        if (cache == null) stateCache[sender.id] = mutableSetOf(subject.id)
+        else {
+            if (cache.contains(subject.id)) return null
+            else stateCache[sender.id]?.add(subject.id)
         }
 
         val name = sender.nameCardOrNick

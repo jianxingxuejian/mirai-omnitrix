@@ -18,16 +18,13 @@ class Echo : GroupCommand {
         if (args.isEmpty()) return null
         val first = args[0]
         val (group, sender) = event.getInfo()
-        if (first.startsWith("我是")) {
-            return result(first.replaceFirst("我", sender.nick))
-        }
+        if (first.startsWith("我是")) return result(first.replaceFirst("我", sender.nick))
 
         val forwardBuilder = ForwardMessageBuilder(group)
         var qq: Long? = null
         args.forEach {
-            if (it.startsWith("@")) {
-                qq = it.substring(1).toLong()
-            } else {
+            if (it.startsWith("@")) qq = it.substring(1).toLong()
+            else {
                 try {
                     qq = it.toLong()
                 } catch (_: NumberFormatException) {
