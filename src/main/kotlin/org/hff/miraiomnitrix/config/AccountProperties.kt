@@ -13,5 +13,9 @@ data class AccountProperties(
     /** bangumi番组计划网页cookie https://bgm.tv */
     val bgmCookie: String?,
     /** https://platform.openai.com/account/api-keys */
-    val openaiApiKey: String?
+    val openaiApiKey: String?,
+    /** 微软azure语音服务密钥 */
+    val azureSpeechKey: String?,
+    /** 微软azure语音服务区域 */
+    val azureSpeechRegion: String?,
 )

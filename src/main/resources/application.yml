@@ -38,3 +38,5 @@ account:
   saucenaoKey:
   bgmCookie:
   openaiApiKey:
+  azureSpeechKey:
+  azureSpeechRegion:

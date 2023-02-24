@@ -50,6 +50,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
 //    implementation("org.seleniumhq.selenium:selenium-java:4.8.0")
     implementation("org.xerial:sqlite-jdbc:3.40.1.0")
+    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.25.0@jar")
 }
 
 tasks.withType<KotlinCompile> {
