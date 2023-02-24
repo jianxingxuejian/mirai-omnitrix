@@ -16,14 +16,9 @@ import org.hff.miraiomnitrix.config.AccountProperties
 
 
 @Command(name = ["tts", "语音"])
-class Tts(accountProperties: AccountProperties) : AnyCommand {
+class Tts(private val accountProperties: AccountProperties) : AnyCommand {
 
-    private val speechRecognizer = SpeechSynthesizer(
-        SpeechConfig.fromSubscription(
-            accountProperties.azureSpeechKey,
-            accountProperties.azureSpeechRegion
-        )
-    )
+    private var speechRecognizer: SpeechSynthesizer? = null
 
     val speechConfigXml = """
     <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
@@ -41,9 +36,17 @@ class Tts(accountProperties: AccountProperties) : AnyCommand {
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         if (args.isEmpty()) return null
+        if (speechRecognizer == null) {
+            speechRecognizer = SpeechSynthesizer(
+                SpeechConfig.fromSubscription(
+                    accountProperties.azureSpeechKey,
+                    accountProperties.azureSpeechRegion
+                )
+            )
+        }
 
         val speechSynthesisResult = withContext(Dispatchers.IO) {
-            speechRecognizer.SpeakSsml(speechConfigXml.format(args.joinToString(" ")))
+            speechRecognizer!!.SpeakSsml(speechConfigXml.format(args.joinToString(" ")))
         }
         if (speechSynthesisResult.reason == ResultReason.SynthesizingAudioCompleted) {
             speechSynthesisResult.audioData?.let {
