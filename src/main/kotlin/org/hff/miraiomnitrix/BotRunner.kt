@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.utils.BotConfiguration
 import org.hff.miraiomnitrix.command.CommandManager
 import org.hff.miraiomnitrix.config.BotProperties
@@ -29,6 +30,10 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
             bot.login()
             // 监听所有消息
             bot.eventChannel.subscribeAlways<MessageEvent> { handleMessage(this) }
+            // 机器人被戳后戳回去
+            bot.eventChannel.subscribeAlways<NudgeEvent> {
+                if (target.id == bot.id) from.nudge().sendTo(subject)
+            }
         }
     }
 
