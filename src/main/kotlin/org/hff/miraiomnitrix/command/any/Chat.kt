@@ -26,7 +26,7 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
     private val stateCache = mutableMapOf<Long, MutableSet<Long>>()
     private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
 
-    private val models = arrayOf(Model("GPT-3", "text-davinci-003"), Model("ChatGPT", "text-chat-davinci-002-20221122"))
+    private val models = arrayOf(Model("ChatGPT", "gpt-3.5-turbo"))
     private var index = 0
     private var maxTokens = 3200
     private var temperature = 0.1

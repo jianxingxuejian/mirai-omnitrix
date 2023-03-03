@@ -43,6 +43,8 @@ object JsonUtil {
 
     fun JsonObject.getArray(key: String): JsonArray = this.get(key).asJsonArray
 
+    fun JsonObject.getArrayOrNull(key: String): JsonArray? = this.get(key)?.asJsonArray
+
     fun JsonElement.get(key: String): JsonElement = this.asJsonObject.get(key)
 
     fun JsonElement.getAsStr(key: String): String = this.asJsonObject.getAsStr(key)

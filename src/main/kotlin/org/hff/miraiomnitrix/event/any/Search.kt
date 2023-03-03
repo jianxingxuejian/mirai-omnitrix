@@ -10,6 +10,7 @@ import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.JsonUtil.getArrayOrNull
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStrOrNull
 import org.hff.miraiomnitrix.utils.getInfo
@@ -39,23 +40,23 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
         val data = result.getAsJsonObject("data")
         val thumbnail = header.getAsStr("thumbnail")
         val thumbnailImg = HttpUtil.getInputStreamByProxy(thumbnail)
-        val urls = data.getAsJsonArray("ext_urls")
+        val urls = data.getArrayOrNull("ext_urls")
+        if (urls == null || urls.isEmpty) return stop("无搜图结果")
         val urlsText = if (urls.size() == 1) {
-            "链接: " + urls[0]
+            "链接: " + urls[0].asString.trim('"')
         } else {
-            urls.mapIndexed { index, url -> "链接${index + 1}：$url" }.joinToString("\n")
+            urls.mapIndexed { index, url -> "链接${index + 1}：${url.asString.trim('"')}" }.joinToString("\n")
         }
-        val chain = MessageChainBuilder()
+        val builder = MessageChainBuilder()
             .append("搜图结果：\n")
             .append(subject.uploadImage(thumbnailImg))
             .append("相似度：" + header.getAsStr("similarity") + "\n")
-            .append("标题：").append(data.getAsStrOrNull("title")).append("\n")
-            .append(urlsText + "\n")
-            .append("作者：").append(
-                data.getAsStrOrNull("member_name") ?: data.getAsStrOrNull("user_name")
-                ?: data.getAsStrOrNull("creator") ?: data.getAsStrOrNull("jp_name")
-            )
-            .build()
-        return stop(chain)
+        val title = data.getAsStrOrNull("title")
+        if (title != null) builder.append("标题：").append(title).append("\n")
+        builder.append(urlsText + "\n")
+        val author = data.getAsStrOrNull("member_name") ?: data.getAsStrOrNull("user_name")
+        ?: data.getAsStrOrNull("creator") ?: data.getAsStrOrNull("jp_name")
+        if (author != null) builder.append("作者：").append(author)
+        return stop(builder.build())
     }
 }
