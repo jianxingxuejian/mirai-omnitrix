@@ -31,8 +31,8 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
 
     val prompt =
         """你是ChatGPT-Plus，一个由OpenAI训练的大型语言模型，当前时间是：%s，接下来你根据我的指令进行回答。
-                |你有1个外部api，分别是1.Bing搜索api(当你需要联网获取资料时使用这个api，参数为关键字)。
-                |每一次的回答你都可以决定是否调用外部api，由你决定调用的参数是什么，请勿使用相同参数进行重复调用。
+                |你有1个外部api，分别是1.Bing搜索api(当你需要联网获取资料时使用这个api，参数为关键字)；
+                |每一次的回答你都可以决定是否调用外部api，由你决定调用的参数是什么，调用之前请检查之前是否使用用相同参数进行调用了，请勿使用相同参数进行重复调用。
                 |你的回复格式要遵循如下规则：第一行只能回复yes或者no，代表你是否要调用外部api，如果你认为可以开始回答问题了，则回复no，然后回答问题；
                 |如果你选择了yes，则第二行回答api的序号，第三行回答api的输入参数，然后回答结束，不要进行多余的回答。
                 |我的问题是:
@@ -63,7 +63,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                 } else {
                     subject.sendMessage(name + "你好，我是ChatGPT-Plus，问答即将开始")
                     buffer.append(args.joinToString("\n"))
-                    val reply = completion(buffer, subject)
+                    val reply = handleExternalApi(buffer, subject)
                     subject.sendMessage(At(sender) + reply)
                 }
                 while (isActive) {
@@ -88,7 +88,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                     val temp = buffer.length
                     buffer.append("\n\n${content.trim()}")
                     try {
-                        val reply = completion(buffer, subject)
+                        val reply = handleExternalApi(buffer, subject)
                         println(buffer)
                         subject.sendMessage(next.quote() + reply)
                     } catch (_: Exception) {
@@ -109,7 +109,20 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
         return null
     }
 
-    suspend fun completion(buffer: StringBuffer, subject: Contact): String {
+    suspend fun handleExternalApi(buffer: StringBuffer, subject: Contact): String {
+        val reply = completion(buffer)
+        buffer.append("\n\n$reply")
+        val lines = reply.split("\n")
+        if (lines.size < 3) return reply
+        if (lines[0] == "no") return lines.drop(1).joinToString("\n")
+        if (lines[0] == "yes" && lines[1] == "1") {
+            search(buffer, lines[2], subject)
+            return handleExternalApi(buffer, subject)
+        }
+        return reply
+    }
+
+    suspend fun completion(buffer: StringBuffer): String {
         if (apiKey == null) throw MyException("未配置apikey")
         val headers = mapOf("Authorization" to apiKey)
         val message = mapOf("role" to "user", "content" to buffer.toString())
@@ -124,26 +137,13 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
         if (choices.isEmpty) throw MyException("choices为空")
         val text = choices[0].get("message").getAsStr("content").removePrefix("\n\n")
         buffer.append("\n\n$text")
-        val newText = handleExternalApi(buffer, text, subject)
-        return newText.split("\n\n").joinToString("\n")
-    }
-
-    suspend fun handleExternalApi(buffer: StringBuffer, text: String, subject: Contact): String {
-        val split = text.split("\n")
-        val first = split[0]
-        if (first == "yes" && split[1] == "1") {
-            subject.sendMessage("正在调用Bing Api搜索${split[2]}的相关内容")
-            val res = search(split[2])
-            buffer.append("\n\n通过调用Bing搜索api返回如下结果:$res")
-            return completion(buffer, subject)
-        }
-        if (first == "no") return split.drop(1).joinToString("\n")
         return text
     }
 
-    fun search(keyword: String): String {
+    suspend fun search(buffer: StringBuffer, keyword: String, subject: Contact) {
         if (bingSearchKey == null) throw MyException("未配置Bing搜索key")
         val headers = mapOf("Ocp-Apim-Subscription-Key" to bingSearchKey)
+        subject.sendMessage("正在调用Bing Api搜索${keyword}的相关内容")
         val json =
             HttpUtil.getString(
                 "https://api.bing.microsoft.com/v7.0/search?q=${
@@ -151,7 +151,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                 }&responseFilter=Webpages&count=3", headers
             )
         val result: BingWebSearch = JsonUtil.fromJson(json)
-        val values = result.webPages?.value ?: return "Bing搜索Api未找到${keyword}的相关内容"
+        val values = result.webPages?.value ?: return
         val jsonArray = JsonArray()
 
         for (value in values) {
@@ -160,8 +160,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
             innerJson.addProperty("snippet", value.snippet)
             jsonArray.add(innerJson)
         }
-
-        return jsonArray.toString()
+        buffer.append("\n\n通过调用Bing搜索api返回如下结果:$jsonArray")
     }
 
     data class BingWebSearch(
