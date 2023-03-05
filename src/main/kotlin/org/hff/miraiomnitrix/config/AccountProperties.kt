@@ -18,4 +18,8 @@ data class AccountProperties(
     val azureSpeechKey: String?,
     /** 微软azure语音服务区域 */
     val azureSpeechRegion: String?,
+    /** 谷歌搜索api-key https://developers.google.com/custom-search/v1/overview */
+    val googleSearchKey: String?,
+    /** 必应搜索 */
+    val bingSearchKey: String?,
 )

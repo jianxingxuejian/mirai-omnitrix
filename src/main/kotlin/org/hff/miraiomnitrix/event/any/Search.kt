@@ -42,6 +42,8 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
         val thumbnailImg = HttpUtil.getInputStreamByProxy(thumbnail)
         val urls = data.getArrayOrNull("ext_urls")
         if (urls == null || urls.isEmpty) return stop("无搜图结果")
+        val similarity = header.getAsStr("similarity")
+        if (similarity.toDouble() < 60) return stop("相似度过低")
         val urlsText = if (urls.size() == 1) {
             "链接: " + urls[0].asString.trim('"')
         } else {
@@ -50,7 +52,7 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
         val builder = MessageChainBuilder()
             .append("搜图结果：\n")
             .append(subject.uploadImage(thumbnailImg))
-            .append("相似度：" + header.getAsStr("similarity") + "\n")
+            .append("相似度：$similarity\n")
         val title = data.getAsStrOrNull("title")
         if (title != null) builder.append("标题：").append(title).append("\n")
         builder.append(urlsText + "\n")

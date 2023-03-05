@@ -40,3 +40,5 @@ account:
   openaiApiKey:
   azureSpeechKey:
   azureSpeechRegion:
+  bingSearchKey:
+  googleSearchKey:

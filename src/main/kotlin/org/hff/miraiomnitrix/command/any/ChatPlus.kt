@@ -1,6 +1,11 @@
 package org.hff.miraiomnitrix.command.any
 
-import kotlinx.coroutines.*
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
@@ -10,41 +15,38 @@ import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.config.AccountProperties
-import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.JsonUtil.get
 import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.getInfo
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 
-@Command(["chat", "聊天"])
-class Chat(accountProperties: AccountProperties, private val permissionProperties: PermissionProperties) : AnyCommand {
+@Command(["chatplus", "高级聊天"])
+class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
 
-    private val prompt = "你是ChatGPT, 一个由OpenAI训练的大型语言模型。现在的时间是:%s，开始问答式交流。"
-    private val stateCache = mutableMapOf<Long, MutableSet<Long>>()
+    val prompt =
+        """你是ChatGPT-Plus，一个由OpenAI训练的大型语言模型，当前时间是：%s，接下来你根据我的指令进行回答。
+                |你有1个外部api，分别是1.Bing搜索api(当你需要联网获取资料时使用这个api，参数为关键字)。
+                |每一次的回答你都可以决定是否调用外部api，由你决定调用的参数是什么，请勿使用相同参数进行重复调用。
+                |你的回复格式要遵循如下规则：第一行只能回复yes或者no，代表你是否要调用外部api，如果你认为可以开始回答问题了，则回复no，然后回答问题；
+                |如果你选择了yes，则第二行回答api的序号，第三行回答api的输入参数，然后回答结束，不要进行多余的回答。
+                |我的问题是:
+            """.trimMargin()
     private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
     private var maxTokens = 1000
     private var temperature = 0.1
-    private val admin = permissionProperties.admin
+
+    private val bingSearchKey = accountProperties.bingSearchKey
+
+    private val stateCache = mutableMapOf<Long, MutableSet<Long>>()
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         val (subject, sender) = event.getInfo()
-        if (permissionProperties.chatExcludeGroup.contains(subject.id)) return null
-
-        if (args.isNotEmpty() && admin.isNotEmpty() && admin.contains(sender.id)) {
-            when (args[0]) {
-                "temperature" -> {
-                    if (args.size < 2) return result("参数错误")
-                    temperature = args[1].toDouble()
-                    return result("temperature更改成功")
-                }
-            }
-        }
-
         val cache = stateCache[sender.id]
         if (cache == null) stateCache[sender.id] = mutableSetOf(subject.id)
         else {
@@ -57,11 +59,11 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
             coroutineScope {
                 val buffer = StringBuffer(prompt.format(LocalDate.now()))
                 if (args.isEmpty()) {
-                    subject.sendMessage(name + "你好，我是ChatGPT，现在开始问答，请@我并说出你的问题")
+                    subject.sendMessage(name + "你好，我是ChatGPT-Plus，请@我并说出你的问题")
                 } else {
-                    subject.sendMessage(name + "你好，我是ChatGPT，问答即将开始")
+                    subject.sendMessage(name + "你好，我是ChatGPT-Plus，问答即将开始")
                     buffer.append(args.joinToString("\n"))
-                    val reply = completion(buffer)
+                    val reply = completion(buffer, subject)
                     subject.sendMessage(At(sender) + reply)
                 }
                 while (isActive) {
@@ -86,7 +88,8 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
                     val temp = buffer.length
                     buffer.append("\n\n${content.trim()}")
                     try {
-                        val reply = completion(buffer)
+                        val reply = completion(buffer, subject)
+                        println(buffer)
                         subject.sendMessage(next.quote() + reply)
                     } catch (_: Exception) {
                         buffer.setLength(temp)
@@ -106,7 +109,7 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
         return null
     }
 
-    fun completion(buffer: StringBuffer): String {
+    suspend fun completion(buffer: StringBuffer, subject: Contact): String {
         if (apiKey == null) throw MyException("未配置apikey")
         val headers = mapOf("Authorization" to apiKey)
         val message = mapOf("role" to "user", "content" to buffer.toString())
@@ -121,7 +124,72 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
         if (choices.isEmpty) throw MyException("choices为空")
         val text = choices[0].get("message").getAsStr("content").removePrefix("\n\n")
         buffer.append("\n\n$text")
-        return text.split("\n\n").joinToString("\n")
+        val newText = handleExternalApi(buffer, text, subject)
+        return newText.split("\n\n").joinToString("\n")
     }
+
+    suspend fun handleExternalApi(buffer: StringBuffer, text: String, subject: Contact): String {
+        val split = text.split("\n")
+        val first = split[0]
+        if (first == "yes" && split[1] == "1") {
+            subject.sendMessage("正在调用Bing Api搜索${split[2]}的相关内容")
+            val res = search(split[2])
+            buffer.append("\n\n通过调用Bing搜索api返回如下结果:$res")
+            return completion(buffer, subject)
+        }
+        if (first == "no") return split.drop(1).joinToString("\n")
+        return text
+    }
+
+    fun search(keyword: String): String {
+        if (bingSearchKey == null) throw MyException("未配置Bing搜索key")
+        val headers = mapOf("Ocp-Apim-Subscription-Key" to bingSearchKey)
+        val json =
+            HttpUtil.getString(
+                "https://api.bing.microsoft.com/v7.0/search?q=${
+                    URLEncoder.encode(keyword, StandardCharsets.UTF_8)
+                }&responseFilter=Webpages&count=3", headers
+            )
+        val result: BingWebSearch = JsonUtil.fromJson(json)
+        val values = result.webPages?.value ?: return "Bing搜索Api未找到${keyword}的相关内容"
+        val jsonArray = JsonArray()
+
+        for (value in values) {
+            val innerJson = JsonObject()
+            innerJson.addProperty("name", value.name)
+            innerJson.addProperty("snippet", value.snippet)
+            jsonArray.add(innerJson)
+        }
+
+        return jsonArray.toString()
+    }
+
+    data class BingWebSearch(
+        val _type: String,
+        val queryContext: QueryContext,
+        val webPages: WebPages?
+    )
+
+    data class QueryContext(
+        val originalQuery: String
+    )
+
+    data class WebPages(
+        val totalEstimatedMatches: Int,
+        val value: List<ValueX>,
+        val webSearchUrl: String
+    )
+
+    data class ValueX(
+        val dateLastCrawled: String,
+        val displayUrl: String,
+        val id: String,
+        val isFamilyFriendly: Boolean,
+        val isNavigational: Boolean,
+        val language: String,
+        val name: String,
+        val snippet: String,
+        val url: String
+    )
 
 }

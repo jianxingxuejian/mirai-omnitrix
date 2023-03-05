@@ -104,7 +104,10 @@ object HttpUtil {
 
     private fun <T : Any> tryGetRightRes(res: HttpResponse<T>?): T {
         if (res == null) throw MyException("无代理配置")
-        if (res.statusCode() != 200) throw MyException("请求失败")
+        if (res.statusCode() != 200) {
+            println("错误码: ${res.statusCode()}，错误信息: ${res.body()}")
+            throw MyException("请求失败")
+        }
         return res.body()
     }
 
