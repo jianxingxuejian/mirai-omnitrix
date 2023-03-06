@@ -50,7 +50,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
         StringBuffer(prompt.format(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        val (subject, sender) = event.getInfo()
+        val (subject, sender, message) = event.getInfo()
         val cache = stateCache[sender.id]
         if (cache == null) {
             stateCache[sender.id] = mutableSetOf(subject.id)
@@ -68,7 +68,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                 } else {
                     buffer.append(args.joinToString("\n"))
                     val reply = handleExternalApi(buffer, subject)
-                    subject.sendMessage(At(sender) + reply)
+                    subject.sendMessage(message.quote() + reply)
                 }
                 while (isActive) {
                     val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)

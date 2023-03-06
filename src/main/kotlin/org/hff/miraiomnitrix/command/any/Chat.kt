@@ -32,7 +32,7 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
     private val admin = permissionProperties.admin
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        val (subject, sender) = event.getInfo()
+        val (subject, sender, message) = event.getInfo()
         if (permissionProperties.chatExcludeGroup.contains(subject.id)) return null
 
         if (args.isNotEmpty() && admin.isNotEmpty() && admin.contains(sender.id)) {
@@ -62,7 +62,7 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
                     subject.sendMessage(name + "你好，我是ChatGPT，问答即将开始")
                     buffer.append(args.joinToString("\n"))
                     val reply = completion(buffer)
-                    subject.sendMessage(At(sender) + reply)
+                    subject.sendMessage(message.quote() + reply)
                 }
                 while (isActive) {
                     val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
