@@ -26,8 +26,8 @@ object JsonUtil {
 
     inline fun <reified T> fromJson(json: String): T = gson.fromJson(json, object : TypeToken<T>() {}.type)
 
-    fun <T : Any> fromJson(json: String, key: String, clazz: KClass<T>): T =
-        gson.fromJson(getObj(json, key), clazz.java)
+    inline fun <reified T : Any> fromJson(json: String, key: String): T =
+        gson.fromJson(getObj(json, key), object : TypeToken<T>() {}.type)
 
     fun <T : Any> fromJson(json: JsonElement, clazz: KClass<T>): T = gson.fromJson(json, clazz.java)
 

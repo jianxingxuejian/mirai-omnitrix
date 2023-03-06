@@ -7,7 +7,6 @@ import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 
 @Event(priority = 2)
 class BiliBili(private val permissionProperties: PermissionProperties) : AnyEvent {
@@ -24,50 +23,24 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
         if (first.length > 30 || !(videoRegex matches args[0])) return next()
 
         val json = HttpUtil.getString(videoUrl, mapOf("bvid" to first))
-        val data = JsonUtil.getObj(json, "data")
-        val title = data.getAsStr("title")
-        val picUrl = data.getAsStr("pic")
-        val pic = subject.uploadImage(HttpUtil.getInputStream(picUrl))
-        val desc = data.getAsStr("desc")
+        val data: BiliVideoInfo = JsonUtil.fromJson(json, "data")
         val share = MessageChainBuilder()
-            .append("哔哩哔哩链接解析：\n")
-            .append("标题：$title\n")
-            .append(pic)
-            .append("简介：$desc\n")
-            .append("链接：https://www.bilibili.com/video/$first")
+            .append(subject.uploadImage(HttpUtil.getInputStream(data.pic)))
+            .append("标题：${data.title}\n")
+            .append("简介：${data.desc.takeIf { it.length > 100 }?.take(100) + "……"}\n")
+            .append("UP主: ${data.owner.name}\n")
+            .append("链接：https://www.bilibili.com/video/$first\n")
             .build()
         return stop(share)
-//            val share = RichMessage.Key.share(
-//                "https://www.bilibili.com/video/$first",
-//                "哔哩哔哩",
-//                content,
-//                "https://open.gtimg.cn/open/app_icon/00/95/17/76/100951776_100_m.png?t=1675158231"
-//            )
-
-//            val detail = Detail(desc = content, preview = pic)
-//            val meta = Meta(detail)
-//            val info = BiliVideoInfo(meta = meta)
-//            val share = LightApp(JsonUtil.toJson(info))
     }
 
-//    data class BiliVideoInfo(
-//        val app: String = "com.tencent.miniapp_01",
-//        val desc: String = "哔哩哔哩",
-//        val ver: String = "1.0.0.19",
-//        val prompt: String = "[QQ小程序]哔哩哔哩",
-//        val needShareCallBack: Boolean = false,
-//        val meta: Meta
-//    )
-//
-//    data class Meta(
-//        val detail_1: Detail
-//    )
-//
-//    data class Detail(
-//        val desc: String,
-//        val icon: String = "https://open.gtimg.cn/open/app_icon/00/95/17/76/100951776_100_m.png?t=1675158231",
-//        val preview: String,
-//        val title: String = "哔哩哔哩"
-//    )
+    data class BiliVideoInfo(
+        val pic: String,
+        val title: String,
+        val desc: String,
+        val owner: Owner
+    )
+
+    data class Owner(val name: String)
 
 }

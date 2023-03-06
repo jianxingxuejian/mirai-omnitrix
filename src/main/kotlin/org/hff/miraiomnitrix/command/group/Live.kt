@@ -113,7 +113,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
 
     private fun getBilibiliUserInfo(uid: Long): UserInfo {
         val apiResult = HttpUtil.getString(infoApi + uid)
-        return JsonUtil.fromJson(apiResult, "data", UserInfo::class)
+        return JsonUtil.fromJson(apiResult, "data")
     }
 
     data class UserInfo(val name: String, val live_room: LiveRoom?)

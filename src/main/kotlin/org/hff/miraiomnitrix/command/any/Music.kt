@@ -12,7 +12,7 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import java.net.URLEncoder
 
-@Command(name = ["音乐", "网易云", "music", "wyy"])
+@Command(name = ["音乐", "网易云", "music", "wyy", "点歌"])
 class Music : AnyCommand {
 
     private val searchUrl = "http://music.163.com/api/search/get?type=1&limit=20&s="
@@ -22,7 +22,8 @@ class Music : AnyCommand {
         val name = args.joinToString(" ")
         val encode = URLEncoder.encode(name, Charsets.UTF_8)
         val json = HttpUtil.getString(searchUrl + encode)
-        val songs = JsonUtil.fromJson(json, "result", MusicResult::class).songs
+        val result: MusicResult = JsonUtil.fromJson(json, "result")
+        val songs = result.songs
         if (songs.isEmpty()) return result("未找到歌曲")
         songs.forEach {
             println("${it.name}=copyrightId:${it.copyrightId};duration:${it.duration};fee:${it.fee};ftype:${it.ftype};mvid:${it.mvid};mark:${it.mark};rtype:${it.rtype};status:${it.status};")
