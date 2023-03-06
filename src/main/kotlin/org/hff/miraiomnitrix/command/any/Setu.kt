@@ -32,7 +32,7 @@ class Setu : AnyCommand {
         val keywords = mutableListOf<String>()
         args.forEach { arg ->
             when {
-                arg == "r" || arg == "r18" -> r18 = 1
+                arg == "r" || arg == "r18" || arg == "R" || arg == "R18" -> r18 = 1
                 arg.matches(Regex("^(n|num)[0-9]+$")) -> num = arg.substringAfter("n", "num").toInt()
                 else -> keywords.add(arg.lowercase())
             }

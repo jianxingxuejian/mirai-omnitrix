@@ -3,11 +3,11 @@ package org.hff.miraiomnitrix.command
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
-import net.mamoe.mirai.message.data.MessageChain
 import org.hff.miraiomnitrix.common.check
-import org.hff.miraiomnitrix.config.BotProperties
+import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.utils.SpringUtil
+import org.hff.miraiomnitrix.utils.Util
 import kotlin.reflect.full.findAnnotation
 
 /**
@@ -17,7 +17,7 @@ import kotlin.reflect.full.findAnnotation
  */
 object CommandManager {
     private val commandHeads = arrayOf("|", "\\", ",", ".", "，", "。")
-    private val botProperties = SpringUtil.getBean(BotProperties::class)
+    private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
 
     /** 指令容器 */
     private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
@@ -37,20 +37,24 @@ object CommandManager {
     }
 
     /** 处理消息，如果是指令则执行 */
-    suspend fun handle(event: MessageEvent): Pair<Boolean, List<String>> {
-        val (commandName, args) = getCommandName(event.message)
-        if (commandName == null) return Pair(false, args)
-
-        val result = when (event) {
-            is GroupMessageEvent -> groupCommands[commandName]?.tryExecute(args, event)
+    suspend fun handle(event: MessageEvent): Pair<Boolean, List<String>> = when (event) {
+        is GroupMessageEvent -> {
+            val (commandName, args) = getCommandName(event)
+            if (commandName == null) Pair(false, args)
+            else groupCommands[commandName]?.tryExecute(args, event)
                 ?: anyCommands[commandName]?.tryExecute(args, event)
-
-            is UserMessageEvent -> userCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
-                ?: anyCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
-
-            else -> null
+                ?: Pair(false, listOf(commandName))
         }
-        return result ?: Pair(false, listOf(commandName))
+
+        is UserMessageEvent -> {
+            val (commandName, args) = getCommandName(event, false)
+            if (commandName == null) Pair(false, args)
+            else userCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
+                ?: anyCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
+                ?: Pair(false, listOf(commandName))
+        }
+
+        else -> Pair(false, listOf())
     }
 
     private suspend fun <T : MessageEvent> Execute<T>.tryExecute(
@@ -75,21 +79,28 @@ object CommandManager {
     /**
      * 解析消息文本，判断是否含有指令头或者@机器人
      *
-     * @param message 原始消息链
-     * @param needHead 是否需要指令头，默认值为true，如果是好友消息之类的则无需指令头
+     * @param event 原始事件
+     * @param needHead 是否需要指令头，默认值为true，如果是非群消息则无需指令头
      * @return Pair<指令名, 参数列表>
      */
-    private fun getCommandName(message: MessageChain, needHead: Boolean = true): Pair<String?, List<String>> {
-        var string = message.contentToString()
+    private fun getCommandName(event: MessageEvent, needHead: Boolean = true): Pair<String?, List<String>> {
+        var string = event.message.contentToString().trim()
+
         var hasHead = commandHeads.any { string.startsWith(it) }
         if (needHead) {
             if (hasHead) {
                 string = string.substring(1)
-            } else if (botProperties != null) {
-                val atBot = "@" + botProperties.qq
+            } else {
+                val atBot = Util.atBot()
                 if (string.contains(atBot)) {
                     hasHead = true
                     string = string.replace(atBot, "")
+                    // 如果是群消息，且群号在不需要chatplus指令头的群号列表中
+                    permissionProperties?.chatPlusNotNeedCommandGroup?.let { list ->
+                        if (list.isNotEmpty() && list.contains(event.subject.id)) {
+                            return Pair("chatplus", string.split(Regex("\\s+")))
+                        }
+                    }
                 }
             }
         }

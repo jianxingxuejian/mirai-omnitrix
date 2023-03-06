@@ -3,7 +3,6 @@ package org.hff.miraiomnitrix.event.group
 import com.sksamuel.scrimage.ImmutableImage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
-import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
@@ -20,10 +19,7 @@ import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
 
 @Event(priority = 1)
-class Pa(
-    private val botProperties: BotProperties,
-    private val permissionProperties: PermissionProperties
-) : GroupEvent {
+class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
 
     private val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
@@ -31,19 +27,22 @@ class Pa(
     private val tieDir = "/img/tie/*"
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent): EventResult {
-        val (group, sender, message) = event.getInfo()
-        if (!args.any { it.endsWith("爬") }) return next()
+        if (args.isEmpty()) return next()
+        val (group, sender) = event.getInfo()
 
-        var qq = args.find { it.startsWith("@") }?.substring(1)?.toLong()
-        if (qq == null) {
-            if (message.contentToString().contains("@" + botProperties.qq)) {
-                qq = sender.id
-            } else {
-                return next()
+        var qq: Long? = null
+        var pa = false
+        args.forEach {
+            if (it == "爬") {
+                pa = true
+            } else if (it.startsWith("@")) {
+                qq = it.substring(1).toLong()
             }
         }
-        val file = getFileByQQ(qq)
+        if (!pa) return next()
+        if (qq == null) qq = sender.id
 
+        val file = getFileByQQ(qq!!)
         val qqImg = HttpUtil.getInputStream(url + qq)
         val imageA = ImageUtil.scaleTo(file, 400, 400)
         val imageB = ImageUtil.scaleTo(qqImg, 75, 75)
