@@ -8,22 +8,15 @@ import org.springframework.stereotype.Service
 @Service
 open class CharacterService : ServiceImpl<CharacterMapper, Character>() {
 
-    fun getCharactersName(): String {
-        return "可用角色如下：" + super.list()
-            .map { it.name }.joinToString(",")
-    }
+    fun getCharactersName() = super.list().map { it.name }.joinToString(",")
 
-    fun getCountByName(name: String): Long {
-        return super.ktQuery()
-            .eq(Character::name, name)
-            .count()
-    }
+    fun getCountByName(name: String): Long = super.ktQuery()
+        .eq(Character::name, name)
+        .count()
 
-    fun get(name: String): Character? {
-        return super.ktQuery()
-            .eq(Character::name, name)
-            .one()
-    }
+    fun get(name: String): Character? = super.ktQuery()
+        .eq(Character::name, name)
+        .one()
 
     fun add(name: String, externalId: String): Boolean {
         val character = Character()
@@ -32,16 +25,8 @@ open class CharacterService : ServiceImpl<CharacterMapper, Character>() {
         return super.save(character)
     }
 
-    fun del(name: String): Boolean {
-        return super.ktUpdate()
-            .eq(Character::name, name)
-            .remove()
-    }
+    fun del(name: String): Boolean = super.ktUpdate()
+        .eq(Character::name, name)
+        .remove()
 
-    fun edit(name: String, externalId: String): Boolean {
-        return super.ktUpdate()
-            .set(Character::externalId, externalId)
-            .eq(Character::name, name)
-            .update()
-    }
 }

@@ -27,10 +27,17 @@ class Character(
 
     private val url = "https://beta.character.ai/chat"
     private val historyCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build<Long, Long>()
+
+    fun help() = result(
+        """可用角色如下: ${characterService.getCharactersName()}
+            |请使用指令+角色名开始聊天
+            |新增角色 add 角色名 角色external_id
+            |删除角色 del 角色名
+            """.trimMargin()
+    )
+
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        if (args.isEmpty()) {
-            return result(characterService.getCharactersName() + "\n" + "请使用指令+角色名开始聊天" + "\n" + "增删改查格式为 add/del/edit 角色名 角色external_id(add/edit操作)")
-        }
+        if (args.isEmpty()) return help()
 
         when (args[0]) {
             "add" -> {
@@ -57,20 +64,6 @@ class Character(
                 }
             }
 
-            "edit", "update" -> {
-                if (args.size < 3) return result("参数错误")
-                val count = characterService.getCountByName(args[1])
-                if (count < 1) {
-                    return result("该角色不存在")
-                }
-                val edit = characterService.edit(args[1], args[2])
-                return if (edit) {
-                    result("角色编辑成功")
-                } else {
-                    result("角色编辑失败")
-                }
-            }
-
         }
 
         val (subject, sender) = event.getInfo()
@@ -81,26 +74,10 @@ class Character(
 
         val entity = characterService.get(args[0]) ?: return result(" 角色不存在")
         val token = accountProperties.characterAiToken ?: return result("无token")
-        val headers = mapOf("authorization" to token)
+        val headers = mapOf("authorization" to token,"User-Agent" to "PostmanRuntime/7.31.1")
         val param = mapOf("character_external_id" to entity.externalId!!)
         chat(entity.externalId!!, event, headers, param)
         return null
-//        val name = args[0]
-//        if (characterCache[name] != null) return null
-//
-//        val info = HttpUtil.postStringByProxy(url + "character/info/", param, headers)
-//        val history = HttpUtil.postStringByProxy(url + "history/create/", param, headers)
-//
-//        val character = JsonUtil.getObj(info, "character")
-//        val identifier = character.getAsStr("identifier").replace("id", "internal_id")
-//        val greeting = character.getAsStr("greeting").replace("{{user}}", sender.nick)
-//        val historyExternalId = JsonUtil.getStr(history, "external_id")
-//
-//        characterCache[name] = Triple(historyExternalId, entity.externalId!!, identifier)
-//        subject.sendMessage(greeting)
-//        chatting = true
-//        concatId = subject.id
-//        characterName = name
     }
 
     suspend fun chat(

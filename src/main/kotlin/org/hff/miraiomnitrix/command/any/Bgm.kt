@@ -20,27 +20,39 @@ class Bgm : AnyCommand {
     private val calendarApi = "https://api.bgm.tv/calendar"
     private val searchApi = "https://api.bgm.tv/v0/search/subjects?limit=10"
 
+    private val help = result(
+        """使用放送、day等关键字可获取bgm的每日放送列表，可追加1-7选择星期
+            |可以用关键字以及查询条件搜索番剧，关键字可为多个，可用查询条件有日期、评分、排名，使用> < >= <=比较符，参数为1-2个，标签为多个，使用空格分隔
+            |示例一: 摇曳露营
+            |示例二: 火影 鸣人 评分 >=6 排名 <=5000 
+            |示例三: 海贼王 日期 >2008 <2020 评分 >=4.5 排名 <3000 >100 标签 热血 冒险
+            """.trimMargin()
+    )
+
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        if (args.isEmpty()) return result("")
+        if (args.isEmpty()) return help
+        if (args[0] == "help") return help
         val subject = event.subject
 
-        if (listOf("每日放送", "每日", "放送", "放送表", "calendar", "day").contains(args[0])) {
+        if (hashSetOf("每日放送", "每日", "放送", "放送表", "calendar", "day").contains(args[0])) {
             val index = args.getOrNull(1)?.toIntOrNull() ?: LocalDate.now().dayOfWeek.value
             val json = HttpUtil.getString(calendarApi)
+            println(json)
             val calendarList: List<Calendar> = JsonUtil.fromJson(json)
             val calendar = calendarList[index - 1]
             buildForwardMessage(subject) {
                 coroutineScope {
-                    calendar.items.forEach {
+                    calendar.items.forEach { (url, name, name_cn, rank, rating, summary, images) ->
                         launch {
-                            val image = HttpUtil.getInputStream(it.images.medium.replaceFirst("http", "https"))
+                            val image = HttpUtil.getInputStream(images.medium.replaceFirst("http", "https"))
                             val message = buildMessageChain {
                                 +subject.uploadImage(image)
                                 +"\n"
-                                +"名字: ${it.name_cn.ifBlank { it.name }}\n"
-                                if (it.rank != 0) +"排名: ${it.rank}\n"
-                                if (it.summary.isNotBlank()) +"简介: ${it.summary}\n"
-                                if (it.rating != null) +"评分: ${it.rating.score}(${it.rating.total}人)\n"
+                                +"名字: ${name_cn.ifBlank { name }}\n"
+                                if (rank != 0) +"排名: $rank\n" else +"暂无排名\n"
+                                if (summary.isNotBlank()) +"简介: $summary\n"
+                                +"评分: ${rating?.score ?: "暂无评分"}(${rating?.total ?: 0}人)\n"
+                                +"链接: $url"
                             }
                             add(subject.bot, message)
                         }
@@ -70,18 +82,18 @@ class Bgm : AnyCommand {
         val result: SearchResult = JsonUtil.fromJson(json)
         buildForwardMessage(subject) {
             coroutineScope {
-                result.data.forEach {
+                result.data.forEach { (name, name_cn, rank, score, summary, image, tags) ->
                     launch {
                         val message = buildMessageChain {
-                            if (it.image.isNotBlank()) {
-                                +subject.uploadImage(HttpUtil.getInputStream(it.image))
+                            if (image.isNotBlank()) {
+                                +subject.uploadImage(HttpUtil.getInputStream(image))
                                 +"\n"
                             }
-                            +"名字: ${it.name_cn.ifBlank { it.name }}\n"
-                            if (it.rank != 0) +"排名: ${it.rank}\n"
-                            if (it.score != null && it.score != 0.0) +"评分: ${it.score}\n"
-                            if (it.summary?.isNotBlank() == true) +"简介: ${it.summary}\n"
-                            +"标签: ${it.tags.joinToString { tag -> tag.name }}"
+                            +"名字: ${name_cn.ifBlank { name }}\n"
+                            if (rank != 0) +"排名: $rank\n" else +"暂无排名\n"
+                            +"评分: ${if (score != null && score != 0.0) score else "暂无评分"}\n"
+                            if (summary?.isNotBlank() == true) +"简介: $summary\n"
+                            if (tags.isNotEmpty()) +"标签: ${tags.joinToString { tag -> tag.name }}"
                         }
                         add(subject.bot, message)
                     }
@@ -103,15 +115,15 @@ class Bgm : AnyCommand {
     data class Calendar(val items: List<Item>)
 
     data class Item(
-        val air_date: String,
-        val air_weekday: Int,
-        val images: Images,
+        val url: String,
         val name: String,
         val name_cn: String,
         val rank: Int,
         val rating: Rating?,
         val summary: String,
-        val url: String
+        val images: Images,
+        val air_date: String,
+        val air_weekday: Int,
     )
 
     data class Images(
@@ -122,47 +134,31 @@ class Bgm : AnyCommand {
         val small: String
     )
 
-    data class Rating(
-        val score: Double,
-        val total: Int
-    )
+    data class Rating(val score: Double, val total: Int)
 
-    data class SearchParam(
-        val filter: Filter,
-        val keyword: String,
-        val sort: String = "rank"
-    )
+    data class SearchParam(val filter: Filter, val keyword: String, val sort: String = "rank")
 
     data class Filter(
-        val air_date: List<String>? = null,
-        val rank: List<String>? = null,
-        val rating: List<String>? = null,
-        val tag: List<String>? = null,
+        val air_date: List<String>,
+        val rank: List<String>,
+        val rating: List<String>,
+        val tag: List<String>,
         val type: List<Int> = listOf(2)
     )
 
-    data class SearchResult(
-        val `data`: List<Data>,
-        val limit: Int,
-        val offset: Int,
-        val total: Int
-    )
+    data class SearchResult(val `data`: List<Data>, val limit: Int, val offset: Int, val total: Int)
 
     data class Data(
-        val date: String,
-        val id: Int,
-        val image: String,
         val name: String,
         val name_cn: String,
         val rank: Int,
         val score: Double?,
         val summary: String?,
+        val image: String,
         val tags: List<Tag>,
+        val date: String,
         val type: Int
     )
 
-    data class Tag(
-        val count: Int,
-        val name: String
-    )
+    data class Tag(val count: Int, val name: String)
 }

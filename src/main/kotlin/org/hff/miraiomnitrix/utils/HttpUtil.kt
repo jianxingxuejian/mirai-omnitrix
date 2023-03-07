@@ -26,6 +26,7 @@ object HttpUtil {
             val (host, port) = httpProperties.proxy
             if (host != null && port != null) {
                 proxyClient = HttpClient.newBuilder()
+                    .version(HttpClient.Version.HTTP_1_1)
                     .proxy(ProxySelector.of(InetSocketAddress(host, port)))
                     .build()
             }
