@@ -25,9 +25,6 @@ class Music : AnyCommand {
         val result: MusicResult = JsonUtil.fromJson(json, "result")
         val songs = result.songs
         if (songs.isEmpty()) return result("未找到歌曲")
-        songs.forEach {
-            println("${it.name}=copyrightId:${it.copyrightId};duration:${it.duration};fee:${it.fee};ftype:${it.ftype};mvid:${it.mvid};mark:${it.mark};rtype:${it.rtype};status:${it.status};")
-        }
         val song = songs.find { it.status == 0 } ?: songs[0]
         val artists = song.artists
         val musicShare = MusicShare(

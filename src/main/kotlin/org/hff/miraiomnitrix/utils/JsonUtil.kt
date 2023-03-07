@@ -33,7 +33,7 @@ object JsonUtil {
 
     fun toJson(obj: Any) = gson.toJson(obj)
 
-    fun parse(data: Map<String, Any?>) = gson.toJson(data).toString()
+    fun parse(data: Any) = gson.toJson(data).toString()
 
     fun JsonObject.getAsStr(key: String): String = this.get(key).asString
 

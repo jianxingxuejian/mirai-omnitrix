@@ -37,7 +37,7 @@ permission:
 account:
   characterAiToken:
   saucenaoKey:
-  bgmCookie:
+  bgmAccessToken:
   openaiApiKey:
   azureSpeechKey:
   azureSpeechRegion:

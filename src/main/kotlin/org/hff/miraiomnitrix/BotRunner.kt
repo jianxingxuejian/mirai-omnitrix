@@ -1,5 +1,6 @@
 package org.hff.miraiomnitrix
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
@@ -20,7 +21,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
     }
 
     override fun run(args: Array<String>) {
-        runBlocking {
+        runBlocking(Dispatchers.IO) {
             val (qq, password) = botProperties
             if (qq == null || password == null) throw IllegalArgumentException("qq或者密码为空，请先在配置文件里添加")
             bot = BotFactory.newBot(qq, password) {

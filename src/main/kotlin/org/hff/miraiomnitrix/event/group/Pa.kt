@@ -36,7 +36,11 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
             if (it == "爬") {
                 pa = true
             } else if (it.startsWith("@")) {
-                qq = it.substring(1).toLong()
+                try {
+                    qq = it.substring(1).toLong()
+                } catch (e: NumberFormatException) {
+                    return next()
+                }
             }
         }
         if (!pa) return next()

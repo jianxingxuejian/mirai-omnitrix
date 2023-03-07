@@ -12,7 +12,8 @@ import org.hff.miraiomnitrix.utils.JsonUtil
 class BiliBili(private val permissionProperties: PermissionProperties) : AnyEvent {
 
     private val videoUrl = "https://api.bilibili.com/x/web-interface/view"
-    private val videoRegex = """(?i)(?<!\w)(?:av(\d+)|(BV1[1-9A-NP-Za-km-z]{9}))""".toRegex()
+    private val avRegex = """(?i)(?<!\w)av(\d+)""".toRegex()
+    private val bvRegex = """(?i)(?<!\w)BV1[1-9A-NP-Za-km-z]{9}""".toRegex()
     override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
         if (args.isEmpty()) return next()
 
@@ -20,14 +21,19 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
         if (permissionProperties.bvExcludeGroup.contains(subject.id)) return next()
 
         val first = args[0]
-        if (first.length > 30 || !(videoRegex matches args[0])) return next()
+        if (first.length > 30) return next()
 
-        val json = HttpUtil.getString(videoUrl, mapOf("bvid" to first))
+        val param = when {
+            avRegex.matches(first) -> mapOf("aid" to avRegex.find(first)!!.groups[1]!!.value)
+            bvRegex.matches(first) -> mapOf("bvid" to first)
+            else -> return next()
+        }
+        val json = HttpUtil.getString(videoUrl, param)
         val data: BiliVideoInfo = JsonUtil.fromJson(json, "data")
         val share = MessageChainBuilder()
             .append(subject.uploadImage(HttpUtil.getInputStream(data.pic)))
             .append("标题：${data.title}\n")
-            .append("简介：${data.desc.takeIf { it.length > 100 }?.take(100) + "……"}\n")
+            .append("简介：${data.desc.take(100)}${if (data.desc.length > 100) "……" else ""}\n")
             .append("UP主: ${data.owner.name}\n")
             .append("链接：https://www.bilibili.com/video/$first\n")
             .build()

@@ -1,90 +1,168 @@
 package org.hff.miraiomnitrix.command.any
 
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChainBuilder
-import org.hff.miraiomnitrix.command.*
-import org.hff.miraiomnitrix.config.AccountProperties
-import org.hff.miraiomnitrix.db.entity.Bgm
-import org.hff.miraiomnitrix.db.service.BgmService
+import net.mamoe.mirai.message.data.buildForwardMessage
+import net.mamoe.mirai.message.data.buildMessageChain
+import org.hff.miraiomnitrix.command.AnyCommand
+import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.HttpUtil
-import org.jsoup.Jsoup
-import java.util.regex.Pattern
+import org.hff.miraiomnitrix.utils.JsonUtil
+import java.time.LocalDate
 
 @Command(name = ["番剧推荐", "bgm"])
-class Bgm(private val bgmService: BgmService, private val accountProperties: AccountProperties) : AnyCommand {
+class Bgm : AnyCommand {
 
-    @OptIn(DelicateCoroutinesApi::class)
+    private val calendarApi = "https://api.bgm.tv/calendar"
+    private val searchApi = "https://api.bgm.tv/v0/search/subjects?limit=10"
+
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        if (args.size == 1 && (args[0] == "init" || args[0] == "初始化")) return init()
-
-        var num: Short = 1
-        val wrapper = bgmService.ktQuery()
-        args.forEach {
-            when {
-                it.matches(Regex("^[0-9]{4}$")) -> wrapper.eq(Bgm::year, it.toShort())
-                it.matches(Regex("^r[0-9]{1,4}$")) -> wrapper.le(Bgm::rank, it.substring(1).toShort())
-                it.matches(Regex("^n[0-9]{1,2}$")) -> num = it.substring(1).toShort()
-                else -> wrapper.like(Bgm::name, "%$it%")
-            }
-        }
-        val list = wrapper.last("ORDER BY RANDOM() LIMIT $num").list()
-
+        if (args.isEmpty()) return result("")
         val subject = event.subject
-        list.forEach {
-            GlobalScope.launch {
-                val msg = MessageChainBuilder()
-                if (it.imgUrl != null && !it.imgUrl.equals("https:/img/no_icon_subject.png")) {
-                    val result = HttpUtil.getInputStreamByProxy(it.imgUrl!!)
-                    val image = subject.uploadImage(result)
-                    msg.append(image)
+
+        if (listOf("每日放送", "每日", "放送", "放送表", "calendar", "day").contains(args[0])) {
+            val index = args.getOrNull(1)?.toIntOrNull() ?: LocalDate.now().dayOfWeek.value
+            val json = HttpUtil.getString(calendarApi)
+            val calendarList: List<Calendar> = JsonUtil.fromJson(json)
+            val calendar = calendarList[index - 1]
+            buildForwardMessage(subject) {
+                coroutineScope {
+                    calendar.items.forEach {
+                        launch {
+                            val image = HttpUtil.getInputStream(it.images.medium.replaceFirst("http", "https"))
+                            val message = buildMessageChain {
+                                +subject.uploadImage(image)
+                                +"\n"
+                                +"名字: ${it.name_cn.ifBlank { it.name }}\n"
+                                if (it.rank != 0) +"排名: ${it.rank}\n"
+                                if (it.summary.isNotBlank()) +"简介: ${it.summary}\n"
+                                if (it.rating != null) +"评分: ${it.rating.score}(${it.rating.total}人)\n"
+                            }
+                            add(subject.bot, message)
+                        }
+                    }
                 }
-                msg.append("名字: ${it.name}\n")
-                    .append("年份: ${it.year}\n")
-                    .append("排名: ${it.rank}\n")
-                    .append("评分: ${it.rate}(${it.rateNum}人)\n")
-                    .append("说明: ${it.info}\n")
-                subject.sendMessage(msg.build())
-            }
+            }.apply { subject.sendMessage(this) }
         }
 
+        val airDate = mutableListOf<String>()
+        val rank = mutableListOf<String>()
+        val rating = mutableListOf<String>()
+        val tag = mutableListOf<String>()
+        val keywords = mutableListOf<String>()
+
+        for (i in args.indices) {
+            when (args[i]) {
+                "日期" -> parseArgs(args, i, airDate)
+                "评分" -> parseArgs(args, i, rating)
+                "排名" -> parseArgs(args, i, rank)
+                "标签" -> parseArgs(args, i, tag)
+                else -> keywords.add(args[i])
+            }
+        }
+        val filter = Filter(air_date = airDate, rating = rating, rank = rank, tag = tag)
+        val searchParam = SearchParam(keyword = keywords.joinToString(" "), filter = filter)
+        val json = HttpUtil.postString(searchApi, searchParam)
+        val result: SearchResult = JsonUtil.fromJson(json)
+        buildForwardMessage(subject) {
+            coroutineScope {
+                result.data.forEach {
+                    launch {
+                        val message = buildMessageChain {
+                            if (it.image.isNotBlank()) {
+                                +subject.uploadImage(HttpUtil.getInputStream(it.image))
+                                +"\n"
+                            }
+                            +"名字: ${it.name_cn.ifBlank { it.name }}\n"
+                            if (it.rank != 0) +"排名: ${it.rank}\n"
+                            if (it.score != null && it.score != 0.0) +"评分: ${it.score}\n"
+                            if (it.summary?.isNotBlank() == true) +"简介: ${it.summary}\n"
+                            +"标签: ${it.tags.joinToString { tag -> tag.name }}"
+                        }
+                        add(subject.bot, message)
+                    }
+                }
+            }
+        }.apply { subject.sendMessage(this) }
         return null
     }
 
-    fun init(): CommandResult? {
-        val cookie = accountProperties.bgmCookie
-        if (cookie.isNullOrBlank()) return result("请配置bangumi网页的cookie")
-        val headers = mapOf("cookie" to cookie)
-        for (i in 1..300) {
-            val result = HttpUtil.getString("https://bgm.tv/anime/browser?sort=rank&page=$i", headers)
-            val document = Jsoup.parse(result)
-            val list = document.select("#browserItemList")
-            list.first()?.children()?.forEach { item ->
-                val bgm = Bgm()
-                bgm.imgUrl = "https:" + item.select(".image")[0].child(0).attr("src")
-                bgm.name = item.select("h3 a").text()
-                if (item.select("h3 small").size > 0) {
-                    bgm.nameOriginal = item.select("h3 small")[0].text()
-                }
-                bgm.rank = item.select(".rank").text().substring(5).toShort()
-                bgm.info = item.child(1).child(2).text()
-                bgm.rate = item.child(1).child(3).child(1).text().toBigDecimal()
-                val text = item.child(1).child(3).child(2).text()
-                bgm.rateNum = Pattern.compile("[^0-9]").matcher(text).replaceAll("").toShort()
-                val regex = "[0-9]{4}年"
-                val matcher = bgm.info?.let { Pattern.compile(regex).matcher(it) }
-                if (matcher?.find() == true) {
-                    bgm.year = matcher.group().substring(0, 4).toShort()
-                } else {
-                    bgm.year = 0
-                }
-                bgmService.ktQuery().eq(Bgm::year, 0).list()
-                bgmService.save(bgm)
-            }
+    fun parseArgs(args: List<String>, i: Int, values: MutableList<String>) {
+        if (i < args.size - 1 && (args[i + 1][0] == '<' || args[i + 1][0] == '>')) {
+            values.add(args[i + 1])
         }
-        return null
+        if (i < args.size - 2 && (args[i + 2][0] == '<' || args[i + 2][0] == '>')) {
+            values.add(args[i + 2])
+        }
     }
+
+    data class Calendar(val items: List<Item>)
+
+    data class Item(
+        val air_date: String,
+        val air_weekday: Int,
+        val images: Images,
+        val name: String,
+        val name_cn: String,
+        val rank: Int,
+        val rating: Rating?,
+        val summary: String,
+        val url: String
+    )
+
+    data class Images(
+        val common: String,
+        val grid: String,
+        val large: String,
+        val medium: String,
+        val small: String
+    )
+
+    data class Rating(
+        val score: Double,
+        val total: Int
+    )
+
+    data class SearchParam(
+        val filter: Filter,
+        val keyword: String,
+        val sort: String = "rank"
+    )
+
+    data class Filter(
+        val air_date: List<String>? = null,
+        val rank: List<String>? = null,
+        val rating: List<String>? = null,
+        val tag: List<String>? = null,
+        val type: List<Int> = listOf(2)
+    )
+
+    data class SearchResult(
+        val `data`: List<Data>,
+        val limit: Int,
+        val offset: Int,
+        val total: Int
+    )
+
+    data class Data(
+        val date: String,
+        val id: Int,
+        val image: String,
+        val name: String,
+        val name_cn: String,
+        val rank: Int,
+        val score: Double?,
+        val summary: String?,
+        val tags: List<Tag>,
+        val type: Int
+    )
+
+    data class Tag(
+        val count: Int,
+        val name: String
+    )
 }

@@ -8,10 +8,10 @@ import org.springframework.boot.context.properties.ConstructorBinding
 data class AccountProperties(
     /** https://beta.character.ai 登陆后F12查看请求头的authorization */
     val characterAiToken: String?,
-    /** saucenao搜图api_key https://saucenao.com/user.php?page=search-api */
+    /** saucenao搜图api key https://saucenao.com/user.php?page=search-api */
     val saucenaoKey: String?,
-    /** bangumi番组计划网页cookie https://bgm.tv */
-    val bgmCookie: String?,
+    /** bangumi番组计划的个人令牌 https://next.bgm.tv/demo/access-token/create */
+    val bgmAccessToken: String?,
     /** https://platform.openai.com/account/api-keys */
     val openaiApiKey: String?,
     /** 微软azure语音服务密钥 */

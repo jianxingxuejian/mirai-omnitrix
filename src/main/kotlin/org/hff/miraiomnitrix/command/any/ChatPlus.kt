@@ -32,15 +32,14 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
 
     val prompt =
         """你是ChatGPT-Plus，一个由OpenAI训练的大型语言模型，现在时间是：%s，接下来你根据我的指令进行回答。
-                |你有权限调用1个外部api，分别是1.Bing在线搜索api(参数为关键字)；
+                |你有权限调用1个外部api，分别是1.Bing在线搜索api(参数为关键字)。
                 |每一次的回答你都可以决定是否调用外部api，由你决定调用的参数是什么。
                 |你的回复格式必须要遵循如下规则：第一行只能回复yes或者no，代表你是否要调用外部api，如果你认为可以开始回答问题了，则回复no，然后回答问题；
                 |如果你选择了yes，则第二行回答api的序号，第三行回答api的输入参数，然后回答结束，不要进行多余的回答。
                 |我的问题是：""".trimMargin()
     private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
     private var maxTokens = 1000
-    private var temperature = 0.1
-
+    private var temperature = 0
 
     private val bingSearchKey = accountProperties.bingSearchKey
 
@@ -93,7 +92,6 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                     buffer.append("\n\n${content.trim()}")
                     try {
                         val reply = handleExternalApi(buffer, subject)
-                        println(buffer)
                         subject.sendMessage(next.quote() + reply)
                     } catch (_: Exception) {
                         buffer.setLength(temp)
