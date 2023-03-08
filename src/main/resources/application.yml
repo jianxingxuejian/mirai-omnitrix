@@ -43,3 +43,4 @@ account:
   azureSpeechRegion:
   bingSearchKey:
   googleSearchKey:
+  githubToken:

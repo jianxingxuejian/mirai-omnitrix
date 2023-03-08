@@ -3,20 +3,11 @@ package org.hff.miraiomnitrix.utils
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import org.hff.miraiomnitrix.exception.MyException
-import kotlin.reflect.KClass
 
 object JsonUtil {
     val gson = Gson()
 
-    fun getStr(json: String) = parse(json).asString
-
     fun getStr(json: String, key: String): String = getKey(json, key).asString
-
-    fun getStr(obj: JsonObject, key: String): String = obj.getAsStr(key)
-
-    fun getStr(element: JsonElement, key: String): String = element.asJsonObject.getAsStr(key)
-
-    fun getObj(json: String) = parse(json).asJsonObject
 
     fun getObj(json: String, key: String): JsonObject = getKey(json, key).asJsonObject
 
@@ -26,30 +17,25 @@ object JsonUtil {
 
     inline fun <reified T> fromJson(json: String): T = gson.fromJson(json, object : TypeToken<T>() {}.type)
 
-    inline fun <reified T : Any> fromJson(json: String, key: String): T =
-        gson.fromJson(getObj(json, key), object : TypeToken<T>() {}.type)
-
-    fun <T : Any> fromJson(json: JsonElement, clazz: KClass<T>): T = gson.fromJson(json, clazz.java)
-
-    fun toJson(obj: Any) = gson.toJson(obj)
+    inline fun <reified T : Any> fromJson(json: String, key: String): T {
+        val element = getKey(json, key)
+        if (element.isJsonArray) {
+            return gson.fromJson(element, object : TypeToken<T>() {}.type)
+        } else if (element.isJsonObject) {
+            return gson.fromJson(element, object : TypeToken<T>() {}.type)
+        }
+        throw MyException("json解析失败")
+    }
 
     fun parse(data: Any) = gson.toJson(data).toString()
 
     fun JsonObject.getAsStr(key: String): String = this.get(key).asString
 
-    fun JsonObject.getAsStrOrNull(key: String): String? = this.get(key)?.asString
-
-    fun JsonObject.getAsInt(key: String): Int = this.get(key).asInt
-
-    fun JsonObject.getArray(key: String): JsonArray = this.get(key).asJsonArray
-
-    fun JsonObject.getArrayOrNull(key: String): JsonArray? = this.get(key)?.asJsonArray
-
     fun JsonElement.get(key: String): JsonElement = this.asJsonObject.get(key)
 
     fun JsonElement.getAsStr(key: String): String = this.asJsonObject.getAsStr(key)
 
-    private fun getKey(json: String, key: String): JsonElement =
+    fun getKey(json: String, key: String): JsonElement =
         JsonParser.parseString(json).asJsonObject.get(key) ?: throw MyException("json解析失败，检查key")
 
     private fun parse(json: String): JsonElement =
@@ -58,6 +44,5 @@ object JsonUtil {
         } catch (e: Exception) {
             throw MyException("json解析失败")
         }
-
 
 }

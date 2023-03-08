@@ -4,6 +4,7 @@ import net.mamoe.mirai.contact.Contact
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.SpringUtil
 
 object Character {
@@ -43,7 +44,7 @@ object Character {
         val result =
             HttpUtil.postStringByProxy(url, chatParams, headers)
         val replies = JsonUtil.getArray(result, "replies")
-            .joinToString("\n") { JsonUtil.getStr(it, "text") }
+            .joinToString("\n") { it.getAsStr("text") }
         subject.sendMessage(replies)
     }
 }

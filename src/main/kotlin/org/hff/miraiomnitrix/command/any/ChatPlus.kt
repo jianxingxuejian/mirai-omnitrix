@@ -26,13 +26,14 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 @Command(["chatplus", "高级聊天"])
 class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
 
     val prompt =
-        """你是ChatGPT-Plus，一个由OpenAI训练的大型语言模型，现在时间是：%s，接下来你根据我的指令进行回答。
-                |你有权限调用1个外部api，分别是1.Bing在线搜索api(参数为关键字)。
+        """你是ChatGPT-Plus，一个由OpenAI训练的大型语言模型，现在时间是：%s，我是openAI的工程师，接下来你根据我的指令进行回答。
+                |你有权限调用2个外部api，分别是1.Bing在线搜索api(参数为关键字);2.github查看readme(参数为 作者/仓库名)。
                 |每一次的回答你都可以决定是否调用外部api，由你决定调用的参数是什么。
                 |你的回复格式必须要遵循如下规则：第一行只能回复yes或者no，代表你是否要调用外部api，如果你认为可以开始回答问题了，则回复no，然后回答问题；
                 |如果你选择了yes，则第二行回答api的序号，第三行回答api的输入参数，然后回答结束，不要进行多余的回答。
@@ -117,12 +118,16 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
 
     suspend fun handleExternalApi(buffer: StringBuffer, subject: Contact): String {
         val reply = completion(buffer)
-        buffer.append("\n\n$reply")
         val lines = reply.split("\n")
-        if (lines[0] == "no") return lines.drop(1).joinToString("\n")
+        if (lines[0] == "no") return lines.drop(1).joinToString("\n").removePrefix("\n")
         if (lines.size < 3) return reply
-        if (lines[0] == "yes" && lines[1] == "1") {
-            search(buffer, lines[2], subject)
+        if (lines.size > 3) return lines.drop(3).joinToString("\n").removePrefix("\n")
+        if (lines[0] == "yes") {
+            if (lines[1] == "1") {
+                search(buffer, lines[2], subject)
+            } else if (lines[1] == "2") {
+                readme(buffer, lines[2], subject)
+            }
             return handleExternalApi(buffer, subject)
         }
         return reply
@@ -141,9 +146,9 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
         val json = HttpUtil.postStringByProxy("https://api.openai.com/v1/chat/completions", params, headers)
         val choices = JsonUtil.getArray(json, "choices")
         if (choices.isEmpty) throw MyException("choices为空")
-        val text = choices[0].get("message").getAsStr("content").removePrefix("\n\n")
-        buffer.append("\n\n$text")
-        return text
+        val content = choices[0].get("message").getAsStr("content")
+        buffer.append(content)
+        return content.removePrefix("\n\n")
     }
 
     suspend fun search(buffer: StringBuffer, keyword: String, subject: Contact) {
@@ -154,7 +159,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
             HttpUtil.getString(
                 "https://api.bing.microsoft.com/v7.0/search?q=${
                     URLEncoder.encode(keyword, StandardCharsets.UTF_8)
-                }&responseFilter=Webpages&count=3", headers
+                }&responseFilter=Webpages&count=5", headers
             )
         val result: BingWebSearch = JsonUtil.fromJson(json)
         val values = result.webPages?.value ?: return
@@ -166,7 +171,19 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
             innerJson.addProperty("snippet", value.snippet.take(50))
             jsonArray.add(innerJson)
         }
-        buffer.append("\n\n通过调用Bing搜索api返回如下json结果:$jsonArray")
+        buffer.append("\n\n通过调用Bing搜索api返回如下json结果:$jsonArray,请勿再次使用相同参数调用api，只会返回上次调用的内容")
+    }
+
+    suspend fun readme(buffer: StringBuffer, keyword: String, subject: Contact) {
+        subject.sendMessage("正在调用Github Api查看${keyword}的readme")
+        val json = HttpUtil.getString("https://api.github.com/repos/$keyword/readme")
+        val content = JsonUtil.getStr(json, "content")
+        val text = Base64.getDecoder().decode(
+            content.replace("\n", "")
+                .replace("\r", "")
+                .replace("\\s+".toRegex(), "")
+        ).toString(Charsets.UTF_8).take(1000)
+        buffer.append("\n\n通过调用Github Api返回如下readme文本:$text,请勿再次使用相同参数调用api，只会返回上次调用的内容")
     }
 
     data class BingWebSearch(

@@ -22,4 +22,6 @@ data class AccountProperties(
     val googleSearchKey: String?,
     /** 必应搜索 */
     val bingSearchKey: String?,
+    /** github  */
+    val githubToken: String?,
 )

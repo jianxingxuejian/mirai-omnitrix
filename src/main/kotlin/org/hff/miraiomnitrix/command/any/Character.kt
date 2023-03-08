@@ -74,7 +74,11 @@ class Character(
 
         val entity = characterService.get(args[0]) ?: return result(" 角色不存在")
         val token = accountProperties.characterAiToken ?: return result("无token")
-        val headers = mapOf("authorization" to token,"User-Agent" to "PostmanRuntime/7.31.1")
+        val headers = mapOf(
+            "authorization" to token,
+            "User-Agent" to "PostmanRuntime/7.31.1",
+            "Cookie" to "csrftoken=uSJnatxvL2PxDokScFcKseg0KtiYop37; sessionid=8cmt1y5x1p98bg9azbxzav3bqcysqqy6; __cf_bm=7NUZiwd7R.7wvu5BCavR1FDoOxzp_ZnFQGaIFNIzHsw-1678241526-0-ASJ84dvAB/7Su6wKVrFVKE4IUT7TPomu2mYazBdzfyN/a7P42KrhVTr0ZIY0F2kIFV+VpQcP2EKoaShxsBK/GsZXiXu04UZOxP3Y/+VzILxZpBN9Nf8y5ge+cNu4cBQhwr84avMm6dJFQ2nE2ujY1ZGy0Oci0+u1M63zY/FZkFP7; _ga=GA1.2.1098620751.1678241529; _gid=GA1.2.20046999.1678241529"
+        )
         val param = mapOf("character_external_id" to entity.externalId!!)
         chat(entity.externalId!!, event, headers, param)
         return null
@@ -109,7 +113,7 @@ class Character(
                     )
                     val result = HttpUtil.postStringByProxy(url + "streaming/", chatParams, headers)
                     val replies = JsonUtil.getArray(result, "replies")
-                        .joinToString("\n") { JsonUtil.getStr(it, "text") }
+                        .joinToString("\n") { it.getAsStr("text") }
                     event.subject.sendMessage(replies)
                 }
             }
