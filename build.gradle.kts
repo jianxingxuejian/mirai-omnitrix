@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.hff"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 configurations {
@@ -28,17 +28,14 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-//    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.springframework.boot:spring-boot-starter")
-//    implementation("org.springframework.boot:spring-boot-starter-aop")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     implementation("net.mamoe:mirai-core-api:2.14.0")
     runtimeOnly("net.mamoe:mirai-core:2.14.0")
-//    runtimeOnly("mysql:mysql-connector-java")
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
     compileOnly("com.baomidou:mybatis-plus-generator:3.5.3")
     compileOnly("org.freemarker:freemarker:2.3.31")
@@ -48,7 +45,6 @@ dependencies {
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.google.code.gson:gson:2.10.1")
-//    implementation("org.seleniumhq.selenium:selenium-java:4.8.0")
     implementation("org.xerial:sqlite-jdbc:3.40.1.0")
     implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.25.0@jar")
 }
