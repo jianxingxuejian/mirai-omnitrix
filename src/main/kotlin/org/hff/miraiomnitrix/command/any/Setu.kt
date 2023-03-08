@@ -7,6 +7,7 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
+import net.mamoe.mirai.message.data.buildMessageChain
 import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
@@ -71,9 +72,14 @@ class Setu : AnyCommand {
     }
 
     suspend fun addForward(forwardBuilder: ForwardMessageBuilder, subject: Contact, imgUrl: String) {
+        val regex = Regex("(?<=/)[^/]*?(?=_\\w+\\.[^.]*\$)")
+        val match = regex.find(imgUrl)
         val result = HttpUtil.getInputStreamByProxy(imgUrl)
         val image = subject.uploadImage(result)
-        forwardBuilder.add(subject.bot, image)
+        forwardBuilder.add(subject.bot, buildMessageChain {
+            +image
+            if (match != null) +"\nhttps://www.pixiv.net/artworks/${match.value}"
+        })
     }
 
 }

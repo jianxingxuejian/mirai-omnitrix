@@ -20,9 +20,9 @@ object JsonUtil {
     inline fun <reified T : Any> fromJson(json: String, key: String): T {
         val element = getKey(json, key)
         if (element.isJsonArray) {
-            return gson.fromJson(element, object : TypeToken<T>() {}.type)
+            return gson.fromJson(element.asJsonArray, object : TypeToken<T>() {}.type)
         } else if (element.isJsonObject) {
-            return gson.fromJson(element, object : TypeToken<T>() {}.type)
+            return gson.fromJson(element.asJsonObject, object : TypeToken<T>() {}.type)
         }
         throw MyException("json解析失败")
     }
