@@ -32,10 +32,11 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
 
         var qq: Long? = null
         var pa = false
+        var tie = false
         args.forEach {
-            if (it == "爬") {
-                pa = true
-            } else if (it.startsWith("@")) {
+            if (it == "爬") pa = true
+            else if (it == "贴") tie = true
+            else if (it.startsWith("@")) {
                 try {
                     qq = it.substring(1).toLong()
                 } catch (e: NumberFormatException) {
@@ -43,10 +44,10 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
                 }
             }
         }
-        if (!pa) return next()
+        if (!pa && !tie) return next()
         if (qq == null) qq = sender.id
 
-        val file = getFileByQQ(qq!!)
+        val file = getFileByQQ(qq!!, pa)
         val qqImg = HttpUtil.getInputStream(url + qq)
         val imageA = ImageUtil.scaleTo(file, 400, 400)
         val imageB = ImageUtil.scaleTo(qqImg, 75, 75)
@@ -56,9 +57,12 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         return stop()
     }
 
-    private fun getFileByQQ(qq: Long): InputStream {
+    private fun getFileByQQ(qq: Long, pa: Boolean): InputStream {
         val admin = permissionProperties.admin
-        val path = if (admin.isNotEmpty() && admin.contains(qq)) tieDir else paDir
+        val path =
+            if (admin.isNotEmpty() && admin.contains(qq)) tieDir
+            else if (pa) paDir
+            else tieDir
         val files = PathMatchingResourcePatternResolver().getResources(path)
         val randomInt = ThreadLocalRandom.current().nextInt(files.size)
         return files[randomInt].inputStream
