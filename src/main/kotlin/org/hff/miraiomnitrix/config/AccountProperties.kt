@@ -24,4 +24,6 @@ data class AccountProperties(
     val bingSearchKey: String?,
     /** github  */
     val githubToken: String?,
+    /** https://www.v2ex.com/settings/tokens  */
+    val v2exToken: String?,
 )
