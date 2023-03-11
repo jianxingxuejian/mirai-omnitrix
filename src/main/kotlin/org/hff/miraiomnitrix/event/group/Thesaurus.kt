@@ -32,10 +32,10 @@ class Thesaurus(permissionProperties: PermissionProperties) : GroupEvent {
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent): EventResult {
         val limiter = limiterMap[event.group.id] ?: return next()
-        with(limiter) { if (!tryAcquire()) return next() }
         val arg = args[0]
         if (arg.isBlank()) return next()
         val list = thesaurus[arg] ?: return next()
+        with(limiter) { if (!tryAcquire()) return next() }
         val reply = list.elementAt((0 until list.size).random())
         return stop(reply)
     }
