@@ -35,7 +35,7 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
         "不准涩涩" to "不涩涩就挨打",
     )
     private val regexMap = mapOf<Regex, () -> Message>(
-        Regex("^(睡觉|晚安).") to {
+        Regex("^(睡觉|晚安).*") to {
             if (now() in MIDNIGHT..of(6, 0)) Image("{1DB34403-D6DA-5C2C-C3D2-EF86C4D5E7CF}.gif")
             else PlainText("你这个年龄段你睡得着觉?")
         },
