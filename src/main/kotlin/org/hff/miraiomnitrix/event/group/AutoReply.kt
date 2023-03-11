@@ -7,14 +7,17 @@ import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.data.PlainText
 import org.hff.miraiomnitrix.config.PermissionProperties
-import org.hff.miraiomnitrix.event.*
+import org.hff.miraiomnitrix.event.Event
+import org.hff.miraiomnitrix.event.EventResult
+import org.hff.miraiomnitrix.event.GroupEvent
+import org.hff.miraiomnitrix.event.next
 import org.hff.miraiomnitrix.utils.getInfo
 import java.time.LocalTime.*
 
 @Event(priority = 2)
 class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
 
-    val limiterMap = permissionProperties.replyIncludeGroup.associateWith { RateLimiter.create(5.0 / 60.0) }
+    val limiterMap = permissionProperties.replyIncludeGroup.associateWith { RateLimiter.create(0.2) }
 
     private val constMap = mapOf(
         "day0" to "day0",
@@ -42,12 +45,23 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
         val limiter = limiterMap[event.group.id] ?: return next()
         if (args.isEmpty()) return next()
-        with(limiter) { if (!tryAcquire()) return next() }
+
         val (group, _, message) = event.getInfo()
         val arg = args[0]
-        constMap[arg]?.let { group.sendMessage(it); return stop() }
-        replyMap[arg]?.let { group.sendMessage(message.quote() + it); return stop() }
-        regexMap.entries.find { it.key.matches(arg) }?.let { group.sendMessage(it.value()); return stop() }
+
+        with(limiter) {
+            when (arg) {
+                in constMap.keys ->
+                    constMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(it) }
+
+                in replyMap.keys ->
+                    replyMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(message.quote() + it) }
+
+                else -> regexMap.entries.find { it.key.matches(arg) }?.value?.takeIf { tryAcquire() }
+                    ?.let { group.sendMessage(it.invoke()) }
+            }
+        }
+
         return next()
     }
 }
