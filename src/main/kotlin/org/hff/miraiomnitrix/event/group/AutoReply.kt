@@ -10,7 +10,7 @@ import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.getInfo
 import java.time.LocalTime.*
 
-@Event(priority = 1)
+@Event(priority = 2)
 class AutoReply : GroupEvent {
 
     private val limiter = RateLimiter.create(5.0 / 60.0)

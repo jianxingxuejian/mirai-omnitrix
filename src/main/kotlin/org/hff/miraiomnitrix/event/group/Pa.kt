@@ -18,7 +18,7 @@ import java.awt.image.BufferedImage
 import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
 
-@Event(priority = 2)
+@Event(priority = 3)
 class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
 
     private val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="

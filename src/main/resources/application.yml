@@ -33,6 +33,7 @@ permission:
   bvExcludeGroup:
   emojiMixExcludeGroup:
   chatPlusNotNeedCommandGroup:
+  thesaurusIncludeGroup:
 
 account:
   characterAiToken:

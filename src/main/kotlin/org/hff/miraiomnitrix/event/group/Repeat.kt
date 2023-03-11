@@ -11,7 +11,7 @@ import org.hff.miraiomnitrix.event.next
 import org.hff.miraiomnitrix.utils.getInfo
 import java.util.*
 
-@Event(priority = 3)
+@Event(priority = 4)
 class Repeat(private val permissionProperties: PermissionProperties) : GroupEvent {
 
     private val groupMsgMap = mutableMapOf<Long, Queue<String>>()
