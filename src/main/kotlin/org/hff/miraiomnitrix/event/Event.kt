@@ -27,7 +27,7 @@ interface UserEvent : Handle<UserMessageEvent>, Allow
 
 /** 事件执行接口 */
 sealed interface Handle<T : MessageEvent> {
-    suspend fun handle(args: List<String>, event: T): EventResult
+    suspend fun handle(args: List<String>, event: T, isAt: Boolean): EventResult
 }
 
 /** 事件处理返回结果 stop()方法代表任务链中止，next()方法代表任务链继续 */

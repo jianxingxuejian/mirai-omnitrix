@@ -18,7 +18,7 @@ class Repeat(private val permissionProperties: PermissionProperties) : GroupEven
     private val random = Random()
     private val breaks = arrayOf("break", "打断")
     private val bound = breaks.size
-    override suspend fun handle(args: List<String>, event: GroupMessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
         val (group, _, message) = event.getInfo()
         var content = message.contentToString()

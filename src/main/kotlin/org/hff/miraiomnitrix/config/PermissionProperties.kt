@@ -16,8 +16,8 @@ data class PermissionProperties(
     val bvExcludeGroup: List<Long>,
     /** 排除合成emoji的群号 */
     val emojiMixExcludeGroup: List<Long>,
-    /** 包含二次元词库的群号 */
-    val thesaurusIncludeGroup: List<Long>,
+    /** 可以回复的群号 */
+    val replyIncludeGroup: List<Long>,
     /** 不需要指令头就可以聊天的群号(会影响部分功能) */
     val chatPlusNotNeedCommandGroup: List<Long>
 )

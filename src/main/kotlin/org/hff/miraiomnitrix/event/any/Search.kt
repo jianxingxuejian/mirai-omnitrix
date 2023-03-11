@@ -19,7 +19,7 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
 
     private val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
     private val commands = listOf("st", "搜图", "soutu")
-    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
         if (!commands.any { it in args }) return next()
 

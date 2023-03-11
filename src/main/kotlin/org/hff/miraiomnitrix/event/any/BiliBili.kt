@@ -14,7 +14,7 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
     private val videoUrl = "https://api.bilibili.com/x/web-interface/view"
     private val avRegex = """(?i)(?<!\w)av(\d+)""".toRegex()
     private val bvRegex = """(?i)(?<!\w)BV1[1-9A-NP-Za-km-z]{9}""".toRegex()
-    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
 
         val subject = event.subject

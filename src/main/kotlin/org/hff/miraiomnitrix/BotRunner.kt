@@ -42,7 +42,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
 
 /** 处理消息，首先解析指令并执行，如果不是指令则接着进行事件处理 */
 suspend fun handleMessage(event: MessageEvent) {
-    val (execute, args) = CommandManager.handle(event)
+    val (execute, args, isAt) = CommandManager.handle(event)
     if (execute) return
-    EventManger.handle(args, event)
+    EventManger.handle(args, event, isAt)
 }

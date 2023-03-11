@@ -30,7 +30,7 @@ class Cache : AnyEvent {
         }
     }
 
-    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isNotEmpty() && args[0] == "error") {
             val stackTrace = errorCache.getIfPresent(event.sender.id)?.stackTrace ?: return next("未找到错误")
             if (stackTrace.isEmpty()) return next("未找到错误")

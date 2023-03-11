@@ -33,7 +33,7 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
         }
     }
 
-    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
         val subject = event.subject
         if (permissionProperties.emojiMixExcludeGroup.contains(subject.id)) return next()

@@ -6,14 +6,15 @@ import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.data.PlainText
+import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.getInfo
 import java.time.LocalTime.*
 
 @Event(priority = 2)
-class AutoReply : GroupEvent {
+class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
 
-    private val limiter = RateLimiter.create(5.0 / 60.0)
+    val limiterMap = permissionProperties.replyIncludeGroup.associateWith { RateLimiter.create(5.0 / 60.0) }
 
     private val constMap = mapOf(
         "day0" to "day0",
@@ -38,7 +39,8 @@ class AutoReply : GroupEvent {
         Regex("^(泪目|哭了).*") to { PlainText("擦擦") }
     )
 
-    override suspend fun handle(args: List<String>, event: GroupMessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
+        val limiter = limiterMap[event.group.id] ?: return next()
         if (args.isEmpty()) return next()
         with(limiter) { if (!tryAcquire()) return next() }
         val (group, _, message) = event.getInfo()

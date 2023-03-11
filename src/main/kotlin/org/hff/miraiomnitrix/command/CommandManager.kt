@@ -37,30 +37,30 @@ object CommandManager {
     }
 
     /** 处理消息，如果是指令则执行 */
-    suspend fun handle(event: MessageEvent): Pair<Boolean, List<String>> = when (event) {
+    suspend fun handle(event: MessageEvent): Triple<Boolean, List<String>, Boolean> = when (event) {
         is GroupMessageEvent -> {
-            val (commandName, args) = getCommandName(event)
-            if (commandName == null) Pair(false, args)
+            val (commandName, args, isAt) = parseCommand(event)
+            if (commandName == null) Triple(false, args, isAt)
             else groupCommands[commandName]?.tryExecute(args, event)
                 ?: anyCommands[commandName]?.tryExecute(args, event)
-                ?: Pair(false, listOf(commandName))
+                ?: Triple(false, listOf(commandName), isAt)
         }
 
         is UserMessageEvent -> {
-            val (commandName, args) = getCommandName(event, false)
-            if (commandName == null) Pair(false, args)
+            val (commandName, args, isAt) = parseCommand(event, false)
+            if (commandName == null) Triple(false, args, isAt)
             else userCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
                 ?: anyCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
-                ?: Pair(false, listOf(commandName))
+                ?: Triple(false, listOf(commandName), isAt)
         }
 
-        else -> Pair(false, listOf())
+        else -> Triple(false, listOf(), false)
     }
 
     private suspend fun <T : MessageEvent> Execute<T>.tryExecute(
         args: List<String>,
         event: T
-    ): Pair<Boolean, List<String>> {
+    ): Triple<Boolean, List<String>, Boolean> {
         val subject = event.subject
         try {
             this.execute(args, event)?.let { (msg, msgChain) ->
@@ -72,7 +72,7 @@ object CommandManager {
             Cache.errorCache.put(subject.id, e)
             subject.sendMessage(e.message ?: "未知错误")
         }
-        return Pair(true, args)
+        return Triple(true, args, true)
     }
 
 
@@ -83,10 +83,11 @@ object CommandManager {
      * @param needHead 是否需要指令头，默认值为true，如果是非群消息则无需指令头
      * @return Pair<指令名, 参数列表>
      */
-    private fun getCommandName(event: MessageEvent, needHead: Boolean = true): Pair<String?, List<String>> {
+    private fun parseCommand(event: MessageEvent, needHead: Boolean = true): Triple<String?, List<String>, Boolean> {
         var string = event.message.contentToString().trim()
 
         var hasHead = commandHeads.any { string.startsWith(it) }
+        var isAt = false
         if (needHead) {
             if (hasHead) {
                 string = string.substring(1)
@@ -94,19 +95,20 @@ object CommandManager {
                 val atBot = Util.atBot()
                 if (string.contains(atBot)) {
                     hasHead = true
+                    isAt = true
                     string = string.replace(atBot, "")
                     // 如果是群消息，且群号在不需要chatplus指令头的群号列表中
                     permissionProperties?.chatPlusNotNeedCommandGroup?.let { list ->
                         if (list.isNotEmpty() && list.contains(event.subject.id)) {
-                            return Pair("chatplus", string.split(Regex("\\s+")))
+                            return Triple("chatplus", string.split(Regex("\\s+")), true)
                         }
                     }
                 }
             }
         }
         val args = string.replace("[图片]", "").replace("[动画表情]", "").trim().split(Regex("\\s+"))
-        if (needHead && !hasHead) return Pair(null, args)
-        return Pair(args[0], args.slice(1 until args.size))
+        if (needHead && !hasHead) return Triple(null, args, false)
+        return Triple(args[0], args.slice(1 until args.size), isAt)
     }
 
 }

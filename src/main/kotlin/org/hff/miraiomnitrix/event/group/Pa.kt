@@ -26,7 +26,7 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
     private val paDir = "/img/pa/*"
     private val tieDir = "/img/tie/*"
 
-    override suspend fun handle(args: List<String>, event: GroupMessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
         val (group, sender) = event.getInfo()
 

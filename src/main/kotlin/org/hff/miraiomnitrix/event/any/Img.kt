@@ -20,7 +20,7 @@ class Img : AnyEvent {
     private val path1 = "/img/other/jjgw.jpg"
     private val path2 = "/img/other/always.png"
 
-    override suspend fun handle(args: List<String>, event: MessageEvent): EventResult {
+    override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
 
         val first = args[0]
