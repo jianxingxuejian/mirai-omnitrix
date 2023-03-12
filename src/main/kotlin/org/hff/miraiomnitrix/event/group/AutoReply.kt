@@ -42,6 +42,7 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
         "涩涩" to "不可以涩涩",
         "不可以涩涩" to "不涩涩就挨打",
         "不准涩涩" to "不涩涩就挨打",
+        "不许涩涩" to "不涩涩就挨打",
         "抱抱" to "抱抱",
     )
     private val imgMap = mapOf(
