@@ -36,7 +36,7 @@ class Thesaurus(permissionProperties: PermissionProperties) : GroupEvent {
         if (arg.startsWith("你是谁")) return stop("我是幻书《爱丽丝梦游仙境》，你可以叫我爱丽丝")
         if (arg.startsWith("你好")) return stop("贵安～我是仙境的爱丽丝，你愿意与我一同前往神奇的国度，去寻找真正的乐园吗？")
         val list = thesaurus[arg] ?: return next()
-        val reply = list.elementAt((0 until list.size).random()).replace("我", "爱丽丝")
+        val reply = list.random().replace("我", "爱丽丝")
         return stop(reply)
     }
 }

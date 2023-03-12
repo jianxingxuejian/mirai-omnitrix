@@ -1,8 +1,6 @@
 package org.hff.miraiomnitrix.utils
 
 import net.mamoe.mirai.contact.User
-import net.mamoe.mirai.event.events.GroupMessageEvent
-import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.BotRunner
 
 object Util {
@@ -16,22 +14,7 @@ object Util {
 
     fun getQq(arg: String) = if (arg.startsWith("@")) arg.substring(1).toLong() else arg.toLong()
 
-    fun getQqImg(args: List<String>) = HttpUtil.getInputStream(QQ_URL + getQq(args))
-
     fun getQqImg(args: List<String>, sender: User) = HttpUtil.getInputStream(QQ_URL + getQq(args, sender))
-
-    fun String.startsWithMany(vararg prefixes: String): Boolean {
-        for (prefix in prefixes) {
-            if (startsWith(prefix)) {
-                return true
-            }
-        }
-        return false
-    }
-
 }
 
-fun MessageEvent.getInfo() = Triple(this.subject, this.sender, this.message)
-
-fun GroupMessageEvent.getInfo() = Triple(this.group, this.sender, this.message)
 
