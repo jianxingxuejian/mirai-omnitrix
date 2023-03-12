@@ -47,7 +47,8 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
             if (now() in MIDNIGHT..of(6, 0)) Image("{1DB34403-D6DA-5C2C-C3D2-EF86C4D5E7CF}.gif")
             else PlainText("你这个年龄段你睡得着觉?")
         },
-        Regex("^(泪目|哭了).*") to { PlainText("擦擦") }
+        Regex("^(泪目|哭了).*") to { PlainText("擦擦") },
+        Regex("^笑死.*") to { Image("{65929E6A-55E8-AF62-D73B-DA8F7F49EA81}.jpg") },
     )
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
