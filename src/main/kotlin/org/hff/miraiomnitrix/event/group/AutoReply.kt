@@ -143,11 +143,10 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
                 "{B5E8F634-676A-CD85-E12B-409CB9223688}.jpg",
             ).random().toImage()
         },
-        "(vtb|管人痴)笑话" to {
-            listOf(
-                "{D20AF59B-E29B-4404-00A4-D5DBEE04039B}.jpg",
-            ).random().toImage()
-        },
+//        "(vtb|管人痴)笑话" to {
+//            listOf(
+//            ).random().toImage()
+//        },
         ".*(泪目|哭了).*" to { "擦擦".toText() },
         "(?=.*晕).{0,5}" to { "{B51F2400-6BCC-EF9F-FC81-249DE7F7AA40}.png".toImage() },
         "(?=.*银趴)(?=.*加).*" to { "{A871CDDD-82BB-AF4C-A294-F7148C1952D0}.jpg".toImage() },
