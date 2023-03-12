@@ -17,7 +17,7 @@ import java.time.LocalTime.*
 @Event(priority = 2)
 class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
 
-    val limiterMap = permissionProperties.replyIncludeGroup.associateWith { RateLimiter.create(0.2) }
+    val limiterMap = permissionProperties.replyIncludeGroup.associateWith { RateLimiter.create(0.1) }
 
     private val constMap = mapOf(
         "day0" to "day0",
@@ -25,7 +25,15 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
         "嘻嘻" to "嘻嘻",
         "笨蛋" to "八嘎",
         "8" to "10",
-        "吃饭了" to "好饿"
+        "吃饭了" to "好饿",
+        "?" to "¿",
+        "？" to "¿",
+        "??" to "???",
+        "？？" to "？？？",
+        "好活" to "活好",
+        "小黑子" to "你干嘛～～哎呦",
+        "真的" to "假的",
+        "假的" to "真的",
     )
     private val replyMap = mapOf(
         "炼" to "不许炼",
