@@ -46,7 +46,6 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
     )
     private val imgMap = mapOf(
         "罕见" to "{F4F6D6BF-24C1-91D9-6E5E-8E2B5D487AF1}.png",
-        "笑死" to "{65929E6A-55E8-AF62-D73B-DA8F7F49EA81}.jpg",
         "不够涩" to "{33B0B14D-32C3-CAAA-B43D-9B1604BE21F5}.png",
         "略略略" to "{492D406C-C102-6F66-E5BD-C59204E5032F}.gif",
         "impact重点照顾你" to "{40EB959D-80FF-1C7F-85A2-5D5E82B52C52}.gif",
