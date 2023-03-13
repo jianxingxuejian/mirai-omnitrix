@@ -15,15 +15,16 @@ import org.jetbrains.skia.*
 class Pornhub : AnyCommand {
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        if (args.size == 1 || args.size > 2) return result("参数错误")
+        if (args.size == 1) return result("参数错误")
         val first = args.getOrElse(0) { "Porn" }
-        val second = args.getOrElse(1) { "Hub" }
-        draw(first, second).use { event.subject.sendImage(it) }
+        val second = args.getOrElse(1) { "hub" }
+        val fontFamily = if (args.size >= 3) args.drop(2).joinToString(" ") else null
+        draw(first, second, fontFamily).use { event.subject.sendImage(it) }
         return null
     }
 
-    fun draw(porn: String = "Porn", hub: String = "Hub"): SkiaExternalResource {
-        val font = SkikoUtil.getFont(FontFamily.Arial, FontStyle.BOLD, 90F)
+    fun draw(porn: String = "Porn", hub: String = "Hub", fontFamily: String?): SkiaExternalResource {
+        val font = SkikoUtil.getFont(fontFamily ?: FontFamily.Tahoma.value, FontStyle.BOLD, 90F)
         val prefix = TextLine.make(porn, font)
         val suffix = TextLine.make(hub, font)
         val black = Paint().setARGB(0xFF, 0x00, 0x00, 0x00)

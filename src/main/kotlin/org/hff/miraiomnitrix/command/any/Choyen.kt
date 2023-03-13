@@ -21,8 +21,8 @@ class Choyen : AnyCommand {
     }
 
     fun draw(top: String, bottom: String): SkiaExternalResource {
-        val sans = SkikoUtil.getFont(FontFamily.NotoSansSC, FontStyle.BOLD, 100F)
-        val serif = SkikoUtil.getFont(FontFamily.NotoSerifSC, FontStyle.BOLD, 100F)
+        val sans = SkikoUtil.getFont(FontFamily.NotoSansSC.value, FontStyle.BOLD, 100F)
+        val serif = SkikoUtil.getFont(FontFamily.NotoSerifSC.value, FontStyle.BOLD, 100F)
         val red = TextLine.make(top, sans)
         val silver = TextLine.make(bottom, serif)
         val width = maxOf(red.textBlob!!.blockBounds.right + 70, silver.textBlob!!.blockBounds.right + 250).toInt()

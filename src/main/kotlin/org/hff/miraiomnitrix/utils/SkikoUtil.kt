@@ -11,19 +11,19 @@ import java.util.*
 
 object SkikoUtil {
     private val provider: TypefaceFontProvider = TypefaceFontProvider()
-    private val instances = listOfNotNull(provider, FontMgr.default) +
+    private val fonts = listOfNotNull(provider, FontMgr.default) +
             ServiceLoader.load(FontMgr::class.java) +
             ServiceLoader.load(TypefaceFontProvider::class.java)
 
 
-    fun getFont(family: FontFamily, style: FontStyle, size: Float) = Font(matchFamilyStyle(family.value, style), size)
+    fun getFont(family: String, style: FontStyle, size: Float) = Font(matchFamilyStyle(family, style), size)
 
     private fun matchFamilyStyle(familyName: String, style: FontStyle) =
-        instances.firstNotNullOfOrNull { it.matchFamily(familyName).matchStyle(style) }
+        fonts.firstNotNullOfOrNull { it.matchFamily(familyName).matchStyle(style) }
 }
 
 enum class FontFamily(val value: String) {
-    Arial("Arial"),
+    Tahoma("Tahoma"),
     NotoSansSC("Noto Sans SC"),
     NotoSerifSC("Noto Serif SC"),
 }
