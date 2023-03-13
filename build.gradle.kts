@@ -26,6 +26,23 @@ repositories {
     mavenCentral()
 }
 
+val osName = System.getProperty("os.name")
+val targetOs = when {
+    osName == "Mac OS X" -> "macos"
+    osName.startsWith("Win") -> "windows"
+    osName.startsWith("Linux") -> "linux"
+    else -> error("Unsupported OS: $osName")
+}
+
+val osArch = System.getProperty("os.arch")
+var targetArch = when (osArch) {
+    "x86_64", "amd64" -> "x64"
+    "aarch64" -> "arm64"
+    else -> error("Unsupported arch: $osArch")
+}
+
+val target = "${targetOs}-${targetArch}"
+
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
@@ -36,6 +53,7 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     implementation("net.mamoe:mirai-core-api:2.14.0")
     runtimeOnly("net.mamoe:mirai-core:2.14.0")
+    compileOnly("net.mamoe:mirai-core-utils:2.14.0")
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
     compileOnly("com.baomidou:mybatis-plus-generator:3.5.3")
     compileOnly("org.freemarker:freemarker:2.3.31")
@@ -47,6 +65,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.xerial:sqlite-jdbc:3.40.1.0")
     implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.25.0@jar")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-$target:0.7.54")
 }
 
 tasks.withType<KotlinCompile> {
