@@ -20,12 +20,15 @@ class Menu : AnyCommand {
         |5：`live、直播`，直播状态查询
         |6：`chat、聊天`，与chatGPT机器人进行聊天
         |7：`chatplus、高级聊天`，更强大的chatGPT机器人
-        |8：`js`，执行js程序
+        |8：`ph、pornhub`，生成pornhub样式的图标
+        |9：`红白、5000、choyen`，生成choyen5000样式图片
+        |10：`js`，执行js程序
         |二、非指令功能
         |1: `st、搜图`，使用关键字回复一张图片，或者与自己的图片一起发送，得到saucenao搜图结果
         |2：`爬、一直、急急国王`，生成表情包
         |3：B站链接解析
         |4：合成两个emoji
+        |5：二刺螈词库
     """.trimMargin()
     private final val resultMsg = result(text)
 

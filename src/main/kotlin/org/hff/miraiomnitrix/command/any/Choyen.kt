@@ -27,6 +27,7 @@ class Choyen : AnyCommand {
         val silver = TextLine.make(bottom, serif)
         val width = maxOf(red.textBlob!!.blockBounds.right + 70, silver.textBlob!!.blockBounds.right + 250).toInt()
         val surface = Surface.makeRasterN32Premul(width, 290)
+        surface.canvas.skew(-0.45F, 0F)
         with(surface.canvas) {
             val x = 70F
             val y = 100F
