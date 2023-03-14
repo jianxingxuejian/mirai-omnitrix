@@ -15,7 +15,7 @@ import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.db.service.CharacterService
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
+import org.hff.miraiomnitrix.utils.getAsStr
 import org.hff.miraiomnitrix.utils.getInfo
 import java.util.concurrent.TimeUnit
 

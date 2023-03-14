@@ -14,7 +14,13 @@ object Util {
 
     fun getQq(arg: String) = if (arg.startsWith("@")) arg.substring(1).toLong() else arg.toLong()
 
+    fun getQqImg(qq:Long) = HttpUtil.getInputStream(QQ_URL + qq)
+
     fun getQqImg(args: List<String>, sender: User) = HttpUtil.getInputStream(QQ_URL + getQq(args, sender))
+}
+
+fun <T> Collection<T>.containsAny(collection: Collection<T>): Boolean {
+    return this.any { it in collection }
 }
 
 

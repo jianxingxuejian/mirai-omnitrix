@@ -12,12 +12,14 @@ import org.hff.miraiomnitrix.event.next
 import org.hff.miraiomnitrix.utils.getInfo
 import org.hff.miraiomnitrix.utils.toImage
 import org.hff.miraiomnitrix.utils.toText
+import java.lang.management.ManagementFactory
 import java.time.LocalTime
+import java.util.concurrent.TimeUnit
 
 @Event(priority = 2)
-class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
+class AutoReply(private val permissionProperties: PermissionProperties) : GroupEvent {
 
-    val limiterMap = permissionProperties.replyIncludeGroup.associateWith { RateLimiter.create(0.1) }
+    val limiterMap = hashMapOf<Long, RateLimiter>()
 
     private val textMap = mapOf(
         "day0" to "day0",
@@ -74,6 +76,9 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
         "约吗" to "{588DEAB6-4A76-F6CF-9D39-735142CDC6CF}.jpg",
     ).mapValues { it.value.toImage() }
     private val regexMap = mapOf<String, () -> Message>(
+        "爱丽丝在吗" to {
+            getStatus().toText()
+        },
         "别在这里发(电|癫)" to {
             listOf(
                 "{5B8FA4E2-3AD7-1332-522E-804C956044A6}.jpg",
@@ -160,13 +165,22 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
     ).mapKeys { it.key.toRegex() }
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
-        val limiter = limiterMap[event.group.id] ?: return next()
+        if (permissionProperties.replyExcludeGroup.contains(event.group.id)) return next()
+        val limiter =
+            if (limiterMap.contains(event.group.id)) {
+                limiterMap[event.group.id]
+            } else {
+                val limiter = RateLimiter.create(1.0)
+                limiterMap[event.group.id] = limiter
+                limiter
+            }
+
         if (args.isEmpty()) return next()
 
         val (group, _, message) = event.getInfo()
         val arg = args[0]
 
-        with(limiter) {
+        with(limiter!!) {
             when (arg) {
                 in textMap.keys ->
                     textMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(it) }
@@ -183,5 +197,22 @@ class AutoReply(permissionProperties: PermissionProperties) : GroupEvent {
         }
 
         return next()
+    }
+
+    fun getStatus(): String {
+        val runtime = Runtime.getRuntime()
+        val totalMemory = runtime.totalMemory()
+        val memory = "内存使用: ${totalMemory / 1024 / 1024}MB\n"
+        val uptimeInMillis = ManagementFactory.getRuntimeMXBean().uptime
+        val uptime = getUptime(uptimeInMillis)
+        return memory + uptime
+    }
+
+    fun getUptime(time: Long): String {
+        val days = TimeUnit.MILLISECONDS.toDays(time)
+        val hours = TimeUnit.MILLISECONDS.toHours(time) % 24
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(time) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(time) % 60
+        return "已运行: ${if (days > 0) "$days 天" else ""}${if (hours > 0) "$hours 小时 " else ""}${if (minutes > 0) "$minutes 分钟 " else ""}$seconds 秒\n"
     }
 }

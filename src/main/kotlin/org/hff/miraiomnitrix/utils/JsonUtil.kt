@@ -29,12 +29,6 @@ object JsonUtil {
 
     fun parse(data: Any) = gson.toJson(data).toString()
 
-    fun JsonObject.getAsStr(key: String): String = this.get(key).asString
-
-    fun JsonElement.get(key: String): JsonElement = this.asJsonObject.get(key)
-
-    fun JsonElement.getAsStr(key: String): String = this.asJsonObject.getAsStr(key)
-
     fun getKey(json: String, key: String): JsonElement =
         JsonParser.parseString(json).asJsonObject.get(key) ?: throw MyException("json解析失败，检查key")
 
@@ -46,3 +40,11 @@ object JsonUtil {
         }
 
 }
+
+fun JsonObject.getAsStr(key: String): String = this.get(key).asString
+
+fun JsonElement.get(key: String): JsonElement = this.asJsonObject.get(key)
+
+fun JsonElement.getAsStr(key: String): String = this.asJsonObject.getAsStr(key)
+
+fun JsonElement.getAsArray(key: String): JsonArray = this.asJsonObject.getAsJsonArray(key)

@@ -5,9 +5,9 @@ import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
-import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
+import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
@@ -20,8 +20,6 @@ import java.util.concurrent.ThreadLocalRandom
 
 @Event(priority = 3)
 class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
-
-    private val url = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
     private val paDir = "/img/pa/*"
     private val tieDir = "/img/tie/*"
@@ -48,7 +46,7 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         if (qq == null) qq = sender.id
 
         val file = getFileByQQ(qq!!, pa)
-        val qqImg = HttpUtil.getInputStream(url + qq)
+        val qqImg = Util.getQqImg(qq!!)
         val imageA = ImageUtil.scaleTo(file, 400, 400)
         val imageB = ImageUtil.scaleTo(qqImg, 75, 75)
         val imageC = transformAvatar(imageB)

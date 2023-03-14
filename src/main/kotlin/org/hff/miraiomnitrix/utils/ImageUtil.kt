@@ -10,12 +10,17 @@ object ImageUtil {
 
     private val loader = ImmutableImage.loader()
 
-    fun scaleTo(file: File, width: Int, height: Int): ImmutableImage = loader.fromFile(file).scaleTo(width, height)
+    fun load(file: File): ImmutableImage = loader.fromFile(file)
 
     fun scaleTo(inputStream: InputStream, width: Int, height: Int): ImmutableImage =
         loader.fromStream(inputStream).scaleTo(width, height)
 
+    fun scaleTo(image: ByteArray, width: Int, height: Int): ImmutableImage = loader.fromBytes(image).scaleTo(width, height)
+
     fun ImmutableImage.overlayToStream(image: ImmutableImage, x: Int, y: Int) =
         ByteArrayInputStream(this.overlay(image, x, y).bytes(PngWriter()))
 
+    fun ImmutableImage.toStream() = ByteArrayInputStream(this.bytes(PngWriter()))
+
 }
+

@@ -46,7 +46,21 @@ class Live(private val liveService: LiveService) : GroupCommand {
         }
 
         when (args[0]) {
-            "帮助", "help" -> return result("使用add、添加命令来添加主播，格式为add qq号 b站uid\n使用del、移除命令移除主播，格式为del qq号")
+            "帮助", "help" -> {
+                val help = """使用list、列表命令获取主播列表
+                    |使用add、添加命令来添加主播，格式为add qq号 b站uid
+                    |使用del、移除命令移除主播，格式为del qq号
+                """.trimMargin()
+                return result(help)
+            }
+
+            "列表", "list" -> {
+                val list = liveService.getListByGroup(group.id)
+                if (list.isEmpty()) return result("尚未添加主播")
+                return result("主播列表：\n" + list.mapNotNull { group.members[it.qq]?.nameCardOrNick }
+                    .joinToString("\n"))
+            }
+
             "添加", "add", "save" -> {
                 if (args.size < 3) return result("参数错误")
                 val qq = getQq(args[1])
@@ -67,9 +81,9 @@ class Live(private val liveService: LiveService) : GroupCommand {
                 if (args.size < 2) return result("参数错误")
                 val qq = getQq(args[1])
                 val member = group.getMember(qq) ?: return result("未找到成员")
-                val remove = liveService.removeById(qq)
+                val remove = liveService.removeByQQ(qq)
                 if (!remove) return result("删除失败")
-                return result("已添加${member.nameCardOrNick}的数据")
+                return result("已删除${member.nameCardOrNick}的数据")
             }
         }
         return null

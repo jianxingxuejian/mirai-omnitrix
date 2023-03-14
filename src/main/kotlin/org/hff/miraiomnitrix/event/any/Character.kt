@@ -4,8 +4,8 @@ import net.mamoe.mirai.contact.Contact
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
 import org.hff.miraiomnitrix.utils.SpringUtil
+import org.hff.miraiomnitrix.utils.getAsStr
 
 object Character {
     private val token = SpringUtil.getBean(AccountProperties::class)?.characterAiToken

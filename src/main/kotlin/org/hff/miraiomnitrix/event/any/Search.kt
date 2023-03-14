@@ -11,6 +11,7 @@ import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.containsAny
 import org.hff.miraiomnitrix.utils.getInfo
 import org.jsoup.Jsoup
 
@@ -21,7 +22,7 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
     private val commands = listOf("st", "搜图", "soutu")
     override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
-        if (!commands.any { args.any { arg -> arg.contains(it) } }) return next()
+        if (!args.containsAny(commands)) return next()
 
         val (subject, _, message) = event.getInfo()
 
@@ -69,7 +70,10 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
             +"$urlsText\n"
             val author = data.member_name ?: data.user_name ?: data.creator ?: data.jp_name
             if (author != null) +"作者：$author"
-        }.apply { return true }
+        }.apply {
+            subject.sendMessage(this)
+            return true
+        }
     }
 
     // 使用图片url请求ascii2d网站的搜图数据，解析第一条的html数据

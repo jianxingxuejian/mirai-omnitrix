@@ -15,8 +15,8 @@ import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.JsonUtil.get
-import org.hff.miraiomnitrix.utils.JsonUtil.getAsStr
+import org.hff.miraiomnitrix.utils.get
+import org.hff.miraiomnitrix.utils.getAsStr
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
