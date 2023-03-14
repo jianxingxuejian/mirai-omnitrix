@@ -16,8 +16,6 @@ import java.io.File
 @Command(name = ["随机老婆", "老婆", "waifu"])
 class RandomWaifu : GroupCommand {
 
-    private val imgBottom = ImageUtil.load(ClassPathResource("/img/other/2.jpg").file)
-
     private val genshinAvatars = hashMapOf<String, ByteArray>()
 
     init {
@@ -69,6 +67,7 @@ class RandomWaifu : GroupCommand {
     private fun draw(left: ByteArray, right: ByteArray): ByteArrayInputStream {
         val imgLeft = ImageUtil.scaleTo(left, 150, 180)
         val imgRight = ImageUtil.scaleTo(right, 150, 180)
+        val imgBottom = ImageUtil.load(ClassPathResource("/img/other/2.jpg").file)
         return imgBottom.overlay(imgLeft, 610, 90).overlay(imgRight, 770, 90).toStream()
     }
 
