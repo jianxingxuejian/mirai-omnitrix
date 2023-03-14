@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.command.group
 
-import com.sksamuel.scrimage.ImmutableImage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.command.Command
@@ -17,12 +16,11 @@ import java.io.File
 @Command(name = ["随机老婆", "老婆", "waifu"])
 class RandomWaifu : GroupCommand {
 
-    lateinit var imgBottom: ImmutableImage
+    private val imgBottom = ImageUtil.load(ClassPathResource("/img/other/2.jpg").file)
 
     private val genshinAvatars = hashMapOf<String, ByteArray>()
 
     init {
-        imgBottom = ImageUtil.load(ClassPathResource("/img/other/2.jpg").file)
         val files = PathMatchingResourcePatternResolver().getResources("/img/genshin/avatar/*")
         files.forEach {
             val name = it.filename?.substringBeforeLast(".")
