@@ -170,7 +170,7 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
             if (limiterMap.contains(event.group.id)) {
                 limiterMap[event.group.id]
             } else {
-                val limiter = RateLimiter.create(1.0)
+                val limiter = RateLimiter.create(0.1)
                 limiterMap[event.group.id] = limiter
                 limiter
             }

@@ -12,6 +12,8 @@ object ImageUtil {
 
     fun load(file: File): ImmutableImage = loader.fromFile(file)
 
+    fun load(bytes:ByteArray): ImmutableImage = loader.fromBytes(bytes)
+
     fun scaleTo(inputStream: InputStream, width: Int, height: Int): ImmutableImage =
         loader.fromStream(inputStream).scaleTo(width, height)
 

@@ -57,7 +57,7 @@ dependencies {
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
     compileOnly("com.baomidou:mybatis-plus-generator:3.5.3")
     compileOnly("org.freemarker:freemarker:2.3.31")
-    implementation("com.sksamuel.scrimage:scrimage-core:4.0.32")
+    implementation("com.sksamuel.scrimage:scrimage-core:4.0.33")
     implementation("org.jsoup:jsoup:1.15.3")
     implementation("org.javadelight:delight-nashorn-sandbox:0.2.5")
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
