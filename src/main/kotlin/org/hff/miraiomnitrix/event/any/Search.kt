@@ -21,7 +21,7 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
     private val commands = listOf("st", "搜图", "soutu")
     override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
-        if (!commands.any { it in args }) return next()
+        if (!commands.any { args.any { arg -> arg.contains(it) } }) return next()
 
         val (subject, _, message) = event.getInfo()
 
