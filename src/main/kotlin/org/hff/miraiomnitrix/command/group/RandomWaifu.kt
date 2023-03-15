@@ -5,33 +5,40 @@ import com.sksamuel.scrimage.canvas.GraphicsContext
 import com.sksamuel.scrimage.canvas.drawables.Text
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.nameCardOrNick
+import net.mamoe.mirai.contact.remarkOrNameCard
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.command.result
-import org.hff.miraiomnitrix.utils.*
+import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
+import org.hff.miraiomnitrix.utils.Util
+import org.hff.miraiomnitrix.utils.getInfo
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.Color
 import java.awt.Font
 import java.io.ByteArrayInputStream
-import java.io.File
+import kotlin.collections.set
 
 @Command(name = ["随机老婆", "老婆", "waifu"])
 class RandomWaifu : GroupCommand {
 
-    private val genshinAvatars = hashMapOf<String, ByteArray>()
+    private val avatars = hashMapOf<String, ByteArray>()
 
-    private val bottom = ClassPathResource("/img/other/2.jpg").inputStream.readBytes()
+    private val bottom1 = load("/img/other/1.jpg")
+    private val bottom2 = load("/img/other/2.jpg")
+    private val bottom3 = load("/img/other/3.jpg")
+
+    private final fun load(path: String) = ImageUtil.load(ClassPathResource(path).inputStream.readBytes())
 
     init {
-        val files = PathMatchingResourcePatternResolver().getResources("/img/genshin/avatar/*")
+        val files = PathMatchingResourcePatternResolver().getResources("/img/**/avatar/*")
         files.forEach {
             val name = it.filename?.substringBeforeLast(".")
             if (name != null) {
-                genshinAvatars[name] = it.inputStream.readBytes()
+                avatars[name] = it.inputStream.readBytes()
             }
         }
     }
@@ -39,52 +46,79 @@ class RandomWaifu : GroupCommand {
     override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
         val (group, sender) = event.getInfo()
         val left = sender.id
-        if (args.isEmpty()) {
-            val member = group.members.random()
-            val text = sender.nameCardOrNick + " " + member.nameCardOrNick
-            val startTime = System.currentTimeMillis()
-            val result = draw(sender.id, member.id, text)
-            val elapsedTime = System.currentTimeMillis() - startTime
-            println(elapsedTime)
-            result.use { group.sendImage(it) }
-        } else if (args[0] == "原神") {
-            val name = genshinAvatars.keys.random()
-            val right = genshinAvatars[name]!!
-            draw(left, right, name).use { group.sendImage(it) }
-        } else {
-            val qq = Util.getQq(args)
-            if (qq != null) {
-                val name = group.members[qq]?.nameCardOrNick ?: return result("没有找到成员")
-                draw(left, qq, name).use { group.sendImage(it) }
-            } else {
-                val right = genshinAvatars[args[0]] ?: return result("没有找到角色")
-                draw(left, right, args[0]).use { group.sendImage(it) }
+        when {
+            args.isEmpty() -> {
+                val member = group.members.random()
+                val text = sender.nameCardOrNick + " " + member.nameCardOrNick
+                draw(left, member.id, text).use { group.sendImage(it) }
+            }
+
+            args[0] == "二次元" || args[0] == "动漫" -> {
+                val name = avatars.keys.random()
+                val names = sender.nameCardOrNick + avatars.keys.random()
+                val right = avatars[name]!!
+                draw(left, right, names).use { group.sendImage(it) }
+            }
+
+            else -> {
+                when (val qq = Util.getQq(args)) {
+                    null -> {
+                        val right = avatars[args[0]] ?: return result("没有找到角色")
+                        val names = sender.nameCardOrNick + " " + args[0]
+                        draw(left, right, names).use { group.sendImage(it) }
+                    }
+
+                    else -> {
+                        val member = group.members[qq] ?: return result("没有找到成员")
+                        val names = sender.nameCardOrNick + " " + member.remarkOrNameCard
+                        draw(left, qq, names).use { group.sendImage(it) }
+                    }
+                }
             }
         }
         return null
     }
 
     private fun draw(left: Long, right: Long, names: String): ByteArrayInputStream {
-        val inputStreamLeft = Util.getQqImg(left)
-        val inputStreamRight = Util.getQqImg(right)
-        return draw(inputStreamLeft.readAllBytes(), inputStreamRight.readAllBytes(), names)
+        val rightByteArray = Util.getQqImg(right).use { it.readBytes() }
+        return draw(left, rightByteArray, names)
     }
 
     private fun draw(left: Long, right: ByteArray, names: String): ByteArrayInputStream {
-        val inputStreamLeft = Util.getQqImg(left)
-        return draw(inputStreamLeft.readAllBytes(), right, names)
+        val leftByteArray = Util.getQqImg(left).use { it.readBytes() }
+        return when ((1..3).random()) {
+            1 -> draw1(leftByteArray, right, names)
+            2 -> draw2(leftByteArray, right, names)
+            else -> draw3(leftByteArray, right)
+        }
     }
 
-    private fun draw(left: ByteArray, right: ByteArray, names: String): ByteArrayInputStream {
+    private fun draw1(left: ByteArray, right: ByteArray, names: String): ByteArrayInputStream {
         val imgLeft = ImageUtil.scaleTo(left, 160, 160)
-        val context = GraphicsContext { g2 ->
-            g2.color = Color.BLACK
-            g2.font = Font("Tahoma", Font.PLAIN, 40)
+        val imgRight = ImageUtil.scaleTo(right, 160, 160)
+        val context = GraphicsContext {
+            it.color = Color.BLACK
+            it.font = Font("SimSun", Font.BOLD, 38)
         }
         val text = Text(names, 700, 633, context)
+        return Canvas(bottom1).draw(text).image.overlay(imgLeft, 602, 100).overlay(imgRight, 768, 100).toStream()
+    }
+
+    private fun draw2(left: ByteArray, right: ByteArray, names: String): ByteArrayInputStream {
+        val imgLeft = ImageUtil.scaleTo(left, 160, 160)
         val imgRight = ImageUtil.scaleTo(right, 160, 160)
-        val imgBottom = ImageUtil.load(bottom)
-        return Canvas(imgBottom).draw(text).image.overlay(imgLeft, 602, 100).overlay(imgRight, 768, 100).toStream()
+        val context = GraphicsContext {
+            it.color = Color.BLACK
+            it.font = Font("SimSun", Font.BOLD, 30)
+        }
+        val text = Text(names, 300, 360, context)
+        return Canvas(bottom2).draw(text).image.overlay(imgLeft, 575, 335).overlay(imgRight, 745, 335).toStream()
+    }
+
+    private fun draw3(left: ByteArray, right: ByteArray): ByteArrayInputStream {
+        val imgLeft = ImageUtil.scaleTo(left, 90, 90)
+        val imgRight = ImageUtil.scaleTo(right, 90, 90)
+        return bottom3.overlay(imgLeft, 125, 275).overlay(imgRight, 220, 275).toStream()
     }
 
 //    private fun test(left: InputStream, right: InputStream, text: String): SkiaExternalResource {
@@ -103,19 +137,6 @@ class RandomWaifu : GroupCommand {
 //        return SkiaExternalResource(surface.makeImageSnapshot(), EncodedImageFormat.PNG)
 //    }
 
-}
-
-fun main() {
-    val json =
-        HttpUtil.getString("https://api-static.mihoyo.com/common/blackboard/ys_obc/v1/home/content/list?app_sn=ys_obc&channel_id=189")
-    JsonUtil.getObj(json, "data").getAsArray("list")[0].getAsArray("children")[0].getAsArray("list").forEach {
-        val icon = it.getAsStr("icon")
-        val img = HttpUtil.getInputStream(icon)
-        val title = it.getAsStr("title")
-        val filename = "src/main/resources/img/genshin/avatar/$title.png"
-        val file = File(filename)
-        file.outputStream().use { output -> img.copyTo(output) }
-    }
 }
 
 

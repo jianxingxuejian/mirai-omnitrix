@@ -26,8 +26,8 @@ class Img : AnyEvent {
         val first = args[0]
         val (subject, sender, message) = event.getInfo()
 
-        when {
-            first.startsWith("急急国王") || first.endsWith("急急国王") -> {
+        when (first) {
+            "急急国王" -> {
                 val qqImg = Util.getQqImg(args, sender)
                 val file = ClassPathResource(path1).inputStream
                 val imageA = ImageUtil.scaleTo(file, 400, 400)
@@ -37,7 +37,7 @@ class Img : AnyEvent {
                 return stop()
             }
 
-            first == "一直" -> {
+            "一直" -> {
                 val file = ClassPathResource(path2).inputStream
                 val imageA = ImageUtil.scaleTo(file, 400, 500)
                 val image = Cache.getImgFromCache(message)
