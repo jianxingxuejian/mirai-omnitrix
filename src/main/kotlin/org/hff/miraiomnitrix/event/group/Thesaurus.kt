@@ -30,14 +30,17 @@ class Thesaurus(private val permissionProperties: PermissionProperties) : GroupE
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
         if (!isAt) return next()
         if (permissionProperties.replyExcludeGroup.contains(event.group.id)) return next()
-        val arg = args[0]
-        val list = thesaurus[arg]
-        if (list == null) {
-            if (arg.startsWith("你是谁")) return stop("我是幻书《爱丽丝梦游仙境》，你可以叫我爱丽丝")
-            if (arg.startsWith("你好")) return stop("贵安～我是仙境的爱丽丝，你愿意与我一同前往神奇的国度，去寻找真正的乐园吗？")
-        } else {
-            val reply = list.random().replace("我", "爱丽丝")
-            return stop(reply)
+        val arg = args.getOrNull(0) ?: return next()
+
+        when (val list = thesaurus[arg]) {
+            null -> {
+                if (arg.startsWith("你是谁") && arg.length <= 4)
+                    return stop("我是幻书《爱丽丝梦游仙境》，你可以叫我爱丽丝")
+                if (arg.startsWith("你好") && arg.length <= 7)
+                    return stop("贵安～我是仙境的爱丽丝，你愿意与我一同前往神奇的国度，去寻找真正的乐园吗？")
+            }
+
+            else -> list.random().replace("我", "爱丽丝").apply { return stop(this) }
         }
         return next()
     }

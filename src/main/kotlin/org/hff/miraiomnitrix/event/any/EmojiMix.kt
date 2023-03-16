@@ -1,11 +1,11 @@
 package org.hff.miraiomnitrix.event.any
 
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.sendImage
 import org.springframework.core.io.ClassPathResource
 
 /** emoji合成，json数据来源于 https://github.com/xsalazar/emoji-kitchen */
@@ -39,9 +39,8 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
         val subject = event.subject
         if (permissionProperties.emojiMixExcludeGroup.contains(subject.id)) return next()
 
-        val content = args[0]
         val regex = Regex("^(\\p{So}){2}") // 匹配以两个emoji开头的字符串
-        val emojis = regex.find(content)?.value ?: return next()
+        val emojis = regex.find(args[0])?.value ?: return next()
         val emojiCodePoints = emojis.codePoints().toArray()
         val emojiHexStrings = emojiCodePoints.map { Integer.toHexString(it).removePrefix("U+") }
         val first = emojiHexStrings[0]
@@ -49,8 +48,8 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
         val (leftEmoji, rightEmoji, date) = emojiCache[first]?.get(second)
             ?: emojiCache[second]?.get(first)
             ?: return next()
-        HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png").use { subject.sendImage(it) }
-        return stop()
+        HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
+            .use { return stop(subject.uploadImage(it)) }
     }
 
     data class Emoji(

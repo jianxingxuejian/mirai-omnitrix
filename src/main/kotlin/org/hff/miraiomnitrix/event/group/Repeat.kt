@@ -14,26 +14,22 @@ import java.util.*
 @Event(priority = 4)
 class Repeat(private val permissionProperties: PermissionProperties) : GroupEvent {
 
-    private val groupMsgMap = mutableMapOf<Long, Queue<String>>()
+    private val groupMsgMap = hashMapOf<Long, Queue<String>>()
     private val random = Random()
     private val breaks = arrayOf("break", "打断")
-    private val bound = breaks.size
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
         val (group, _, message) = event.getInfo()
-        var content = message.contentToString()
         if (permissionProperties.repeatExcludeGroup.contains(group.id)) return next()
 
+        var content = message.contentToString()
         var isImage = false
-        val image = message[Image.Key]
-        if (image != null) {
-            content = image.imageId
+        message[Image.Key]?.let {
+            content = it.imageId
             isImage = true
         }
 
-        if (groupMsgMap[group.id] == null) groupMsgMap[group.id] = EvictingQueue.create(10)
-
-        val stringQueue = groupMsgMap[group.id]!!
+        val stringQueue = groupMsgMap.getOrPut(group.id) { EvictingQueue.create(10) }
 
         if (stringQueue.count() < 3) {
             stringQueue.add(content)
@@ -42,16 +38,16 @@ class Repeat(private val permissionProperties: PermissionProperties) : GroupEven
 
         val last = stringQueue.toList().takeLast(3)
         if (content == last[0] && last[0] == last[1] && last[1] == last[2]) {
-            stringQueue.removeIf { it.equals(content) }
-            val num = random.nextInt(bound * 2)
-            if (num < bound) group.sendMessage(breaks[num])
-            else if (isImage) group.sendMessage(Image(content))
-            else group.sendMessage(message)
+            stringQueue.removeIf { it == content }
+            when (val num = random.nextInt(breaks.size * 2)) {
+                in breaks.indices -> group.sendMessage(breaks[num])
+                else -> group.sendMessage(if (isImage) Image(content) else message)
+            }
         } else {
             stringQueue.add(content)
         }
+
         return next()
     }
-
 
 }

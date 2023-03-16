@@ -21,20 +21,14 @@ object ImageUtil {
     fun load(path: String, width: Int, height: Int): ImmutableImage = load(path).scaleTo(width, height)
 
     fun scaleTo(inputStream: InputStream, width: Int, height: Int): ImmutableImage =
-        loader.fromStream(inputStream).scaleTo(width, height)
-
-    fun scaleTo(image: ByteArray, width: Int, height: Int): ImmutableImage =
-        loader.fromBytes(image).scaleTo(width, height)
-
-    fun ImmutableImage.overlayToStream(image: ImmutableImage, x: Int, y: Int) =
-        ByteArrayInputStream(this.overlay(image, x, y).bytes(PngWriter()))
+        inputStream.use { loader.fromStream(it).scaleTo(width, height) }
 
     fun ImmutableImage.toStream() = this.toStream(PngWriter())
 
     fun ImmutableImage.toStream(write: ImageWriter) = ByteArrayInputStream(this.bytes(write))
 
     fun InputStream.toImmutableImage(width: Int, height: Int): ImmutableImage =
-        loader.fromStream(this).scaleTo(width, height)
+        use { loader.fromStream(this).scaleTo(width, height) }
 
 }
 

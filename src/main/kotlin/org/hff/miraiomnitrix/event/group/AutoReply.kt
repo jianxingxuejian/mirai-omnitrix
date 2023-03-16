@@ -10,6 +10,7 @@ import org.hff.miraiomnitrix.event.EventResult
 import org.hff.miraiomnitrix.event.GroupEvent
 import org.hff.miraiomnitrix.event.next
 import org.hff.miraiomnitrix.utils.getInfo
+import org.hff.miraiomnitrix.utils.sendImage
 import org.hff.miraiomnitrix.utils.toImage
 import org.hff.miraiomnitrix.utils.toText
 import java.lang.management.ManagementFactory
@@ -165,23 +166,14 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
     ).mapKeys { it.key.toRegex() }
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
-        if (permissionProperties.replyExcludeGroup.contains(event.group.id)) return next()
-        val limiter =
-            if (limiterMap.contains(event.group.id)) {
-                limiterMap[event.group.id]
-            } else {
-                val limiter = RateLimiter.create(0.1)
-                limiterMap[event.group.id] = limiter
-                limiter
-            }
-
         if (args.isEmpty()) return next()
+        if (permissionProperties.replyExcludeGroup.contains(event.group.id)) return next()
 
+        val limiter = limiterMap.getOrPut(event.group.id) { RateLimiter.create(0.1) }
         val (group, _, message) = event.getInfo()
-        val arg = args[0]
 
-        with(limiter!!) {
-            when (arg) {
+        with(limiter) {
+            when (val arg = args[0]) {
                 in textMap.keys ->
                     textMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(it) }
 
@@ -189,7 +181,7 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
                     replyMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(message.quote() + it) }
 
                 in imgMap.keys ->
-                    imgMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(it) }
+                    imgMap[arg]?.takeIf { tryAcquire() }?.let { group.sendImage(it) }
 
                 else -> regexMap.entries.find { it.key.matches(arg) }?.value?.takeIf { tryAcquire() }
                     ?.let { group.sendMessage(it.invoke()) }

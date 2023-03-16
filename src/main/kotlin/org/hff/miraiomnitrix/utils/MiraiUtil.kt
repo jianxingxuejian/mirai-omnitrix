@@ -22,8 +22,13 @@ fun String.toText() = PlainText(this)
 
 fun ForwardMessageBuilder.add(message: MessageChain) = this.add(context.bot.id, context.bot.nameCardOrNick, message)
 
-suspend fun Contact.sendImage(inputStream: InputStream) {
+suspend fun Contact.sendImage(inputStream: InputStream): Image {
     val image = this.uploadImage(inputStream)
+    this.sendImage(image)
+    return image
+}
+
+suspend fun Contact.sendImage(image: Image) {
     val send = this.sendMessage(image)
     Cache.imageCache.put(send.source.internalIds[0], image.imageId)
 }

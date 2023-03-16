@@ -2,7 +2,7 @@ package org.hff.miraiomnitrix.event.any
 
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.MessageChainBuilder
+import net.mamoe.mirai.message.data.buildMessageChain
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
@@ -30,14 +30,14 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
         }
         val json = HttpUtil.getString(videoUrl, param)
         val data: BiliVideoInfo = JsonUtil.fromJson(json, "data")
-        val share = MessageChainBuilder()
-            .append(subject.uploadImage(HttpUtil.getInputStream(data.pic)))
-            .append("标题：${data.title}\n")
-            .append("简介：${data.desc.take(100)}${if (data.desc.length > 100) "……" else ""}\n")
-            .append("UP主: ${data.owner.name}\n")
-            .append("链接：https://www.bilibili.com/video/$first\n")
-            .build()
-        return stop(share)
+        val img = HttpUtil.getInputStream(data.pic).use { subject.uploadImage(it) }
+        buildMessageChain {
+            +img
+            +"标题：${data.title}\n"
+            +"简介：${data.desc.take(100)}${if (data.desc.length > 100) "……" else ""}\n"
+            +"UP主: ${data.owner.name}\n"
+            +"链接：https://www.bilibili.com/video/$first\n"
+        }.apply { return stop(this) }
     }
 
     data class BiliVideoInfo(

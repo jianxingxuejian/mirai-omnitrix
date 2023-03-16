@@ -4,8 +4,8 @@ import com.sksamuel.scrimage.ImmutableImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
-import org.hff.miraiomnitrix.utils.ImageUtil
-import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
+import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
+import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
 import org.hff.miraiomnitrix.utils.sendImage
@@ -28,30 +28,17 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         if (args.isEmpty()) return next()
         val (group, sender) = event.getInfo()
 
-        var qq: Long? = null
-        var pa = false
-        var tie = false
-        args.forEach {
-            if (it == "爬") pa = true
-            else if (it == "贴") tie = true
-            else if (it.startsWith("@")) {
-                try {
-                    qq = it.substring(1).toLong()
-                } catch (e: NumberFormatException) {
-                    return next()
-                }
-            }
-        }
-        if (!pa && !tie) return next()
-        if (qq == null) qq = sender.id
+        val qq = Util.getQq(args, sender)
+        val pa = args.contains("爬")
+        val tie = args.contains("贴")
 
-        val file = getFileByQQ(qq!!, pa)
-        val qqImg = Util.getQqImg(qq!!)
-        val imageA = ImageUtil.scaleTo(file, 400, 400)
-        val imageB = ImageUtil.scaleTo(qqImg, 75, 75)
+        if (!pa && !tie) return next()
+
+        val imageA = getFileByQQ(qq, pa).toImmutableImage(400, 400)
+        val imageB = Util.getQqImg(qq).toImmutableImage(75, 75)
         val imageC = transformAvatar(imageB)
-        imageA.overlayToStream(imageC, 5, 320).use { group.sendImage(it) }
-        return stop()
+        imageA.overlay(imageC, 5, 320).toStream()
+            .use { return stop(group.sendImage(it)) }
     }
 
     private fun getFileByQQ(qq: Long, pa: Boolean): InputStream {

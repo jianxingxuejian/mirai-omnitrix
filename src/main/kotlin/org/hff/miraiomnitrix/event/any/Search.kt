@@ -11,7 +11,6 @@ import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.containsAny
 import org.hff.miraiomnitrix.utils.getInfo
 import org.jsoup.Jsoup
 
@@ -22,7 +21,7 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
     private val commands = listOf("st", "搜图", "soutu")
     override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
-        if (!args.containsAny(commands)) return next()
+        if (args.take(2).any { it in commands }.not()) return next()
 
         val (subject, _, message) = event.getInfo()
 

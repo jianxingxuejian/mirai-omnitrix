@@ -53,18 +53,16 @@ class Wallpaper : AnyCommand {
             val apiResult = HttpUtil.getString(vipUrl + sort)
             if (apiResult.isBlank()) return result("api获取为空")
             val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-            HttpUtil.getInputStream(url).use { subject.sendImage(it) }
-            return null
+            HttpUtil.getInputStream(url).use { return result(subject.sendImage(it)) }
         }
         urls.forEach {
             try {
                 val apiResult = HttpUtil.getString(it + sort)
                 val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-                HttpUtil.getInputStream(url).use {img-> subject.sendImage(img) }
+                HttpUtil.getInputStream(url).use { img -> return result(subject.sendImage(img)) }
             } catch (e: Exception) {
                 return@forEach
             }
-            return null
         }
 
         return result("执行失败")
