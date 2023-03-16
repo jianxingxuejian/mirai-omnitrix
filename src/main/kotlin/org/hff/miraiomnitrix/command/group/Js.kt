@@ -39,9 +39,9 @@ class Js : GroupCommand {
             if (text.isBlank()) return result("blank")
             result(text)
         } catch (error: ScriptCPUAbuseException) {
-            error.message?.let { result(it) }
+            error.message?.let(::result)
         } catch (error: ScriptException) {
-            error.message?.let { result(it) }
+            error.message?.let(::result)
         }
     }
 }

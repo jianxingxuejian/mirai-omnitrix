@@ -1,7 +1,6 @@
 package org.hff.miraiomnitrix.event.group
 
 import com.sksamuel.scrimage.ImmutableImage
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
@@ -9,6 +8,7 @@ import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.overlayToStream
 import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
+import org.hff.miraiomnitrix.utils.sendImage
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
 import java.awt.Color
@@ -50,8 +50,7 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         val imageA = ImageUtil.scaleTo(file, 400, 400)
         val imageB = ImageUtil.scaleTo(qqImg, 75, 75)
         val imageC = transformAvatar(imageB)
-        val overlay = imageA.overlayToStream(imageC, 5, 320)
-        group.sendImage(overlay)
+        imageA.overlayToStream(imageC, 5, 320).use { group.sendImage(it) }
         return stop()
     }
 

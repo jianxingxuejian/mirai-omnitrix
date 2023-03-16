@@ -3,7 +3,8 @@ package org.hff.miraiomnitrix.command
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
-import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.ForwardMessageBuilder
+import net.mamoe.mirai.message.data.Message
 import org.hff.miraiomnitrix.common.Allow
 import org.springframework.stereotype.Component
 
@@ -33,7 +34,8 @@ sealed interface Execute<T : MessageEvent> {
 }
 
 /** 指令执行结果 */
-data class CommandResult(val msg: String?, val msgChain: MessageChain?)
+data class CommandResult(val msg: String?, val msgChain: Message?)
 
 fun result(msg: String) = CommandResult(msg, null)
-fun result(message: MessageChain) = CommandResult(null, message)
+fun result(message: Message) = CommandResult(null, message)
+fun result(forwardMessageBuilder: ForwardMessageBuilder) = result(forwardMessageBuilder.build())

@@ -3,7 +3,7 @@ package org.hff.miraiomnitrix.event
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
-import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.Message
 import org.hff.miraiomnitrix.common.Allow
 import org.springframework.stereotype.Component
 
@@ -31,14 +31,14 @@ sealed interface Handle<T : MessageEvent> {
 }
 
 /** 事件处理返回结果 stop()方法代表任务链中止，next()方法代表任务链继续 */
-data class EventResult(val stop: Boolean, val msg: String?, val msgChain: MessageChain?)
+data class EventResult(val stop: Boolean, val msg: String?, val message: Message?)
 
 fun stop() = result(true)
 fun stop(msg: String?) = result(true, msg)
-fun stop(msgChain: MessageChain?) = result(true, msgChain)
+fun stop(message: Message?) = result(true, message)
 fun next() = result(false)
 fun next(msg: String?) = result(false, msg)
-fun next(msgChain: MessageChain?) = result(false, msgChain)
+fun next(message: Message?) = result(false, message)
 fun result(stop: Boolean) = EventResult(stop, null, null)
 fun result(stop: Boolean, msg: String?) = EventResult(stop, msg, null)
-fun result(stop: Boolean, msgChain: MessageChain?) = EventResult(stop, null, msgChain)
+fun result(stop: Boolean, message: Message?) = EventResult(stop, null, message)

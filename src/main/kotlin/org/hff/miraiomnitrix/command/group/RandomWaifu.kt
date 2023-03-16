@@ -15,7 +15,6 @@ import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
-import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.Color
 import java.awt.Font
@@ -27,18 +26,16 @@ class RandomWaifu : GroupCommand {
 
     private val avatars = hashMapOf<String, ByteArray>()
 
-    private val bottom1 = load("/img/other/1.jpg")
-    private val bottom2 = load("/img/other/2.jpg")
-    private val bottom3 = load("/img/other/3.jpg")
-
-    private final fun load(path: String) = ImageUtil.load(ClassPathResource(path).inputStream.readBytes())
+    private val bottom1 = ImageUtil.load("/img/other/1.jpg")
+    private val bottom2 = ImageUtil.load("/img/other/2.jpg")
+    private val bottom3 = ImageUtil.load("/img/other/3.jpg")
 
     init {
         val files = PathMatchingResourcePatternResolver().getResources("/img/**/avatar/*")
         files.forEach {
             val name = it.filename?.substringBeforeLast(".")
             if (name != null) {
-                avatars[name] = it.inputStream.readBytes()
+                it.inputStream.use { stream -> avatars[name] = stream.readBytes() }
             }
         }
     }

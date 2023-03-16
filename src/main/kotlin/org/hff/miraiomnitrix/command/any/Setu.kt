@@ -8,17 +8,11 @@ import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.buildMessageChain
-import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.result
-import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.get
-import org.hff.miraiomnitrix.utils.getAsStr
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
+import org.hff.miraiomnitrix.utils.*
 
 
 @Command(name = ["涩图", "setu"])
@@ -42,44 +36,46 @@ class Setu : AnyCommand {
         val forwardBuilder = ForwardMessageBuilder(subject)
 
         coroutineScope {
-            val exceptionHandler = CoroutineExceptionHandler { _, _ ->
-                run {
-                    val tags = keywords.joinToString("&tag=", "&tag=") { URLEncoder.encode(it, StandardCharsets.UTF_8) }
-                    val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
-                    JsonUtil.getArray(json, "data")
-                        .map { it.get("urls").getAsStr("original") }
-                        .forEach { launch { addForward(forwardBuilder, subject, it) } }
-                }
-            }
-            launch(exceptionHandler) {
-                val json = HttpUtil.getString("$api2?r18=$r18&num=$num&keyword=${keywords.joinToString("|")}")
-                JsonUtil.getArray(json).map { it.getAsStr("url") }
-                    .forEach {
-                        try {
-                            launch { addForward(forwardBuilder, subject, it) }
-                        } catch (_: Exception) {
-                            return@forEach
-                        }
+            coroutineScope {
+                val exceptionHandler = CoroutineExceptionHandler { _, _ ->
+                    run {
+                        val tags = keywords.joinToString("&tag=", "&tag=") { it.toUrl() }
+                        val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
+                        JsonUtil.getArray(json, "data")
+                            .map { it.get("urls").getAsStr("original") }
+                            .forEach { launch { forwardBuilder.add(subject, it) } }
                     }
+                }
+                launch(exceptionHandler) {
+                    val url = "$api2?r18=$r18&num=$num&keyword=${keywords.joinToString("|") { it.toUrl() }}"
+                    val json = HttpUtil.getString(url)
+                    JsonUtil.getArray(json).map { it.getAsStr("url") }
+                        .forEach { launch { forwardBuilder.add(subject, it) } }
+                }
             }
         }
 
+
         if (forwardBuilder.size > 0) {
-            subject.sendMessage(forwardBuilder.build().toMessageChain()).apply { if (r18 == 1) recallIn(60 * 1000) }
+            subject.sendMessage(forwardBuilder.build())
+                .apply { if (r18 == 1) recallIn(60 * 1000) }
             return null
         }
         return result("没有找到符合条件的涩图")
     }
 
-    suspend fun addForward(forwardBuilder: ForwardMessageBuilder, subject: Contact, imgUrl: String) {
+    suspend fun ForwardMessageBuilder.add(subject: Contact, imgUrl: String) {
         val regex = Regex("(?<=/)[^/]*?(?=_\\w+\\.[^.]*\$)")
         val match = regex.find(imgUrl)
-        val result = HttpUtil.getInputStreamByProxy(imgUrl)
-        val image = subject.uploadImage(result)
-        forwardBuilder.add(subject.bot, buildMessageChain {
-            +image
-            if (match != null) +"\nhttps://www.pixiv.net/artworks/${match.value}"
-        })
+        try {
+            HttpUtil.getInputStreamByProxy(imgUrl).use {
+                buildMessageChain {
+                    +subject.uploadImage(it)
+                    if (match != null) +"\nhttps://www.pixiv.net/artworks/${match.value}"
+                }.apply(::add)
+            }
+        } catch (_: Exception) {
+        }
     }
 
 }

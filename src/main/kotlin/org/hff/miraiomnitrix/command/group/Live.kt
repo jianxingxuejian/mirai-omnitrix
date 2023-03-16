@@ -25,6 +25,14 @@ class Live(private val liveService: LiveService) : GroupCommand {
 
     private val infoApi = "https://api.bilibili.com/x/space/wbi/acc/info?mid="
 
+    val help = result(
+        """使用list、列表命令获取主播列表
+            |使用add、添加命令来添加主播，格式为add qq号 b站uid
+            |使用del、移除命令移除主播，格式为del qq号
+            """.trimMargin()
+    )
+
+
     override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
         val group = event.group
         if (args.isEmpty()) {
@@ -45,19 +53,13 @@ class Live(private val liveService: LiveService) : GroupCommand {
             return result("当前没有人在直播")
         }
 
-        when (args[0]) {
-            "帮助", "help" -> {
-                val help = """使用list、列表命令获取主播列表
-                    |使用add、添加命令来添加主播，格式为add qq号 b站uid
-                    |使用del、移除命令移除主播，格式为del qq号
-                """.trimMargin()
-                return result(help)
-            }
+        return when (args[0]) {
+            "帮助", "help" -> help
 
             "列表", "list" -> {
                 val list = liveService.getListByGroup(group.id)
                 if (list.isEmpty()) return result("尚未添加主播")
-                return result("主播列表：\n" + list.mapNotNull { group.members[it.qq]?.nameCardOrNick }
+                result("主播列表：\n" + list.mapNotNull { group.members[it.qq]?.nameCardOrNick }
                     .joinToString("\n"))
             }
 
@@ -73,7 +75,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
                     ?: return result("未找到直播间信息")
                 val save = liveService.save(live)
                 if (!save) return result("保存失败")
-                return result("已添加${member.nameCardOrNick}的数据")
+                result("已添加${member.nameCardOrNick}的数据")
             }
 //            "订阅", "subscribe" -> {}
 //            "更新", "update" -> {}
@@ -83,10 +85,11 @@ class Live(private val liveService: LiveService) : GroupCommand {
                 val member = group.getMember(qq) ?: return result("未找到成员")
                 val remove = liveService.removeByQQ(qq)
                 if (!remove) return result("删除失败")
-                return result("已删除${member.nameCardOrNick}的数据")
+                result("已删除${member.nameCardOrNick}的数据")
             }
+
+            else -> help
         }
-        return null
     }
 
     val livesCache = mutableMapOf<Long, Int>()

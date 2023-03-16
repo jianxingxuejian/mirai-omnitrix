@@ -1,16 +1,13 @@
 package org.hff.miraiomnitrix.command.any
 
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.result
-import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import java.io.InputStream
+import org.hff.miraiomnitrix.utils.sendImage
 
 @Command(name = ["壁纸", "bizhi"])
 class Wallpaper : AnyCommand {
@@ -56,16 +53,14 @@ class Wallpaper : AnyCommand {
             val apiResult = HttpUtil.getString(vipUrl + sort)
             if (apiResult.isBlank()) return result("api获取为空")
             val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-            val image = HttpUtil.getInputStream(url)
-            sendImage(subject, image)
+            HttpUtil.getInputStream(url).use { subject.sendImage(it) }
             return null
         }
         urls.forEach {
             try {
                 val apiResult = HttpUtil.getString(it + sort)
                 val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-                val img = HttpUtil.getInputStream(url)
-                sendImage(subject, img)
+                HttpUtil.getInputStream(url).use {img-> subject.sendImage(img) }
             } catch (e: Exception) {
                 return@forEach
             }
@@ -73,11 +68,5 @@ class Wallpaper : AnyCommand {
         }
 
         return result("执行失败")
-    }
-
-    suspend fun sendImage(subject: Contact, inputStream: InputStream) {
-        val image = subject.uploadImage(inputStream)
-        val send = subject.sendMessage(image)
-        Cache.imageCache.put(send.source.internalIds[0], image.imageId)
     }
 }

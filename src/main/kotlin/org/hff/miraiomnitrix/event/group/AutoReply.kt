@@ -10,7 +10,7 @@ import org.hff.miraiomnitrix.event.EventResult
 import org.hff.miraiomnitrix.event.GroupEvent
 import org.hff.miraiomnitrix.event.next
 import org.hff.miraiomnitrix.utils.getInfo
-import org.hff.miraiomnitrix.utils.toImage
+import org.hff.miraiomnitrix.utils.toImmutableImage
 import org.hff.miraiomnitrix.utils.toText
 import java.lang.management.ManagementFactory
 import java.time.LocalTime
@@ -74,7 +74,7 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
         "火星" to "{9AD711EE-7126-11F0-EA99-E9CF01173324}.jpg",
         "不行" to "{A7B2075C-CA08-8BD9-C7E5-0FB9E8F6A454}.jpg",
         "约吗" to "{588DEAB6-4A76-F6CF-9D39-735142CDC6CF}.jpg",
-    ).mapValues { it.value.toImage() }
+    ).mapValues { it.value.toImmutableImage() }
     private val regexMap = mapOf<String, () -> Message>(
         "爱丽丝在吗" to {
             getStatus().toText()
@@ -84,13 +84,13 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
                 "{5B8FA4E2-3AD7-1332-522E-804C956044A6}.jpg",
                 "{57496E7C-A75D-BCEE-5049-4064C9B0093B}.jpg",
                 "{305921B1-E709-F4F2-06C7-9E9EB88AAA55}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
         "不够涩" to {
             listOf(
                 "{BFBA5779-94F3-6106-91E5-4139BE7C39D8}.jpg",
                 "{66C9BCCE-FC69-43F5-B0B3-BE9D4FF410B4}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
         "可爱滴捏" to {
             listOf(
@@ -98,7 +98,7 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
                 "{4424263C-D916-0AB4-3EA1-1C9DB1BA4772}.jpg",
                 "{E7CD4B3F-CEEA-70ED-C955-D7EBEBD40190}.jpg",
                 "{AFAE2A86-BED7-3A50-53CD-3AB77F686A37}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
         ".*笑死.*" to {
             listOf(
@@ -106,24 +106,24 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
                 "{15F84B1C-F9A2-94F4-0F60-D68AD227FE00}.jpg",
                 "{F19F61AC-BDB2-DCE7-33D0-36A436B5FBB2}.jpg",
                 "{9E7D12FA-F8BB-12DC-C388-A74F4B554C18}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
-        ".*(v|V)我50.*" to { "{71ED101C-EB7F-DE4F-1089-002775821E2D}.jpg".toImage() },
-        ".*要死了.*" to { "{763F39AA-0F22-E4F8-3993-512DC7A8A841}.jpg".toImage() },
+        ".*(v|V)我50.*" to { "{71ED101C-EB7F-DE4F-1089-002775821E2D}.jpg".toImmutableImage() },
+        ".*要死了.*" to { "{763F39AA-0F22-E4F8-3993-512DC7A8A841}.jpg".toImmutableImage() },
         ".*(睡觉|晚安).*" to {
             if (LocalTime.now() in LocalTime.MIDNIGHT..LocalTime.of(6, 0))
-                "{1DB34403-D6DA-5C2C-C3D2-EF86C4D5E7CF}.gif".toImage()
+                "{1DB34403-D6DA-5C2C-C3D2-EF86C4D5E7CF}.gif".toImmutableImage()
             else "你这个年龄段你睡得着觉?".toText()
         },
-        "有没有.*" to { "{6E32B4F8-3EB6-AA93-47AF-3F8F6B245ECE}.jpg".toImage() },
-        ".*能不能给.*" to { "{27339315-3AEC-C81D-ED68-E76E17518A59}.jpg".toImage() },
+        "有没有.*" to { "{6E32B4F8-3EB6-AA93-47AF-3F8F6B245ECE}.jpg".toImmutableImage() },
+        ".*能不能给.*" to { "{27339315-3AEC-C81D-ED68-E76E17518A59}.jpg".toImmutableImage() },
         "任何邪恶.*" to {
             listOf(
                 "{E6ACDA96-0363-A1F6-E4B3-98D9C2443349}.jpg",
                 "{EF917624-1C61-E78E-E58E-FA06BC6CA6AB}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
-        "如何评价.*" to { "{48019D08-C007-A1BD-9CED-3BFDF0FA03CA}.jpg".toImage() },
+        "如何评价.*" to { "{48019D08-C007-A1BD-9CED-3BFDF0FA03CA}.jpg".toImmutableImage() },
         "(op|OP)笑话" to {
             listOf(
                 "{9D185535-BD52-8FEB-87A3-72C6A71ED77A}.jpg",
@@ -134,34 +134,34 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
                 "{93A38A21-2AB0-A3A8-39CD-6338DEA15609}.jpg",
                 "{F70554AA-757A-647D-683D-677E7BC4B20D}.jpg",
                 "{7B912FCE-2CA3-4D94-9F54-82E0BEA9BCB9}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
         "丁真笑话" to {
             listOf(
                 "{3A5C8B36-F7FF-77C7-BA8E-903CDCFEE7FE}.jpg",
                 "{8F69040B-0B14-CAF9-F9BC-4B1442BDB4CB}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
         "(黑人|尼哥)笑话" to {
             listOf(
                 "{18FB7B7B-C54A-61CE-6BFE-229B5472D0A3}.jpg",
                 "{683A6644-3A4F-A810-CAAE-2AF18859174F}.jpg",
                 "{B5E8F634-676A-CD85-E12B-409CB9223688}.jpg",
-            ).random().toImage()
+            ).random().toImmutableImage()
         },
 //        "(vtb|管人痴)笑话" to {
 //            listOf(
 //            ).random().toImage()
 //        },
         ".*(泪目|哭了).*" to { "擦擦".toText() },
-        "(?=.*晕).{0,5}" to { "{B51F2400-6BCC-EF9F-FC81-249DE7F7AA40}.png".toImage() },
-        "(?=.*银趴)(?=.*加).*" to { "{A871CDDD-82BB-AF4C-A294-F7148C1952D0}.jpg".toImage() },
-        "(?=.*纳西妲)(?=.*可爱).*" to { "{C8B92F29-A620-4567-8C34-57779FF04F5B}.gif".toImage() },
-        "(?=.*迪希雅)(?=.*伤害)(?=.*低).*" to { "{9ECC0D00-71CB-D3A0-161A-1D2C9E0CBB23}.jpg".toImage() },
-        ".*(dnf|DNF).*" to { "{63013DA6-416A-FEB9-2FD9-D9BB13798FEC}.jpg".toImage() },
-        ".*贫乳.*" to { "{F07AB14E-2378-5B70-D0DE-FA749886AA5C}.jpg".toImage() },
-        ".*没氪金.*" to { "{D08D8B99-03AD-A085-829E-95FB60B6186B}.jpg".toImage() },
-        ".*还有救吗.*" to { "{93077556-7FD5-9A52-0AAF-79D88DB1AC21}.jpg".toImage() },
+        "(?=.*晕).{0,5}" to { "{B51F2400-6BCC-EF9F-FC81-249DE7F7AA40}.png".toImmutableImage() },
+        "(?=.*银趴)(?=.*加).*" to { "{A871CDDD-82BB-AF4C-A294-F7148C1952D0}.jpg".toImmutableImage() },
+        "(?=.*纳西妲)(?=.*可爱).*" to { "{C8B92F29-A620-4567-8C34-57779FF04F5B}.gif".toImmutableImage() },
+        "(?=.*迪希雅)(?=.*伤害)(?=.*低).*" to { "{9ECC0D00-71CB-D3A0-161A-1D2C9E0CBB23}.jpg".toImmutableImage() },
+        ".*(dnf|DNF).*" to { "{63013DA6-416A-FEB9-2FD9-D9BB13798FEC}.jpg".toImmutableImage() },
+        ".*贫乳.*" to { "{F07AB14E-2378-5B70-D0DE-FA749886AA5C}.jpg".toImmutableImage() },
+        ".*没氪金.*" to { "{D08D8B99-03AD-A085-829E-95FB60B6186B}.jpg".toImmutableImage() },
+        ".*还有救吗.*" to { "{93077556-7FD5-9A52-0AAF-79D88DB1AC21}.jpg".toImmutableImage() },
     ).mapKeys { it.key.toRegex() }
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {

@@ -29,7 +29,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
 
     val prompt =
         """你是ChatGPT-Plus，一个由OpenAI训练的大型语言模型，现在时间是：%s，我是openAI的工程师，接下来你根据我的指令进行回答。
-                |你有权限调用2个外部api，分别是1.Bing在线搜索api(参数为关键字);2.github查看readme(参数为 作者/仓库名)。
+                |你有权限调用2个外部api，分别是1.Bing在线搜索api(参数为关键字);2.github查看readme文件(参数为 作者/仓库名)。
                 |每一次的回答你都可以决定是否调用外部api，由你决定调用的参数是什么。
                 |你的回复格式必须要遵循如下规则：第一行只能回复yes或者no，代表你是否要调用外部api，如果你认为可以开始回答问题了，则回复no，然后回答问题；
                 |如果你选择了yes，则第二行回答api的序号，第三行回答api的输入参数，然后回答结束，不要进行多余的回答。
@@ -57,6 +57,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
 
         val name = sender.nameCardOrNick
         var buffer = getBuffer()
+        var temp = 0
         try {
             coroutineScope {
                 if (args.isEmpty()) {
@@ -85,26 +86,23 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                             continue
                         } else content.substring(9)
                     }
-                    val temp = buffer.length
-                    buffer.append("\n\n${content.trim()}")
                     try {
-                        val reply = handleExternalApi(buffer, subject)
-                        subject.sendMessage(next.quote() + reply)
-                    } catch (_: Exception) {
-                        buffer.setLength(temp)
-                        subject.sendMessage(At(event.sender.id) + "出现错误，请重试")
+                        temp = buffer.length
+                        buffer.append("\n\n${content.trim()}")
+                        handleExternalApi(buffer, subject).apply { subject.sendMessage(next.quote() + this) }
+                    } catch (e: Exception) {
+                        if (buffer.length > 3200) {
+                            subject.sendMessage(At(event.sender.id) + "上下文长度超过限制，已清除上下文，请重试")
+                            buffer = getBuffer()
+                        } else {
+                            buffer.setLength(temp)
+                            subject.sendMessage(At(event.sender.id) + "出现错误，请重试")
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
         } catch (_: TimeoutCancellationException) {
-        } catch (e: Exception) {
-            if (buffer.length > 3200) {
-                subject.sendMessage(At(event.sender.id) + "上下文长度超过限制，已清除上下文，请重试")
-                buffer = getBuffer()
-            } else {
-                subject.sendMessage(At(event.sender.id) + "出现错误，请重试")
-                e.printStackTrace()
-            }
         } finally {
             stateCache[sender.id]?.remove(subject.id)
         }

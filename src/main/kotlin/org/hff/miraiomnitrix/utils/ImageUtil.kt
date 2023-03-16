@@ -1,7 +1,9 @@
 package org.hff.miraiomnitrix.utils
 
 import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.PngWriter
+import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
@@ -12,17 +14,27 @@ object ImageUtil {
 
     fun load(file: File): ImmutableImage = loader.fromFile(file)
 
-    fun load(bytes:ByteArray): ImmutableImage = loader.fromBytes(bytes)
+    fun load(bytes: ByteArray): ImmutableImage = loader.fromBytes(bytes)
+
+    fun load(path: String) = load(ClassPathResource(path).inputStream.use { it.readBytes() })
+
+    fun load(path: String, width: Int, height: Int): ImmutableImage = load(path).scaleTo(width, height)
 
     fun scaleTo(inputStream: InputStream, width: Int, height: Int): ImmutableImage =
         loader.fromStream(inputStream).scaleTo(width, height)
 
-    fun scaleTo(image: ByteArray, width: Int, height: Int): ImmutableImage = loader.fromBytes(image).scaleTo(width, height)
+    fun scaleTo(image: ByteArray, width: Int, height: Int): ImmutableImage =
+        loader.fromBytes(image).scaleTo(width, height)
 
     fun ImmutableImage.overlayToStream(image: ImmutableImage, x: Int, y: Int) =
         ByteArrayInputStream(this.overlay(image, x, y).bytes(PngWriter()))
 
-    fun ImmutableImage.toStream() = ByteArrayInputStream(this.bytes(PngWriter()))
+    fun ImmutableImage.toStream() = this.toStream(PngWriter())
+
+    fun ImmutableImage.toStream(write: ImageWriter) = ByteArrayInputStream(this.bytes(write))
+
+    fun InputStream.toImmutableImage(width: Int, height: Int): ImmutableImage =
+        loader.fromStream(this).scaleTo(width, height)
 
 }
 

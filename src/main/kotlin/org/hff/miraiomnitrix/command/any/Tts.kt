@@ -12,12 +12,15 @@ import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
+import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.config.AccountProperties
 
 
 @Command(name = ["tts", "语音"])
-class Tts(private val accountProperties: AccountProperties) : AnyCommand {
+class Tts(accountProperties: AccountProperties) : AnyCommand {
 
+    private val azureSpeechKey = accountProperties.azureSpeechKey
+    private val azureSpeechRegion = accountProperties.azureSpeechRegion
     private var speechRecognizer: SpeechSynthesizer? = null
 
     val speechConfigXml = """
@@ -35,14 +38,10 @@ class Tts(private val accountProperties: AccountProperties) : AnyCommand {
 """.trimIndent()
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
+        if (azureSpeechKey == null || azureSpeechRegion == null) return result("未配置Azure Speech Key或Region")
         if (args.isEmpty()) return null
         if (speechRecognizer == null) {
-            speechRecognizer = SpeechSynthesizer(
-                SpeechConfig.fromSubscription(
-                    accountProperties.azureSpeechKey,
-                    accountProperties.azureSpeechRegion
-                )
-            )
+            speechRecognizer = SpeechSynthesizer(SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion))
         }
 
         val speechSynthesisResult = withContext(Dispatchers.IO) {

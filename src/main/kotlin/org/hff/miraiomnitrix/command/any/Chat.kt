@@ -49,16 +49,16 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
         }
 
         val name = sender.nameCardOrNick
+        var buffer = StringBuffer(prompt.format(LocalDate.now()))
+        var temp = 0
         try {
             coroutineScope {
-                val buffer = StringBuffer(prompt.format(LocalDate.now()))
                 if (args.isEmpty()) {
                     subject.sendMessage(name + "你好，我是ChatGPT，现在开始问答，请@我并说出你的问题")
                 } else {
                     subject.sendMessage(name + "你好，我是ChatGPT，问答即将开始")
                     buffer.append(args.joinToString("\n"))
-                    val reply = completion(buffer)
-                    subject.sendMessage(message.quote() + reply)
+                    completion(buffer).apply { subject.sendMessage(message.quote() + this) }
                 }
                 while (isActive) {
                     val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
@@ -79,22 +79,24 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
                             continue
                         } else content.substring(5)
                     }
-                    val temp = buffer.length
-                    buffer.append("\n\n${content.trim()}")
                     try {
-                        val reply = completion(buffer)
-                        subject.sendMessage(next.quote() + reply)
-                    } catch (_: Exception) {
-                        buffer.setLength(temp)
-                        subject.sendMessage(At(event.sender.id) + "出现错误，请重试")
+                        temp = buffer.length
+                        buffer.append("\n\n${content.trim()}")
+                        completion(buffer).apply { subject.sendMessage(next.quote() + this) }
+                    } catch (e: Exception) {
+                        if (buffer.length > 3200) {
+                            subject.sendMessage(At(sender) + "上下文长度超过限制，已清除上下文，请重试")
+                            buffer = StringBuffer(prompt.format(LocalDate.now()))
+                        }else{
+                            buffer.setLength(temp)
+                            subject.sendMessage(At(sender) + "出现错误，请重试")
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
         } catch (_: TimeoutCancellationException) {
             subject.sendMessage(At(event.sender.id) + "超时，问答已结束")
-        } catch (e: Exception) {
-            subject.sendMessage(At(event.sender.id) + "出现错误，请重试")
-            e.printStackTrace()
         } finally {
             stateCache[sender.id]?.remove(subject.id)
         }

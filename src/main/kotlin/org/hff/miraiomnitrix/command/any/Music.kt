@@ -3,7 +3,6 @@ package org.hff.miraiomnitrix.command.any
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
-import net.mamoe.mirai.message.data.toMessageChain
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
@@ -36,7 +35,7 @@ class Music : AnyCommand {
             musicUrl = "http://music.163.com/song/media/outer/url?id=${song.id}",
             brief = "[分享]" + song.name,
         )
-        return result(musicShare.toMessageChain())
+        return result(musicShare)
     }
 
 
