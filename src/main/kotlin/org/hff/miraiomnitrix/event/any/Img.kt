@@ -1,16 +1,12 @@
 package org.hff.miraiomnitrix.event.any
 
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import org.hff.miraiomnitrix.event.*
-import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.ImageUtil
+import org.hff.miraiomnitrix.utils.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
-import org.hff.miraiomnitrix.utils.Util
-import org.hff.miraiomnitrix.utils.getInfo
 
 @Event(priority = 3)
 class Img : AnyEvent {
@@ -39,12 +35,8 @@ class Img : AnyEvent {
                     HttpUtil.getInputStream(image.queryUrl())
                 }.toImmutableImage(400, 400)
                 val bottom = top.copy().scaleTo(60, 60)
-                always.overlay(top, 0, 0).overlay(bottom, 230, 420).toStream().use {
-                    val upload = subject.uploadImage(it)
-                    val send = subject.sendMessage(upload)
-                    Cache.imageCache.put(send.source.internalIds[0], upload.imageId)
-                    return stop()
-                }
+                always.overlay(top, 0, 0).overlay(bottom, 230, 420).toStream().use { subject.sendImage(it) }
+                return stop()
             }
         }
 

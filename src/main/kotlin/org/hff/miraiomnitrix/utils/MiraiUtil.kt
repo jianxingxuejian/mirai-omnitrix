@@ -16,7 +16,7 @@ fun MessageEvent.getInfo() = Triple(this.subject, this.sender, this.message)
 
 fun GroupMessageEvent.getInfo() = Triple(this.group, this.sender, this.message)
 
-fun String.toImmutableImage() = Image(this)
+fun String.toImage() = Image(this)
 
 fun String.toText() = PlainText(this)
 

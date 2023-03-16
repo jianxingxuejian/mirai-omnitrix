@@ -15,16 +15,18 @@ import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
+import org.springframework.core.io.Resource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.Color
 import java.awt.Font
 import java.io.ByteArrayInputStream
+import java.io.InputStream
 import kotlin.collections.set
 
 @Command(name = ["随机老婆", "老婆", "waifu"])
 class RandomWaifu : GroupCommand {
 
-    private val avatars = hashMapOf<String, ByteArray>()
+    private val avatars = hashMapOf<String, Resource>()
 
     private val bottom1 = ImageUtil.load("/img/other/1.jpg")
     private val bottom2 = ImageUtil.load("/img/other/2.jpg")
@@ -35,7 +37,7 @@ class RandomWaifu : GroupCommand {
         files.forEach {
             val name = it.filename?.substringBeforeLast(".")
             if (name != null) {
-                it.inputStream.use { stream -> avatars[name] = stream.readBytes() }
+                avatars[name] = it
             }
         }
     }
@@ -53,16 +55,15 @@ class RandomWaifu : GroupCommand {
             args[0] == "二次元" || args[0] == "动漫" -> {
                 val name = avatars.keys.random()
                 val names = sender.nameCardOrNick + avatars.keys.random()
-                val right = avatars[name]!!
-                draw(left, right, names).use { group.sendImage(it) }
+                avatars[name]!!.inputStream.use { draw(left, it, names).use { img -> group.sendImage(img) } }
             }
 
             else -> {
                 when (val qq = Util.getQq(args)) {
                     null -> {
-                        val right = avatars[args[0]] ?: return result("没有找到角色")
+                        val avatar = avatars[args[0]] ?: return result("没有找到角色")
                         val names = sender.nameCardOrNick + " " + args[0]
-                        draw(left, right, names).use { group.sendImage(it) }
+                        avatar.inputStream.use { draw(left, it, names).use { img -> group.sendImage(img) } }
                     }
 
                     else -> {
@@ -77,20 +78,20 @@ class RandomWaifu : GroupCommand {
     }
 
     private fun draw(left: Long, right: Long, names: String): ByteArrayInputStream {
-        val rightByteArray = Util.getQqImg(right).use { it.readBytes() }
+        val rightByteArray = Util.getQqImg(right)
         return draw(left, rightByteArray, names)
     }
 
-    private fun draw(left: Long, right: ByteArray, names: String): ByteArrayInputStream {
-        val leftByteArray = Util.getQqImg(left).use { it.readBytes() }
+    private fun draw(left: Long, rightIs: InputStream, names: String): ByteArrayInputStream {
+        val leftIs = Util.getQqImg(left)
         return when ((1..3).random()) {
-            1 -> draw1(leftByteArray, right, names)
-            2 -> draw2(leftByteArray, right, names)
-            else -> draw3(leftByteArray, right)
+            1 -> draw1(leftIs, rightIs, names)
+            2 -> draw2(leftIs, rightIs, names)
+            else -> draw3(leftIs, rightIs)
         }
     }
 
-    private fun draw1(left: ByteArray, right: ByteArray, names: String): ByteArrayInputStream {
+    private fun draw1(left: InputStream, right: InputStream, names: String): ByteArrayInputStream {
         val imgLeft = ImageUtil.scaleTo(left, 160, 160)
         val imgRight = ImageUtil.scaleTo(right, 160, 160)
         val context = GraphicsContext {
@@ -101,7 +102,7 @@ class RandomWaifu : GroupCommand {
         return Canvas(bottom1).draw(text).image.overlay(imgLeft, 602, 100).overlay(imgRight, 768, 100).toStream()
     }
 
-    private fun draw2(left: ByteArray, right: ByteArray, names: String): ByteArrayInputStream {
+    private fun draw2(left: InputStream, right: InputStream, names: String): ByteArrayInputStream {
         val imgLeft = ImageUtil.scaleTo(left, 160, 160)
         val imgRight = ImageUtil.scaleTo(right, 160, 160)
         val context = GraphicsContext {
@@ -112,7 +113,7 @@ class RandomWaifu : GroupCommand {
         return Canvas(bottom2).draw(text).image.overlay(imgLeft, 575, 335).overlay(imgRight, 745, 335).toStream()
     }
 
-    private fun draw3(left: ByteArray, right: ByteArray): ByteArrayInputStream {
+    private fun draw3(left: InputStream, right: InputStream): ByteArrayInputStream {
         val imgLeft = ImageUtil.scaleTo(left, 90, 90)
         val imgRight = ImageUtil.scaleTo(right, 90, 90)
         return bottom3.overlay(imgLeft, 125, 275).overlay(imgRight, 220, 275).toStream()
