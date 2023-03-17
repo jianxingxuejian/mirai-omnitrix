@@ -7,7 +7,7 @@ import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.sendImage
+import org.hff.miraiomnitrix.utils.sendImageAndCache
 
 @Command(name = ["壁纸", "bizhi"])
 class Wallpaper : AnyCommand {
@@ -53,13 +53,13 @@ class Wallpaper : AnyCommand {
             val apiResult = HttpUtil.getString(vipUrl + sort)
             if (apiResult.isBlank()) return result("api获取为空")
             val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-            HttpUtil.getInputStream(url).use { return result(subject.sendImage(it)) }
+            HttpUtil.getInputStream(url).use { subject.sendImageAndCache(it) }.run { return null }
         }
         urls.forEach {
             try {
                 val apiResult = HttpUtil.getString(it + sort)
                 val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-                HttpUtil.getInputStream(url).use { img -> return result(subject.sendImage(img)) }
+                HttpUtil.getInputStream(url).use { img -> subject.sendImageAndCache(img) }.run { return null }
             } catch (e: Exception) {
                 return@forEach
             }

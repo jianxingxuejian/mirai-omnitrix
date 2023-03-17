@@ -10,11 +10,11 @@ import java.io.InputStream
 import java.util.*
 
 object SkikoUtil {
+
     private val provider: TypefaceFontProvider = TypefaceFontProvider()
     private val fonts = listOfNotNull(provider, FontMgr.default) +
             ServiceLoader.load(FontMgr::class.java) +
             ServiceLoader.load(TypefaceFontProvider::class.java)
-
 
     fun getFont(family: String, style: FontStyle, size: Float) = Font(matchFamilyStyle(family, style), size)
 

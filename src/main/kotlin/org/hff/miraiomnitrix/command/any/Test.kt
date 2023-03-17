@@ -44,7 +44,6 @@ class Test : AnyCommand {
 """
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        val lightApp = LightApp(jsonString)
-        return result(lightApp)
+        return LightApp(jsonString).let(::result)
     }
 }

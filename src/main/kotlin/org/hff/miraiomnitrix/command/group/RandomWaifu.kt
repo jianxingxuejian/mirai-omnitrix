@@ -3,7 +3,6 @@ package org.hff.miraiomnitrix.command.group
 import com.sksamuel.scrimage.canvas.Canvas
 import com.sksamuel.scrimage.canvas.GraphicsContext
 import com.sksamuel.scrimage.canvas.drawables.Text
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.contact.remarkOrNameCard
 import net.mamoe.mirai.event.events.GroupMessageEvent
@@ -15,6 +14,7 @@ import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
+import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.springframework.core.io.Resource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.Color
@@ -33,8 +33,7 @@ class RandomWaifu : GroupCommand {
     private val bottom3 = ImageUtil.load("/img/other/3.jpg")
 
     init {
-        val files = PathMatchingResourcePatternResolver().getResources("/img/**/avatar/*")
-        files.forEach {
+        PathMatchingResourcePatternResolver().getResources("/img/**/avatar/*").forEach {
             val name = it.filename?.substringBeforeLast(".")
             if (name != null) {
                 avatars[name] = it
@@ -48,14 +47,14 @@ class RandomWaifu : GroupCommand {
         when {
             args.isEmpty() -> {
                 val member = group.members.random()
-                val text = sender.nameCardOrNick + " " + member.nameCardOrNick
-                draw(left, member.id, text).use { group.sendImage(it) }
+                val names = sender.nameCardOrNick + " " + member.nameCardOrNick
+                draw(left, member.id, names).use { group.sendImageAndCache(it) }
             }
 
             args[0] == "二次元" || args[0] == "动漫" -> {
                 val name = avatars.keys.random()
                 val names = sender.nameCardOrNick + avatars.keys.random()
-                avatars[name]!!.inputStream.use { draw(left, it, names).use { img -> group.sendImage(img) } }
+                avatars[name]!!.inputStream.use { draw(left, it, names).use { img -> group.sendImageAndCache(img) } }
             }
 
             else -> {
@@ -63,13 +62,13 @@ class RandomWaifu : GroupCommand {
                     null -> {
                         val avatar = avatars[args[0]] ?: return result("没有找到角色")
                         val names = sender.nameCardOrNick + " " + args[0]
-                        avatar.inputStream.use { draw(left, it, names).use { img -> group.sendImage(img) } }
+                        avatar.inputStream.use { draw(left, it, names).use { img -> group.sendImageAndCache(img) } }
                     }
 
                     else -> {
                         val member = group.members[qq] ?: return result("没有找到成员")
                         val names = sender.nameCardOrNick + " " + member.remarkOrNameCard
-                        draw(left, qq, names).use { group.sendImage(it) }
+                        draw(left, qq, names).use { group.sendImageAndCache(it) }
                     }
                 }
             }

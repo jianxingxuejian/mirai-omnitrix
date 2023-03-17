@@ -21,10 +21,6 @@ object Util {
     fun getQqImg(args: List<String>, sender: User) = HttpUtil.getInputStream(QQ_URL + getQq(args, sender))
 }
 
-fun <T> Collection<T>.containsAny(collection: Collection<T>): Boolean {
-    return this.any { it in collection }
-}
-
 fun String.toUrl(): String = URLEncoder.encode(this, StandardCharsets.UTF_8)
 
 

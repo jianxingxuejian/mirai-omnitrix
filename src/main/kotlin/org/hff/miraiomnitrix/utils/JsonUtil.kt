@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken
 import org.hff.miraiomnitrix.exception.MyException
 
 object JsonUtil {
+
     val gson = Gson()
 
     fun getStr(json: String, key: String): String = getKey(json, key).asString
@@ -17,7 +18,7 @@ object JsonUtil {
 
     inline fun <reified T> fromJson(json: String): T = gson.fromJson(json, object : TypeToken<T>() {}.type)
 
-    inline fun <reified T : Any> fromJson(json: String, key: String): T {
+    inline fun <reified T : Any?> fromJson(json: String, key: String): T {
         val element = getKey(json, key)
         if (element.isJsonArray) {
             return gson.fromJson(element.asJsonArray, object : TypeToken<T>() {}.type)

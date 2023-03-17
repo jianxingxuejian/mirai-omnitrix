@@ -8,7 +8,7 @@ import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
-import org.hff.miraiomnitrix.utils.sendImage
+import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
 import java.awt.Color
@@ -35,10 +35,9 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         if (!pa && !tie) return next()
 
         val imageA = getFileByQQ(qq, pa).toImmutableImage(400, 400)
-        val imageB = Util.getQqImg(qq).toImmutableImage(75, 75)
-        val imageC = transformAvatar(imageB)
-        imageA.overlay(imageC, 5, 320).toStream()
-            .use { return stop(group.sendImage(it)) }
+        val imageB = Util.getQqImg(qq).toImmutableImage(75, 75).transformAvatar()
+        imageA.overlay(imageB, 5, 320).toStream().use { group.sendImageAndCache(it) }
+        return stop()
     }
 
     private fun getFileByQQ(qq: Long, pa: Boolean): InputStream {
@@ -52,22 +51,24 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         return files[randomInt].inputStream
     }
 
-    private fun transformAvatar(avatar: ImmutableImage): ImmutableImage {
-        val height = avatar.height
+    private fun ImmutableImage.transformAvatar(): ImmutableImage {
+        val height = this.height
         val bufferedImage = BufferedImage(height, height, BufferedImage.TYPE_4BYTE_ABGR)
 
-        val graphics1 = bufferedImage.createGraphics()
-        graphics1.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        graphics1.clip = Ellipse2D.Double(1.0, 1.0, height - 2.0, height - 2.0)
-        graphics1.drawImage(avatar.awt(), 1, 1, height - 2, height - 2, null)
-        graphics1.dispose()
+        with(bufferedImage.createGraphics()) {
+            setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            clip = Ellipse2D.Double(1.0, 1.0, height - 2.0, height - 2.0)
+            drawImage(this@transformAvatar.awt(), 1, 1, height - 2, height - 2, null)
+            dispose()
+        }
 
-        val graphics2 = bufferedImage.createGraphics()
-        graphics2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        graphics2.stroke = BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-        graphics2.color = Color.WHITE
-        graphics2.drawOval(2, 2, height - 4, height - 4)
-        graphics2.dispose()
+        with(bufferedImage.createGraphics()) {
+            setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            stroke = BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            color = Color.WHITE
+            drawOval(2, 2, height - 4, height - 4)
+            dispose()
+        }
 
         return ImmutableImage.fromAwt(bufferedImage)
     }

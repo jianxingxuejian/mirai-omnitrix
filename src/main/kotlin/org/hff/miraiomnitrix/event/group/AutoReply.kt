@@ -10,7 +10,7 @@ import org.hff.miraiomnitrix.event.EventResult
 import org.hff.miraiomnitrix.event.GroupEvent
 import org.hff.miraiomnitrix.event.next
 import org.hff.miraiomnitrix.utils.getInfo
-import org.hff.miraiomnitrix.utils.sendImage
+import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.hff.miraiomnitrix.utils.toImage
 import org.hff.miraiomnitrix.utils.toText
 import java.lang.management.ManagementFactory
@@ -181,7 +181,7 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
                     replyMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(message.quote() + it) }
 
                 in imgMap.keys ->
-                    imgMap[arg]?.takeIf { tryAcquire() }?.let { group.sendImage(it) }
+                    imgMap[arg]?.takeIf { tryAcquire() }?.let { group.sendImageAndCache(it) }
 
                 else -> regexMap.entries.find { it.key.matches(arg) }?.value?.takeIf { tryAcquire() }
                     ?.let { group.sendMessage(it.invoke()) }

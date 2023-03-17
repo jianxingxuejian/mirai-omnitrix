@@ -13,17 +13,11 @@ class Thesaurus(private val permissionProperties: PermissionProperties) : GroupE
     val thesaurus = hashMapOf<String, MutableSet<String>>()
 
     init {
-        parseData("json/thesaurus1.json")
-        parseData("json/thesaurus2.json")
-        parseData("json/thesaurus3.json")
-    }
-
-    private fun parseData(path: String) {
-        val json = ClassPathResource(path).inputStream.readAllBytes().toString(Charsets.UTF_8)
-        val map: Map<String, List<String>> = JsonUtil.fromJson(json)
-        map.forEach { (key, value) ->
-            if (thesaurus[key] == null) thesaurus[key] = mutableSetOf()
-            thesaurus[key]!!.addAll(value)
+        listOf("json/thesaurus1.json", "json/thesaurus1.json", "json/thesaurus3.json").forEach {
+            val json = ClassPathResource(it).inputStream.bufferedReader().use { reader -> reader.readText() }
+            JsonUtil.fromJson<Map<String, List<String>>>(json).forEach { (key, value) ->
+                thesaurus.getOrPut(key) { mutableSetOf() }.addAll(value)
+            }
         }
     }
 
@@ -40,7 +34,7 @@ class Thesaurus(private val permissionProperties: PermissionProperties) : GroupE
                     return stop("贵安～我是仙境的爱丽丝，你愿意与我一同前往神奇的国度，去寻找真正的乐园吗？")
             }
 
-            else -> list.random().replace("我", "爱丽丝").apply { return stop(this) }
+            else -> return list.random().replace("我", "爱丽丝").let(::stop)
         }
         return next()
     }

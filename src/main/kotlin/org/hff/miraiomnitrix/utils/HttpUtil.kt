@@ -13,86 +13,73 @@ import java.net.http.HttpResponse
 import java.time.Duration
 
 object HttpUtil {
-    private val httpProperties = getBean(HttpProperties::class)
 
-    private val httpClient = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(10))
-        .version(HttpClient.Version.HTTP_1_1)
-        .build()
-    private var proxyClient: HttpClient? = null
+    private val proxy = getBean(HttpProperties::class).proxy
 
-    init {
-        if (httpProperties != null) {
-            val (host, port) = httpProperties.proxy
-            if (host != null && port != null) {
-                proxyClient = HttpClient.newBuilder()
-                    .version(HttpClient.Version.HTTP_1_1)
-                    .proxy(ProxySelector.of(InetSocketAddress(host, port)))
-                    .build()
+    private val httpClient = createHttpClient(10)
+    private val proxyClient = createHttpClient(20, proxy)
+
+    private fun createHttpClient(timeout: Long, proxy: HttpProperties.Proxy? = null): HttpClient {
+        val builder = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(timeout))
+            .version(HttpClient.Version.HTTP_1_1)
+        if (proxy?.host != null && proxy.port != null) {
+            builder.proxy(ProxySelector.of(InetSocketAddress(proxy.host, proxy.port)))
+        }
+        return builder.build()
+    }
+
+
+    fun getStringRes(url: String): HttpResponse<String> =
+        httpClient.send(requestGet(url), HttpResponse.BodyHandlers.ofString())
+
+    fun getString(url: String): String = getStringRes(url).tryGetBody()
+
+    fun getStringRes(url: String, headers: Map<String, String>): HttpResponse<String> =
+        httpClient.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
+
+    fun getString(url: String, headers: Map<String, String>): String = getStringRes(url, headers).tryGetBody()
+
+    fun getStringResByProxy(url: String): HttpResponse<String> =
+        proxyClient.send(requestGet(url), HttpResponse.BodyHandlers.ofString())
+
+    fun getStringByProxy(url: String): String = getStringResByProxy(url).tryGetBody()
+
+    fun getStringResByProxy(url: String, headers: Map<String, String>): HttpResponse<String> =
+        proxyClient.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
+
+    fun getStringByProxy(url: String, headers: Map<String, String>): String =
+        getStringResByProxy(url, headers).tryGetBody()
+
+    fun getInputStreamRes(url: String): HttpResponse<InputStream> =
+        httpClient.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
+
+    fun getInputStream(url: String): InputStream = getInputStreamRes(url).tryGetBody()
+
+    fun getInputStreamResByProxy(url: String): HttpResponse<InputStream> =
+        proxyClient.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
+
+    fun getInputStreamByProxy(url: String): InputStream = getInputStreamResByProxy(url).tryGetBody()
+
+    fun postStringRes(url: String, data: Any): HttpResponse<String> =
+        httpClient.send(requestPost(url, data), HttpResponse.BodyHandlers.ofString())
+
+    fun postString(url: String, data: Any): String = postStringRes(url, data).tryGetBody()
+
+    fun postStringResByProxy(url: String, data: Any, headers: Map<String, String>): HttpResponse<String> =
+        proxyClient.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
+
+    fun postStringByProxy(url: String, data: Any, headers: Map<String, String>): String =
+        postStringResByProxy(url, data, headers).tryGetBody()
+
+    private fun requestGet(url: String) = HttpRequest.newBuilder(URI.create(url)).GET().build()
+
+    private fun requestGet(url: String, headers: Map<String, String>) =
+        HttpRequest.newBuilder(URI.create(url)).GET()
+            .apply {
+                headers.forEach { (name, value) -> setHeader(name, value) }
             }
-        }
-    }
-
-    fun getString(url: String, headers: Map<String, String>? = null): String {
-        val res = httpClient.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
-        return tryGetRightRes(res)
-    }
-
-    fun getStringByProxy(url: String): String {
-        val res = proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofString()) ?: throw RuntimeException()
-        return tryGetRightRes(res)
-    }
-
-    fun getStringByProxy(url: String, headers: Map<String, String>): String {
-        val res = proxyClient?.send(requestGet(url, headers), HttpResponse.BodyHandlers.ofString())
-            ?: throw RuntimeException()
-        return tryGetRightRes(res)
-    }
-
-    fun getInputStream(url: String): InputStream {
-        val res = httpClient.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
-        return tryGetRightRes(res)
-    }
-
-    fun getInputStreamByProxy(url: String): InputStream {
-        val res = proxyClient?.send(requestGet(url), HttpResponse.BodyHandlers.ofInputStream())
-        return tryGetRightRes(res)
-    }
-
-    fun postString(url: String, data: Any): String {
-        val res = httpClient.send(requestPost(url, data), HttpResponse.BodyHandlers.ofString())
-        return tryGetRightRes(res)
-    }
-
-    fun postStringByProxy( url: String, data: Any, headers: Map<String, String>? = null ): String {
-        val res = proxyClient?.send(requestPost(url, data, headers), HttpResponse.BodyHandlers.ofString())
-        return tryGetRightRes(res)
-    }
-
-    private fun requestGetBuilder(url: String) = HttpRequest.newBuilder(URI.create(url)).GET()
-
-    private fun requestGet(url: String, headers: Map<String, String>? = null) =
-        if (headers == null) {
-            requestGetBuilder(url).build()
-        } else {
-            val builder = requestGetBuilder(url)
-            headers.forEach { (name, value) -> builder.setHeader(name, value) }
-            builder.build()
-        }
-
-    private fun requestPostBuilder(url: String, data: Any) =
-        HttpRequest.newBuilder(URI.create(url))
-            .POST(HttpRequest.BodyPublishers.ofString(JsonUtil.parse(data)))
-            .header("Content-Type", "application/json")
-
-    private fun requestPost(url: String, data: Any, headers: Map<String, String>?) =
-        if (headers == null) {
-            requestPostBuilder(url, data).build()
-        } else {
-            val builder = requestPostBuilder(url, data)
-            headers.forEach { (name, value) -> builder.setHeader(name, value) }
-            builder.build()
-        }
+            .build()
 
     private fun requestPost(url: String, data: Any) =
         HttpRequest.newBuilder(URI.create(url))
@@ -100,13 +87,19 @@ object HttpUtil {
             .header("Content-Type", "application/json")
             .build()
 
-    private fun <T : Any> tryGetRightRes(res: HttpResponse<T>?): T {
-        if (res == null) throw MyException("无代理配置")
-        if (res.statusCode() != 200) {
-            println("错误码: ${res.statusCode()}，错误信息: ${res.body()}")
-            throw MyException("请求失败")
-        }
-        return res.body()
+    private fun requestPost(url: String, data: Any, headers: Map<String, String>) =
+        HttpRequest.newBuilder(URI.create(url))
+            .POST(HttpRequest.BodyPublishers.ofString(JsonUtil.parse(data)))
+            .header("Content-Type", "application/json")
+            .apply {
+                headers.forEach { (name, value) -> setHeader(name, value) }
+            }
+            .build()
+
+    private fun <T : Any> HttpResponse<T>.tryGetBody(): T {
+        if (this.statusCode() != 200)
+            throw MyException("错误码: ${this.statusCode()}，错误信息: ${this.body()}")
+        return this.body()
     }
 
 }

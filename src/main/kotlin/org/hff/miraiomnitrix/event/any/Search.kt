@@ -39,15 +39,15 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
     suspend fun trySauceNAO(imgUrl: String, subject: Contact): Boolean {
         val saucenaoKey = accountProperties.saucenaoKey ?: return false
         val json = HttpUtil.getStringByProxy("$url$saucenaoKey&url=$imgUrl")
-        val results: List<SauceNAOResult> = JsonUtil.fromJson(json, "results")
-        if (results.isEmpty()) {
-            subject.sendMessage("SauceNAO未找到搜图结果")
+        val results: List<SauceNAOResult>? = JsonUtil.fromJson(json, "results")
+        if (results.isNullOrEmpty()) {
+            subject.sendMessage("SauceNAO未找到搜图结果，切换下一个引擎")
             return false
         }
         val (header, data) = results[0]
         val urls = data.ext_urls
         if (urls.isNullOrEmpty()) {
-            subject.sendMessage("SauceNAO未找到搜图结果")
+            subject.sendMessage("SauceNAO未找到搜图结果，切换下一个引擎")
             return false
         }
         val similarity = header.similarity.toDouble()
@@ -55,7 +55,6 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
             subject.sendMessage("SauceNAO搜图结果相似度过低，切换下一个引擎")
             return false
         }
-        val thumbnailImg = HttpUtil.getInputStreamByProxy(header.thumbnail)
         val urlsText = if (urls.size == 1) {
             "链接: " + urls[0].trim('"')
         } else {
@@ -63,16 +62,14 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
         }
         buildMessageChain {
             +"SauceNAO搜图结果：\n"
-            +subject.uploadImage(thumbnailImg)
+            +HttpUtil.getInputStreamByProxy(header.thumbnail).use { subject.uploadImage(it) }
             +"相似度：$similarity\n"
             if (data.title != null) +"标题：${data.title}\n"
             +"$urlsText\n"
             val author = data.member_name ?: data.user_name ?: data.creator ?: data.jp_name
             if (author != null) +"作者：$author"
-        }.apply {
-            subject.sendMessage(this)
-            return true
-        }
+        }.let { subject.sendMessage(it) }
+        return true
     }
 
     // 使用图片url请求ascii2d网站的搜图数据，解析第一条的html数据

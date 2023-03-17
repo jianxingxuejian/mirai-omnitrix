@@ -26,7 +26,7 @@ class Music : AnyCommand {
         if (songs.isEmpty()) return result("未找到歌曲")
         val song = songs.find { it.status == 0 } ?: songs[0]
         val artists = song.artists
-        val musicShare = MusicShare(
+        return MusicShare(
             kind = MusicKind.NeteaseCloudMusic,
             title = song.name,
             summary = artists.joinToString("/") { it.name },
@@ -34,8 +34,7 @@ class Music : AnyCommand {
             pictureUrl = artists[0].img1v1Url,
             musicUrl = "http://music.163.com/song/media/outer/url?id=${song.id}",
             brief = "[分享]" + song.name,
-        )
-        return result(musicShare)
+        ).let(::result)
     }
 
 

@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.command.any
 
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
@@ -16,8 +15,7 @@ class Choyen : AnyCommand {
 
     override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
         if (args.size < 2) return result("参数错误")
-        draw(args[0], args[1]).use { event.subject.sendImage(it) }
-        return null
+        return draw(args[0], args[1]).use { event.subject.uploadImage(it) }.let(::result)
     }
 
     fun draw(top: String, bottom: String): SkiaExternalResource {

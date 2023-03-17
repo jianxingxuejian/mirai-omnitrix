@@ -14,10 +14,9 @@ object SpringUtil : ApplicationContextAware {
         context = applicationContext
     }
 
-    fun <T : Any> getBean(beanClass: KClass<out T>) = context?.getBean(beanClass.java)
+    fun <T : Any> getBean(beanClass: KClass<out T>) = context!!.getBean(beanClass.java)
 
-    fun getBeansWithAnnotation(annotationClass: KClass<out Annotation>): Map<String, Any>? {
-        return context?.getBeansWithAnnotation(annotationClass.java)
-    }
+    fun getBeansWithAnnotation(annotationClass: KClass<out Annotation>): Map<String, Any>? =
+        context?.getBeansWithAnnotation(annotationClass.java)
 
 }

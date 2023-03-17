@@ -5,16 +5,13 @@ import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayInputStream
-import java.io.File
 import java.io.InputStream
 
 object ImageUtil {
 
     private val loader = ImmutableImage.loader()
 
-    fun load(file: File): ImmutableImage = loader.fromFile(file)
-
-    fun load(bytes: ByteArray): ImmutableImage = loader.fromBytes(bytes)
+    private fun load(bytes: ByteArray): ImmutableImage = loader.fromBytes(bytes)
 
     fun load(path: String) = load(ClassPathResource(path).inputStream.use { it.readBytes() })
 

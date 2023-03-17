@@ -30,14 +30,13 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
         }
         val json = HttpUtil.getString(videoUrl, param)
         val data: BiliVideoInfo = JsonUtil.fromJson(json, "data")
-        val img = HttpUtil.getInputStream(data.pic).use { subject.uploadImage(it) }
-        buildMessageChain {
-            +img
+        return buildMessageChain {
+            +HttpUtil.getInputStream(data.pic).use { subject.uploadImage(it) }
             +"标题：${data.title}\n"
             +"简介：${data.desc.take(100)}${if (data.desc.length > 100) "……" else ""}\n"
             +"UP主: ${data.owner.name}\n"
             +"链接：https://www.bilibili.com/video/$first\n"
-        }.apply { return stop(this) }
+        }.let(::stop)
     }
 
     data class BiliVideoInfo(

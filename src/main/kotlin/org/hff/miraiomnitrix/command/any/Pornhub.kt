@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.command.any
 
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
@@ -19,8 +18,7 @@ class Pornhub : AnyCommand {
         val first = args.getOrElse(0) { "Porn" }
         val second = args.getOrElse(1) { "hub" }
         val fontFamily = if (args.size >= 3) args.drop(2).joinToString(" ") else null
-        draw(first, second, fontFamily).use { event.subject.sendImage(it) }
-        return null
+        return draw(first, second, fontFamily).use { event.subject.uploadImage(it) }.let(::result)
     }
 
     fun draw(porn: String = "Porn", hub: String = "Hub", fontFamily: String?): SkiaExternalResource {
