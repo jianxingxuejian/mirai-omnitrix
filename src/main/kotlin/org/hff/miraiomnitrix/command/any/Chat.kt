@@ -58,7 +58,7 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
                 } else {
                     subject.sendMessage(name + "你好，我是ChatGPT，问答即将开始")
                     buffer.append(args.joinToString("\n"))
-                    completion(buffer).apply { subject.sendMessage(message.quote() + this) }
+                    completion(buffer).let { subject.sendMessage(message.quote() + it) }
                 }
                 while (isActive) {
                     val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
@@ -82,7 +82,7 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
                     try {
                         temp = buffer.length
                         buffer.append("\n\n${content.trim()}")
-                        completion(buffer).apply { subject.sendMessage(next.quote() + this) }
+                        completion(buffer).let { subject.sendMessage(next.quote() + it) }
                     } catch (e: Exception) {
                         if (buffer.length > 3200) {
                             subject.sendMessage(At(sender) + "上下文长度超过限制，已清除上下文，请重试")

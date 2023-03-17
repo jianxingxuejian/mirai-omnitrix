@@ -98,10 +98,8 @@ object CommandManager {
                     isAt = true
                     string = string.replace(atBot, "")
                     // 如果是群消息，且群号在不需要chatplus指令头的群号列表中
-                    permissionProperties?.chatPlusNotNeedCommandGroup?.let { list ->
-                        if (list.isNotEmpty() && list.contains(event.subject.id)) {
-                            return Triple("chatplus", string.split(Regex("\\s+")), true)
-                        }
+                    if (permissionProperties.chatPlusNotNeedCommandGroup.contains(event.subject.id)) {
+                        return Triple("chatplus", string.split(Regex("\\s+")), true)
                     }
                 }
             }

@@ -58,7 +58,7 @@ class Setu : AnyCommand {
 
         if (forwardBuilder.size > 0) {
             subject.sendMessage(forwardBuilder.build())
-                .apply { if (r18 == 1) recallIn(60 * 1000) }
+                .run { if (r18 == 1) recallIn(60 * 1000) }
             return null
         }
         return result("没有找到符合条件的涩图")
@@ -72,7 +72,7 @@ class Setu : AnyCommand {
                 buildMessageChain {
                     +subject.uploadImage(it)
                     if (match != null) +"\nhttps://www.pixiv.net/artworks/${match.value}"
-                }.apply(::add)
+                }.run(::add)
             }
         } catch (_: Exception) {
         }

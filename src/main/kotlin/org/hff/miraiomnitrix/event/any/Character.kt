@@ -8,7 +8,7 @@ import org.hff.miraiomnitrix.utils.SpringUtil
 import org.hff.miraiomnitrix.utils.getAsStr
 
 object Character {
-    private val token = SpringUtil.getBean(AccountProperties::class)?.characterAiToken
+    private val token = SpringUtil.getBean(AccountProperties::class).characterAiToken
     private const val url = "https://beta.character.ai/chat/streaming/"
     private val characterCache = mutableMapOf<String, Triple<String, String, String>>()
     private var chatting = false

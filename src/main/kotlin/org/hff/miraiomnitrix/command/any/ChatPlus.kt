@@ -64,8 +64,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                     subject.sendMessage(name + "你好，我是ChatGPT-Plus，请@我并说出你的问题")
                 } else {
                     buffer.append(args.joinToString("\n"))
-                    val reply = handleExternalApi(buffer, subject)
-                    subject.sendMessage(message.quote() + reply)
+                    handleExternalApi(buffer, subject).let { subject.sendMessage(message.quote() + it) }
                 }
                 while (isActive) {
                     val next = event.nextMessage(300_000L, EventPriority.HIGH, intercept = true)
@@ -89,7 +88,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
                     try {
                         temp = buffer.length
                         buffer.append("\n\n${content.trim()}")
-                        handleExternalApi(buffer, subject).apply { subject.sendMessage(next.quote() + this) }
+                        handleExternalApi(buffer, subject).let { subject.sendMessage(next.quote() + it) }
                     } catch (e: Exception) {
                         if (buffer.length > 3200) {
                             subject.sendMessage(At(event.sender.id) + "上下文长度超过限制，已清除上下文，请重试")

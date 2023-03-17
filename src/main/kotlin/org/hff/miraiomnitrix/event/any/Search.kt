@@ -99,7 +99,7 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
             +subject.uploadImage(thumbnailImg)
             +"相似度：$similarity\n"
             +"$urlsText\n"
-        }.apply { return true }
+        }.run { return true }
     }
 
     data class SauceNAOResult(
