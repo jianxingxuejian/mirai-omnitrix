@@ -174,10 +174,21 @@ class MiraiOmnitrixApplicationTests {
         Jsoup.parse(html).getElementsByClass("collection-avatar__item").forEachIndexed { index, element ->
             run {
                 val title = element.child(1).text()
-                val name = regex.find(title)?.groupValues?.get(1)?.replace( Regex("[^a-zA-Z0-9\u4E00-\u9FA5]+"), "")
+                val name = regex.find(title)?.groupValues?.get(1)?.replace(Regex("[^a-zA-Z0-9\u4E00-\u9FA5]+"), "")
                 val src = srcList[index]
                 write(src, "src/main/resources/img/bh3/avatar/$name.png")
             }
+        }
+    }
+
+    @Test
+    fun downloadPcrAvatar() {
+        val html = HttpUtil.getString("https://wiki.biligame.com/pcr/%E8%A7%92%E8%89%B2%E5%9B%BE%E9%89%B4")
+        Jsoup.parse(html).getElementById("CardSelectTr")?.child(0)?.children()?.drop(1)?.forEach {
+            val icon = it.child(0).child(0).child(0).attr("src")
+            val name = it.child(1).text()
+            val path = "src/main/resources/img/pcr/avatar/$name.png"
+            write(icon, path)
         }
     }
 

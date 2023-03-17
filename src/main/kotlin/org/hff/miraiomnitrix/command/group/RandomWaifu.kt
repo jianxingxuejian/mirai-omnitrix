@@ -6,15 +6,14 @@ import com.sksamuel.scrimage.canvas.drawables.Text
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.contact.remarkOrNameCard
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.message.data.Image
+import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.command.result
-import org.hff.miraiomnitrix.utils.ImageUtil
+import org.hff.miraiomnitrix.utils.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
-import org.hff.miraiomnitrix.utils.Util
-import org.hff.miraiomnitrix.utils.getInfo
-import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.springframework.core.io.Resource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.Color
@@ -42,9 +41,16 @@ class RandomWaifu : GroupCommand {
     }
 
     override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
-        val (group, sender) = event.getInfo()
+        val (group, sender, message) = event.getInfo()
         val left = sender.id
+        val image = message[Image.Key]
         when {
+            image != null -> {
+                val names = if (args.isEmpty()) sender.nameCardOrNick else sender.nameCardOrNick + args[0]
+                HttpUtil.getInputStream(image.queryUrl())
+                    .use { draw(left, it, names).use { img -> group.sendImageAndCache(img) } }
+            }
+
             args.isEmpty() -> {
                 val member = group.members.random()
                 val names = sender.nameCardOrNick + " " + member.nameCardOrNick
