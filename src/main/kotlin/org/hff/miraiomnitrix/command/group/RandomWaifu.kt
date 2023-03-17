@@ -8,10 +8,12 @@ import net.mamoe.mirai.contact.remarkOrNameCard
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
+import net.mamoe.mirai.message.data.QuoteReply
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.command.result
+import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.utils.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.springframework.core.io.Resource
@@ -43,11 +45,14 @@ class RandomWaifu : GroupCommand {
     override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
         val (group, sender, message) = event.getInfo()
         val left = sender.id
-        val image = message[Image.Key]
+        val quote = message[QuoteReply.Key]
+        val imgUrl =
+            if (quote != null) Cache.imageCache.getIfPresent(quote.source.internalIds[0])?.let { Image(it).queryUrl() }
+            else message[Image.Key]?.queryUrl()
         when {
-            image != null -> {
-                val names = if (args.isEmpty()) sender.nameCardOrNick else sender.nameCardOrNick + args[0]
-                HttpUtil.getInputStream(image.queryUrl())
+            imgUrl != null -> {
+                val names = if (args.isEmpty()) sender.nameCardOrNick else sender.nameCardOrNick + " " + args[0]
+                HttpUtil.getInputStream(imgUrl)
                     .use { draw(left, it, names).use { img -> group.sendImageAndCache(img) } }
             }
 
