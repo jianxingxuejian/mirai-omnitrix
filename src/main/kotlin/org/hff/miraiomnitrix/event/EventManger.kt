@@ -3,6 +3,7 @@ package org.hff.miraiomnitrix.event
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
+import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.utils.SpringUtil
 
 object EventManger {
@@ -49,12 +50,18 @@ object EventManger {
         event: T,
         isAt: Boolean = false
     ) {
-        for (handler in this) {
-            val (stop, msg, msgChain) = handler.handle(args, event, isAt)
-            val subject = event.subject
-            if (msg != null) subject.sendMessage(msg)
-            if (msgChain != null) subject.sendMessage(msgChain)
-            if (stop) break
+        val subject = event.subject
+        try {
+            for (handler in this) {
+                val (stop, msg, msgChain) = handler.handle(args, event, isAt)
+                if (msg != null) subject.sendMessage(msg)
+                if (msgChain != null) subject.sendMessage(msgChain)
+                if (stop) break
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Cache.errorCache.put(subject.id, e)
+            subject.sendMessage(e.message ?: "未知错误")
         }
     }
 

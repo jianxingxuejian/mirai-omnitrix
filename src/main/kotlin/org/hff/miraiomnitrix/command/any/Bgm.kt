@@ -54,7 +54,7 @@ class Bgm : AnyCommand {
                             if (summary.isNotBlank()) +"简介: $summary\n"
                             +"评分: ${rating?.score ?: "暂无评分"}(${rating?.total ?: 0}人)\n"
                             +"链接: $url"
-                        }.apply(forward::add)
+                        }.run(forward::add)
                     }
                 }
             }
@@ -94,7 +94,7 @@ class Bgm : AnyCommand {
                         +"评分: ${if (score != null && score != 0.0) score else "暂无评分"}\n"
                         if (summary?.isNotBlank() == true) +"简介: $summary\n"
                         if (tags.isNotEmpty()) +"标签: ${tags.joinToString { tag -> tag.name }}"
-                    }.apply(forward::add)
+                    }.run(forward::add)
                 }
             }
         }
