@@ -12,6 +12,7 @@ import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.event.EventManger
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
+import xyz.cssxsh.mirai.tool.FixProtocolVersion
 
 @Component
 class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
@@ -24,6 +25,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
         runBlocking(Dispatchers.IO) {
             val (qq, password) = botProperties
             if (qq == null || password == null) throw IllegalArgumentException("qq或者密码为空，请先在配置文件里添加")
+            FixProtocolVersion.update()
             bot = BotFactory.newBot(qq, password) {
                 protocol = BotConfiguration.MiraiProtocol.IPAD
                 fileBasedDeviceInfo("device.json")
