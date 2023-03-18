@@ -5,10 +5,7 @@ import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.ForwardMessageBuilder
-import net.mamoe.mirai.message.data.Image
-import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.message.data.*
 import org.hff.miraiomnitrix.event.any.Cache
 import java.io.InputStream
 
@@ -35,3 +32,11 @@ suspend fun Contact.sendImageAndCache(image: Image) {
 
 suspend fun Contact.sendMessage(forwardMessageBuilder: ForwardMessageBuilder) =
     this.sendMessage(forwardMessageBuilder.build())
+
+fun MessageChain.getImage(): Image? {
+    val quote = this[QuoteReply.Key]
+    return if (quote != null)
+        Cache.imageCache.getIfPresent(quote.source.internalIds[0])?.let { Image(it) }
+    else
+        this[Image.Key]
+}

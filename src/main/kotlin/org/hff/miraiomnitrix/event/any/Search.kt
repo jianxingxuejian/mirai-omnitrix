@@ -3,14 +3,13 @@ package org.hff.miraiomnitrix.event.any
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import net.mamoe.mirai.message.data.QuoteReply
 import net.mamoe.mirai.message.data.buildMessageChain
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.getImage
 import org.hff.miraiomnitrix.utils.getInfo
 import org.jsoup.Jsoup
 
@@ -25,11 +24,7 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
 
         val (subject, _, message) = event.getInfo()
 
-        val quote = message[QuoteReply.Key]
-        val imgUrl = if (quote != null) {
-            val imageId = Cache.imageCache.getIfPresent(quote.source.internalIds[0]) ?: return next()
-            Image(imageId).queryUrl()
-        } else message[Image.Key]?.queryUrl() ?: return next()
+        val imgUrl = message.getImage()?.queryUrl() ?: return next()
 
         trySauceNAO(imgUrl, subject)
 

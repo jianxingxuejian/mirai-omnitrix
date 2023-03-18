@@ -13,3 +13,11 @@ CREATE TABLE IF NOT EXISTS `live`
     `uid`      INTEGER NOT NULL,
     `room_id`  INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS `auto_reply`
+(
+    `id`      INTEGER PRIMARY KEY AUTOINCREMENT,
+    `type`    INTEGER NOT NULL,
+    `keyword` INTEGER NOT NULL,
+    `content` INTEGER NOT NULL
+);
