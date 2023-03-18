@@ -75,6 +75,7 @@ class AutoReply(private val permissionProperties: PermissionProperties) : GroupE
         "火星" to "{9AD711EE-7126-11F0-EA99-E9CF01173324}.jpg",
         "不行" to "{A7B2075C-CA08-8BD9-C7E5-0FB9E8F6A454}.jpg",
         "约吗" to "{588DEAB6-4A76-F6CF-9D39-735142CDC6CF}.jpg",
+        "乐" to "{0683E379-4C80-EED1-F4F0-FCCF72F1AC65}.jpg",
     ).mapValues { it.value.toImage() }
     private val regexMap = mapOf<String, () -> Message>(
         "爱丽丝在吗" to {
