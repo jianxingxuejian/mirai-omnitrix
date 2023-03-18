@@ -43,7 +43,7 @@ class AutoReply(
     }
 
     private val regexMap = mapOf<String, () -> Message>(
-        "爱丽丝在吗" to {
+        "(诺提拉斯|爱丽丝)在吗" to {
             getStatus().toText()
         },
         ".*(睡觉|晚安).*" to {

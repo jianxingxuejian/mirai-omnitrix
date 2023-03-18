@@ -20,6 +20,7 @@ spring:
 bot:
   qq:
   password:
+  hello:
 
 http:
   proxy:

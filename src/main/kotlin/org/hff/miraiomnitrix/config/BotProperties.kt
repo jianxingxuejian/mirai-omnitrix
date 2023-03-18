@@ -9,5 +9,7 @@ data class BotProperties(
     /** qq号 */
     val qq: Long?,
     /** qq密码 */
-    val password: String?
+    val password: String?,
+    /** 招呼语 */
+    val hello: String?,
 )
