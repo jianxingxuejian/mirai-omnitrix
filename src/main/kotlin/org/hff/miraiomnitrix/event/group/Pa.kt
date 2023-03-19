@@ -28,11 +28,11 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         if (args.isEmpty()) return next()
         val (group, sender) = event.getInfo()
 
-        val qq = Util.getQq(args, sender)
         val pa = args.contains("爬")
         val tie = args.contains("贴")
-
         if (!pa && !tie) return next()
+
+        val qq = Util.getQq(args, sender)
 
         val imageA = getFileByQQ(qq, pa).toImmutableImage(400, 400)
         val imageB = Util.getQqImg(qq).toImmutableImage(75, 75).transformAvatar()

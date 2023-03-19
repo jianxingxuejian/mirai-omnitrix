@@ -16,24 +16,36 @@ import org.jsoup.Jsoup
 @Event(priority = 4)
 class Search(private val accountProperties: AccountProperties) : AnyEvent {
 
-    private val url = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
-    private val commands = listOf("st", "搜图", "soutu")
+    private val sauceNAOUrl = "https://saucenao.com/search.php?db=999&output_type=2&numres=1&api_key="
+    private val st = listOf("st", "搜图", "soutu")
+    private val traceUrl = "https://api.trace.moe/search?url="
+    private val sf = listOf("sf", "搜番", "soufan")
     override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
-        if (args.take(2).any { it in commands }.not()) return next()
 
+        val arg = args.take(2)
         val (subject, _, message) = event.getInfo()
 
-        val imgUrl = message.getImage()?.queryUrl() ?: return next()
+        when {
+            arg.any { st.contains(it) } -> {
+                val imgUrl = message.getImage()?.queryUrl() ?: return next()
+                trySauceNAO(imgUrl, subject)
+                return stop()
+            }
 
-        trySauceNAO(imgUrl, subject)
+            arg.any { sf.contains(it) } -> {
+                val imgUrl = message.getImage()?.queryUrl() ?: return next()
+                tracemoe(imgUrl)
+                return stop()
+            }
+        }
 
-        return stop()
+        return next()
     }
 
     suspend fun trySauceNAO(imgUrl: String, subject: Contact): Boolean {
         val saucenaoKey = accountProperties.saucenaoKey ?: return false
-        val json = HttpUtil.getStringByProxy("$url$saucenaoKey&url=$imgUrl")
+        val json = HttpUtil.getStringByProxy("$sauceNAOUrl$saucenaoKey&url=$imgUrl")
         val results: List<SauceNAOResult>? = JsonUtil.fromJson(json, "results")
         if (results.isNullOrEmpty()) {
             subject.sendMessage("SauceNAO未找到搜图结果，切换下一个引擎")
@@ -95,6 +107,11 @@ class Search(private val accountProperties: AccountProperties) : AnyEvent {
             +"相似度：$similarity\n"
             +"$urlsText\n"
         }.run { return true }
+    }
+
+    private fun tracemoe(imgUrl: String) {
+        val json = HttpUtil.getString(traceUrl + imgUrl)
+        println(json)
     }
 
     data class SauceNAOResult(
