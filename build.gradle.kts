@@ -69,6 +69,7 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.40.1.0")
     implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.25.0@jar")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-$target:0.7.54")
+    implementation("com.github.gotson:webp-imageio:0.2.2")
     implementation(files("lib/fix-protocol-version-1.3.0.mirai2.jar"))
 }
 

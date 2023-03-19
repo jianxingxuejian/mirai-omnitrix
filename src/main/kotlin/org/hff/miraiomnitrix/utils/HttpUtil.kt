@@ -22,6 +22,7 @@ object HttpUtil {
     private fun createHttpClient(timeout: Long, proxy: HttpProperties.Proxy? = null): HttpClient {
         val builder = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(timeout))
+            .followRedirects(HttpClient.Redirect.ALWAYS)
             .version(HttpClient.Version.HTTP_1_1)
         if (proxy?.host != null && proxy.port != null) {
             builder.proxy(ProxySelector.of(InetSocketAddress(proxy.host, proxy.port)))
