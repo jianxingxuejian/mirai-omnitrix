@@ -38,8 +38,9 @@ class AutoReply(
             .mapValues { entry -> entry.value.map { it.content } }
         imageMap = list.filter { it.type == ReplyEnum.Image }.groupBy { it.keyword }
             .mapValues { entry -> entry.value.map { it.content.toImage() } }
-        regexImageMap = list.filter { it.type == ReplyEnum.Regex }.groupBy { it.keyword.toRegex() }
+        regexImageMap = list.filter { it.type == ReplyEnum.Regex }.groupBy { it.keyword }
             .mapValues { entry -> entry.value.map { it.content.toImage() } }
+            .mapKeys { it.key.toRegex() }
     }
 
     private val regexMap = mapOf<String, () -> Message>(
@@ -58,7 +59,7 @@ class AutoReply(
         if (args.isEmpty()) return next()
         if (permissionProperties.replyExcludeGroup.contains(event.group.id)) return next()
 
-        val limiter = limiterMap.getOrPut(event.group.id) { RateLimiter.create(0.1) }
+        val limiter = limiterMap.getOrPut(event.group.id) { RateLimiter.create(0.05) }
         val (group, _, message) = event.getInfo()
 
         with(limiter) {
