@@ -4,6 +4,7 @@ import com.google.common.collect.EvictingQueue
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.content
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.getInfo
@@ -24,20 +25,19 @@ class Repeat(private val permissionProperties: PermissionProperties) : GroupEven
 
         val stringQueue = groupMsgMap.getOrPut(group.id) { EvictingQueue.create(10) }
 
-        if (stringQueue.count() < 3) stringQueue.apply { add(content) }.run { return stop() }
+        if (stringQueue.count() < 3) stringQueue.apply { add(content) }.run { return next() }
 
         val last = stringQueue.toList().takeLast(3)
-        if (content == last[0] && last[0] == last[1] && last[1] == last[2]) {
+        return if (content == last[0] && last[0] == last[1] && last[1] == last[2]) {
             stringQueue.removeIf { it == content }
             when (val num = random.nextInt(breaks.size * 2)) {
-                in breaks.indices -> group.sendMessage(breaks[num])
-                else -> group.sendMessage(if (isImage) Image(content) else message)
-            }
+                in breaks.indices -> breaks[num].toPlainText()
+                else -> if (isImage) Image(content) else message
+            }.let(::stop)
         } else {
             stringQueue.add(content)
+            next()
         }
-
-        return next()
     }
 
 }

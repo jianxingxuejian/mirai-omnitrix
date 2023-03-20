@@ -1,10 +1,10 @@
 package org.hff.miraiomnitrix.command.any
 
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.FontFamily
 import org.hff.miraiomnitrix.utils.SkiaExternalResource
 import org.hff.miraiomnitrix.utils.SkikoUtil
@@ -13,9 +13,9 @@ import org.jetbrains.skia.*
 @Command(name = ["红白", "choyen", "5000"])
 class Choyen : AnyCommand {
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        if (args.size < 2) return result("参数错误")
-        return draw(args[0], args[1]).use { event.subject.uploadImage(it) }.let(::result)
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+        if (args.size < 2) return "参数错误".toPlainText()
+        draw(args[0], args[1]).use { return event.subject.uploadImage(it) }
     }
 
     fun draw(top: String, bottom: String): SkiaExternalResource {

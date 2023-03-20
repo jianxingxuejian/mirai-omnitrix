@@ -7,11 +7,11 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
+import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.buildMessageChain
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.*
 
 
@@ -21,7 +21,7 @@ class Setu : AnyCommand {
     private val api1 = "https://api.lolicon.app/setu/v2"
     private val api2 = "https://image.anosu.top/pixiv/json"
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         var r18 = 0
         var num = 1
         val keywords = mutableListOf<String>()
@@ -61,7 +61,7 @@ class Setu : AnyCommand {
                 .run { if (r18 == 1) recallIn(60 * 1000) }
             return null
         }
-        return result("没有找到符合条件的涩图")
+        return "没有找到符合条件的涩图".toPlainText()
     }
 
     suspend fun ForwardMessageBuilder.add(subject: Contact, imgUrl: String) {

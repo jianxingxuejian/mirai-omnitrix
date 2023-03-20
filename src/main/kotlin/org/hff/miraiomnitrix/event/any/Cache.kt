@@ -14,18 +14,8 @@ import java.util.concurrent.TimeUnit
 class Cache : AnyEvent {
 
     companion object {
-
         val imageCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Int, String>()
         val errorCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build<Long, Exception>()
-
-        fun getImgFromCache(message: MessageChain): Image? {
-            val quote = message[QuoteReply.Key]
-            return if (quote != null) {
-                val imageId = imageCache.getIfPresent(quote.source.internalIds[0])
-                if (imageId == null) null
-                else Image(imageId)
-            } else message[Image.Key]
-        }
     }
 
     override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
@@ -34,11 +24,16 @@ class Cache : AnyEvent {
             val stackTrace = errorCache.getIfPresent(event.sender.id)?.stackTrace ?: return next("未找到错误")
             if (stackTrace.isEmpty()) return next("未找到错误")
             val maxLines = (args.getOrNull(1)?.toIntOrNull() ?: 10).coerceIn(1, stackTrace.size)
-            subject.sendMessage(stackTrace.slice(0..maxLines).joinToString("\n"))
+            subject.sendMessage(stackTrace.take(maxLines).joinToString("\n"))
             return stop()
         }
-        val image = message[Image.Key] ?: return next()
-        imageCache.put(message.source.internalIds[0], image.imageId)
+        message[Image.Key]?.run { imageCache.put(message.source.internalIds[0], imageId) }
         return next()
     }
 }
+
+fun MessageChain.getImageFromCache(): Image? =
+    when (val quote = this[QuoteReply.Key]) {
+        null -> this[Image.Key]
+        else -> Cache.imageCache.getIfPresent(quote.source.internalIds[0])?.let { Image(it) }
+    }

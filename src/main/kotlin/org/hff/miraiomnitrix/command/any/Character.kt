@@ -6,11 +6,11 @@ import kotlinx.coroutines.isActive
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.toPlainText
 import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.db.service.CharacterService
 import org.hff.miraiomnitrix.utils.HttpUtil
@@ -28,40 +28,31 @@ class Character(
     private val url = "https://beta.character.ai/chat"
     private val historyCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build<Long, Long>()
 
-    fun help() = result(
-        """可用角色如下: ${characterService.getCharactersName()}
-            |请使用指令+角色名开始聊天
-            |新增角色 add 角色名 角色external_id
-            |删除角色 del 角色名
-            """.trimMargin()
-    )
+    fun help() = """
+        |可用角色如下: ${characterService.getCharactersName()}
+        |请使用指令+角色名开始聊天
+        |新增角色 add 角色名 角色external_id
+        |删除角色 del 角色名
+    """.trimMargin().toPlainText()
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         if (args.isEmpty()) return help()
 
         when (args[0]) {
             "add" -> {
-                if (args.size < 3) return result("参数错误")
+                if (args.size < 3) return "参数错误".toPlainText()
                 val count = characterService.getCountByName(args[1])
                 if (count > 0) {
-                    return result("该角色已存在")
+                    return "该角色已存在".toPlainText()
                 }
                 val add = characterService.add(args[1], args[2])
-                return if (add) {
-                    result("角色添加成功")
-                } else {
-                    result("角色添加失败")
-                }
+                return (if (add) "角色删除成功" else "角色删除失败").toPlainText()
             }
 
             "del", "remove" -> {
-                if (args.size < 2) return result("参数错误")
+                if (args.size < 2) return "参数错误".toPlainText()
                 val del = characterService.del(args[1])
-                return if (del) {
-                    result("角色删除成功")
-                } else {
-                    result("角色删除失败")
-                }
+                return (if (del) "角色删除成功" else "角色删除失败").toPlainText()
             }
 
         }
@@ -70,10 +61,10 @@ class Character(
 
         val cache = historyCache.getIfPresent(subject.id)
         if (cache == null) historyCache.put(subject.id, sender.id)
-        else if (cache == sender.id) return result(At(sender) + "角色进程已启动，请@机器人进行问答")
+        else if (cache == sender.id) return At(sender) + "角色进程已启动，请@机器人进行问答"
 
-        val entity = characterService.get(args[0]) ?: return result(" 角色不存在")
-        val token = accountProperties.characterAiToken ?: return result("无token")
+        val entity = characterService.get(args[0]) ?: return "角色不存在".toPlainText()
+        val token = accountProperties.characterAiToken ?: return "无token".toPlainText()
         val headers = mapOf(
             "authorization" to token,
             "User-Agent" to "PostmanRuntime/7.31.1",

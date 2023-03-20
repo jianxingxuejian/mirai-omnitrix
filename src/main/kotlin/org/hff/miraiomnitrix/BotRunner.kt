@@ -27,7 +27,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
             if (qq == null || password == null) throw IllegalArgumentException("qq或者密码为空，请先在配置文件里添加")
             FixProtocolVersion.update()
             bot = BotFactory.newBot(qq, password) {
-                protocol = BotConfiguration.MiraiProtocol.IPAD
+                protocol = BotConfiguration.MiraiProtocol.MACOS
                 fileBasedDeviceInfo("device.json")
             }
             bot.login()

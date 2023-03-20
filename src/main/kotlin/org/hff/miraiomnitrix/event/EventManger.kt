@@ -53,9 +53,8 @@ object EventManger {
         val subject = event.subject
         try {
             for (handler in this) {
-                val (stop, msg, msgChain) = handler.handle(args, event, isAt)
-                if (msg != null) subject.sendMessage(msg)
-                if (msgChain != null) subject.sendMessage(msgChain)
+                val (stop, message) = handler.handle(args, event, isAt)
+                if (message != null) subject.sendMessage(message)
                 if (stop) break
             }
         } catch (e: Exception) {

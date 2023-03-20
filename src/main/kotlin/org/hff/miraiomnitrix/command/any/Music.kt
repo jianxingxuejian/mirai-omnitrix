@@ -1,12 +1,12 @@
 package org.hff.miraiomnitrix.command.any
 
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import java.net.URLEncoder
@@ -16,14 +16,14 @@ class Music : AnyCommand {
 
     private val searchUrl = "http://music.163.com/api/search/get?type=1&limit=20&s="
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        if (args.isEmpty()) return result("请输入歌曲名")
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+        if (args.isEmpty()) return "请输入歌曲名".toPlainText()
         val name = args.joinToString(" ")
         val encode = URLEncoder.encode(name, Charsets.UTF_8)
         val json = HttpUtil.getString(searchUrl + encode)
         val result: MusicResult = JsonUtil.fromJson(json, "result")
         val songs = result.songs
-        if (songs.isEmpty()) return result("未找到歌曲")
+        if (songs.isEmpty()) return "未找到歌曲".toPlainText()
         val song = songs.find { it.status == 0 } ?: songs[0]
         val artists = song.artists
         return MusicShare(
@@ -34,7 +34,7 @@ class Music : AnyCommand {
             pictureUrl = artists[0].img1v1Url,
             musicUrl = "http://music.163.com/song/media/outer/url?id=${song.id}",
             brief = "[分享]" + song.name,
-        ).let(::result)
+        )
     }
 
 

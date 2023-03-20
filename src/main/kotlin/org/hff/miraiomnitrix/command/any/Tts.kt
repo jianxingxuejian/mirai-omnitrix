@@ -8,11 +8,11 @@ import kotlinx.coroutines.withContext
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.toPlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.config.AccountProperties
 
 
@@ -37,8 +37,8 @@ class Tts(accountProperties: AccountProperties) : AnyCommand {
     </speak>
 """.trimIndent()
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        if (azureSpeechKey == null || azureSpeechRegion == null) return result("未配置Azure Speech Key或Region")
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+        if (azureSpeechKey == null || azureSpeechRegion == null) return "未配置Azure Speech Key或Region".toPlainText()
         if (args.isEmpty()) return null
         if (speechRecognizer == null) {
             speechRecognizer = SpeechSynthesizer(SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion))
@@ -49,9 +49,9 @@ class Tts(accountProperties: AccountProperties) : AnyCommand {
         }
         if (speechSynthesisResult.reason == ResultReason.SynthesizingAudioCompleted) {
             speechSynthesisResult.audioData?.let {
-                return when (val subject = event.subject) {
-                    is Group -> subject.uploadAudio(it.toExternalResource()).let(::result)
-                    is Friend -> subject.uploadAudio(it.toExternalResource()).let(::result)
+                when (val subject = event.subject) {
+                    is Group -> subject.uploadAudio(it.toExternalResource())
+                    is Friend -> subject.uploadAudio(it.toExternalResource())
                     else -> null
                 }
             }

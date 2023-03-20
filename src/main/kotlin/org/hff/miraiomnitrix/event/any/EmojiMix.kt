@@ -49,8 +49,7 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
             ?: emojiCache[second]?.get(first)
             ?: return next()
         HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
-            .use { subject.sendImageAndCache(it) }
-        return stop()
+            .use { subject.sendImageAndCache(it) }.run { return stop() }
     }
 
     data class Emoji(

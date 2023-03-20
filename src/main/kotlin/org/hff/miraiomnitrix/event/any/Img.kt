@@ -20,18 +20,20 @@ class Img : AnyEvent {
 
         when (args[0]) {
             "急急国王" -> {
-                val qqImg = Util.getQqImg(args, sender).toImmutableImage(100, 125)
-                jjgw.overlay(qqImg, 190, 5).toStream().use { subject.sendImageAndCache(it) }
+                val qqAvatar = (if (args.size == 1) sender.id else args.getQq())
+                    ?.toAvatar()?.use { it.toImmutableImage(100, 125) } ?: return next()
+                jjgw.overlay(qqAvatar, 190, 5).toStream().use { subject.sendImageAndCache(it) }
                 return stop()
             }
 
             "一直" -> {
-                val image = Cache.getImgFromCache(message)
-                val top = if (image == null) {
-                    Util.getQqImg(args, sender)
-                } else {
-                    HttpUtil.getInputStream(image.queryUrl())
-                }.toImmutableImage(400, 400)
+                val top = when (val image = message.getImageFromCache()) {
+                    null -> (if (args.size == 1) sender.id else args.getQq())
+                        ?.toAvatar() ?: return next()
+
+                    else -> HttpUtil.getInputStream(image.queryUrl())
+                }.use { it.toImmutableImage(400, 400) }
+
                 val bottom = top.copy().scaleTo(60, 60)
                 always.overlay(top, 0, 0).overlay(bottom, 230, 420).toStream()
                     .use { subject.sendImageAndCache(it) }

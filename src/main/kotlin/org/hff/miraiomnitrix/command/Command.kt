@@ -5,6 +5,7 @@ import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.PlainText
 import org.hff.miraiomnitrix.common.Allow
 import org.springframework.stereotype.Component
 
@@ -30,12 +31,12 @@ interface UserCommand : Execute<UserMessageEvent>, Allow
 
 /** 指令执行接口 */
 sealed interface Execute<T : MessageEvent> {
-    suspend fun execute(args: List<String>, event: T): CommandResult?
+    suspend fun execute(args: List<String>, event: T): Message?
 }
 
 /** 指令执行结果 */
-data class CommandResult(val msg: String?, val msgChain: Message?)
+data class CommandResult(val message: Message)
 
-fun result(msg: String) = CommandResult(msg, null)
-fun result(message: Message) = CommandResult(null, message)
+fun result(msg: String) = CommandResult(PlainText(msg))
+fun result(message: Message) = CommandResult(message)
 fun result(forwardMessageBuilder: ForwardMessageBuilder) = result(forwardMessageBuilder.build())

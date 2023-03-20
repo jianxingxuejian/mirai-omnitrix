@@ -3,11 +3,11 @@ package org.hff.miraiomnitrix.command
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
+import org.hff.miraiomnitrix.BotRunner
 import org.hff.miraiomnitrix.common.check
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.any.Cache
 import org.hff.miraiomnitrix.utils.SpringUtil
-import org.hff.miraiomnitrix.utils.Util
 import kotlin.reflect.full.findAnnotation
 
 /**
@@ -63,9 +63,8 @@ object CommandManager {
     ): Triple<Boolean, List<String>, Boolean> {
         val subject = event.subject
         try {
-            this.execute(args, event)?.let { (msg, msgChain) ->
-                msg?.let { subject.sendMessage(it) }
-                msgChain?.let { subject.sendMessage(it) }
+            this.execute(args, event)?.run {
+                subject.sendMessage(this)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -92,7 +91,7 @@ object CommandManager {
             if (hasHead) {
                 string = string.substring(1)
             } else {
-                val atBot = Util.atBot()
+                val atBot = "@" + BotRunner.bot.id
                 if (string.contains(atBot)) {
                     hasHead = true
                     isAt = true

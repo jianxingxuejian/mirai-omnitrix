@@ -5,6 +5,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.db.entity.ReplyEnum
 import org.hff.miraiomnitrix.db.service.AutoReplyService
@@ -12,7 +13,6 @@ import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.getInfo
 import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.hff.miraiomnitrix.utils.toImage
-import org.hff.miraiomnitrix.utils.toText
 import java.lang.management.ManagementFactory
 import java.time.LocalTime
 import java.util.concurrent.TimeUnit
@@ -44,14 +44,14 @@ class AutoReply(
 
     private val regexMap = mapOf<String, () -> Message>(
         "(诺提拉斯|爱丽丝)在吗" to {
-            getStatus().toText()
+            getStatus().toPlainText()
         },
         ".*(睡觉|晚安).*" to {
             if (LocalTime.now() in LocalTime.MIDNIGHT..LocalTime.of(6, 0))
                 "{1DB34403-D6DA-5C2C-C3D2-EF86C4D5E7CF}.gif".toImage()
-            else "你这个年龄段你睡得着觉?".toText()
+            else "你这个年龄段你睡得着觉?".toPlainText()
         },
-        ".*(泪目|哭了).*" to { "擦擦".toText() },
+        ".*(泪目|哭了).*" to { "擦擦".toPlainText() },
     ).mapKeys { it.key.toRegex() }
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
@@ -64,21 +64,20 @@ class AutoReply(
         with(limiter) {
             when (val arg = args[0]) {
                 in textMap.keys ->
-                    textMap[arg]?.takeIf { tryAcquire() }?.let { group.sendMessage(it.random());return stop() }
+                    textMap[arg]?.takeIf { tryAcquire() }?.run { return stop(this.random()) }
 
                 in replyMap.keys ->
-                    replyMap[arg]?.takeIf { tryAcquire() }
-                        ?.let { group.sendMessage(message.quote() + it.random());return stop() }
+                    replyMap[arg]?.takeIf { tryAcquire() }?.run { return stop(message.quote() + this.random()) }
 
                 in imageMap.keys ->
-                    imageMap[arg]?.takeIf { tryAcquire() }?.let { group.sendImageAndCache(it.random());return stop() }
+                    imageMap[arg]?.takeIf { tryAcquire() }?.run { group.sendImageAndCache(this.random()) }
                         .run { return stop() }
 
                 else -> {
                     regexMap.entries.find { it.key.matches(arg) }?.value?.takeIf { tryAcquire() }
-                        ?.let { group.sendMessage(it.invoke());return stop() }
+                        ?.run { return stop(this.invoke()) }
                     regexImageMap.entries.find { it.key.matches(arg) }?.value?.takeIf { tryAcquire() }
-                        ?.let { group.sendImageAndCache(it.random());return stop() }
+                        ?.run { group.sendImageAndCache(this.random()) }.run { return stop() }
                 }
 
             }

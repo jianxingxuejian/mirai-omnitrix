@@ -1,10 +1,10 @@
 package org.hff.miraiomnitrix.command.any
 
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.sendImageAndCache
@@ -28,7 +28,7 @@ class Wallpaper : AnyCommand {
         "rsetbgsekbjlghelkrabvfgheiv"
     )
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         var sort = "random"
         args.forEach {
             when (it) {
@@ -51,7 +51,7 @@ class Wallpaper : AnyCommand {
 
         if (vip.contains(sort)) {
             val apiResult = HttpUtil.getString(vipUrl + sort)
-            if (apiResult.isBlank()) return result("api获取为空")
+            if (apiResult.isBlank()) return "api获取为空".toPlainText()
             val url = JsonUtil.getArray(apiResult, "pic")[0].asString
             HttpUtil.getInputStream(url).use { subject.sendImageAndCache(it) }.run { return null }
         }
@@ -65,6 +65,6 @@ class Wallpaper : AnyCommand {
             }
         }
 
-        return result("执行失败")
+        return "执行失败".toPlainText()
     }
 }

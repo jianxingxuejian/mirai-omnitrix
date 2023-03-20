@@ -6,9 +6,10 @@ import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
-import org.hff.miraiomnitrix.utils.Util
 import org.hff.miraiomnitrix.utils.getInfo
+import org.hff.miraiomnitrix.utils.getQq
 import org.hff.miraiomnitrix.utils.sendImageAndCache
+import org.hff.miraiomnitrix.utils.toAvatar
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
 import java.awt.Color
@@ -26,16 +27,15 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
-        val (group, sender) = event.getInfo()
-
         val pa = args.contains("爬")
         val tie = args.contains("贴")
         if (!pa && !tie) return next()
 
-        val qq = Util.getQq(args, sender)
+        val (group, sender) = event.getInfo()
+        val qq = if (isAt) sender.id else args.getQq() ?: return next()
 
         val imageA = getFileByQQ(qq, pa).toImmutableImage(400, 400)
-        val imageB = Util.getQqImg(qq).toImmutableImage(75, 75).transformAvatar()
+        val imageB = qq.toAvatar().toImmutableImage(75, 75).transformAvatar()
         imageA.overlay(imageB, 5, 320).toStream().use { group.sendImageAndCache(it) }
         return stop()
     }

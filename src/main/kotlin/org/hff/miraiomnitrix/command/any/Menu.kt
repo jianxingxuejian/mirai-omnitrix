@@ -1,10 +1,9 @@
 package org.hff.miraiomnitrix.command.any
 
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.Message
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.utils.SkiaExternalResource
 import org.hff.miraiomnitrix.utils.SkikoUtil
 import org.jetbrains.skia.*
@@ -12,7 +11,7 @@ import org.jetbrains.skia.*
 @Command(name = ["menu", "help", "菜单", "帮助"])
 class Menu : AnyCommand {
 
-    private final val text = """
+    private val text = """
         |帮助说明：
         |一、指令功能(需要以中英文符号开头或者@机器人触发)：
         |1：setu、涩图，可追加：n[数量] r(r18) 任意标签(空格或者'|'分隔)
@@ -28,8 +27,8 @@ class Menu : AnyCommand {
         |10：waifu、老婆，与随机群员结婚，可以@指定对象，可以自定义图片与角色名
         |    可以使用原神|崩坏三|碧蓝航线|碧蓝档案|明日方舟|公主连结角色名
         |11：mute、禁言，随机禁言0-600秒
-        |12：js，执行js程序
-        |13：moyu、摸鱼，今日摸鱼人日历
+        |12：moyu、摸鱼，今日摸鱼人日历
+        |13：js，执行js程序
         |二、非指令功能
         |1：st、搜图，使用关键字回复一张图片，或者与自己的图片一起发送
         |2：爬、一直、急急国王，生成表情包
@@ -41,10 +40,8 @@ class Menu : AnyCommand {
 
     private val menu = convertImage(text)
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        event.subject.sendImage(menu)
-        return null
-    }
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? =
+        event.subject.uploadImage(menu)
 
     private final fun convertImage(text: String): SkiaExternalResource {
         val bgColor = 0xFF2C3E50.toInt()

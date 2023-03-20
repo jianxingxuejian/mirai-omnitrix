@@ -6,16 +6,16 @@ import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.getMember
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.BotRunner
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.GroupCommand
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.db.entity.Live
 import org.hff.miraiomnitrix.db.service.LiveService
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.Util.getQq
+import org.hff.miraiomnitrix.utils.getQq
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 
@@ -25,19 +25,18 @@ class Live(private val liveService: LiveService) : GroupCommand {
 
     private val infoApi = "https://api.bilibili.com/x/space/wbi/acc/info?mid="
 
-    val help = result(
-        """使用list、列表命令获取主播列表
-            |使用add、添加命令来添加主播，格式为add qq号 b站uid
-            |使用del、移除命令移除主播，格式为del qq号
-            """.trimMargin()
-    )
+    val help = """
+        |使用list、列表命令获取主播列表
+        |使用add、添加命令来添加主播，格式为add qq号 b站uid
+        |使用del、移除命令移除主播，格式为del qq号
+    """.trimMargin()
 
 
-    override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
+    override suspend fun execute(args: List<String>, event: GroupMessageEvent): Message? {
         val group = event.group
         if (args.isEmpty()) {
             val list = liveService.ktQuery().eq(Live::groupId, group.id).list()
-            if (list.isEmpty()) return result("尚未添加主播\n使用live help指令获取使用方法")
+            if (list.isEmpty()) return "尚未添加主播\n使用live help指令获取使用方法".toPlainText()
 
             val liveStates = mutableListOf<String>()
             coroutineScope {
@@ -49,8 +48,8 @@ class Live(private val liveService: LiveService) : GroupCommand {
                     }
                 }
             }
-            if (liveStates.isNotEmpty()) return result("当前正在直播：\n" + liveStates.joinToString("\n"))
-            return result("当前没有人在直播")
+            if (liveStates.isNotEmpty()) return ("当前正在直播：\n" + liveStates.joinToString("\n")).toPlainText()
+            return "当前没有人在直播".toPlainText()
         }
 
         return when (args[0]) {
@@ -58,38 +57,37 @@ class Live(private val liveService: LiveService) : GroupCommand {
 
             "列表", "list" -> {
                 val list = liveService.getListByGroup(group.id)
-                if (list.isEmpty()) return result("尚未添加主播")
-                result("主播列表：\n" + list.mapNotNull { group.members[it.qq]?.nameCardOrNick }
-                    .joinToString("\n"))
+                if (list.isEmpty()) return "尚未添加主播".toPlainText()
+                ("主播列表：\n" + list.mapNotNull { group.members[it.qq]?.nameCardOrNick }.joinToString("\n"))
             }
 
             "添加", "add", "save" -> {
-                if (args.size < 3) return result("参数错误")
-                val qq = getQq(args[1])
-                val member = group.getMember(qq) ?: return result("未找到成员")
+                if (args.size < 3) return "参数错误".toPlainText()
+                val qq = args[1].getQq() ?: return "qq号错误".toPlainText()
+                val member = group.getMember(qq) ?: return "未找到成员".toPlainText()
                 val count = liveService.ktQuery().eq(Live::qq, qq).eq(Live::groupId, group.id).count()
-                if (count != 0L) return result("人员重复")
+                if (count != 0L) return "人员重复".toPlainText()
                 val uid = args[2].toLong()
                 val userInfo = getBilibiliUserInfo(uid)
                 val live = userInfo.live_room?.let { Live(null, qq, group.id, uid, it.roomid) }
-                    ?: return result("未找到直播间信息")
+                    ?: return "未找到直播间信息".toPlainText()
                 val save = liveService.save(live)
-                if (!save) return result("保存失败")
-                result("已添加${member.nameCardOrNick}的数据")
+                if (!save) return "保存失败".toPlainText()
+                "已添加${member.nameCardOrNick}的数据"
             }
 //            "订阅", "subscribe" -> {}
 //            "更新", "update" -> {}
             "移除", "del", "remove" -> {
-                if (args.size < 2) return result("参数错误")
-                val qq = getQq(args[1])
-                val member = group.getMember(qq) ?: return result("未找到成员")
+                if (args.size < 2) return "参数错误".toPlainText()
+                val qq = args[1].getQq() ?: return "qq号错误".toPlainText()
+                val member = group.getMember(qq) ?: return "未找到成员".toPlainText()
                 val remove = liveService.removeByQQ(qq)
-                if (!remove) return result("删除失败")
-                result("已删除${member.nameCardOrNick}的数据")
+                if (!remove) return "删除失败".toPlainText()
+                "已删除${member.nameCardOrNick}的数据"
             }
 
             else -> help
-        }
+        }.toPlainText()
     }
 
     val livesCache = mutableMapOf<Long, Int>()

@@ -2,10 +2,9 @@ package org.hff.miraiomnitrix.command.any
 
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.LightApp
+import net.mamoe.mirai.message.data.Message
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 
 @Command(name = ["测试", "test"])
 class Test : AnyCommand {
@@ -43,7 +42,6 @@ class Test : AnyCommand {
     }
 """
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
-        return LightApp(jsonString).let(::result)
-    }
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? = LightApp(jsonString)
+
 }

@@ -5,12 +5,12 @@ import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import net.mamoe.mirai.message.data.toPlainText
 import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.exception.MyException
@@ -27,16 +27,16 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
     private var temperature = 0.1
     private val admin = permissionProperties.admin
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         val (subject, sender, message) = event.getInfo()
         if (permissionProperties.chatExcludeGroup.contains(subject.id)) return null
 
         if (args.isNotEmpty() && admin.isNotEmpty() && admin.contains(sender.id)) {
             when (args[0]) {
                 "temperature" -> {
-                    if (args.size < 2) return result("参数错误")
+                    if (args.size < 2) return "参数错误".toPlainText()
                     temperature = args[1].toDouble()
-                    return result("temperature更改成功")
+                    return "temperature更改成功".toPlainText()
                 }
             }
         }
@@ -87,7 +87,7 @@ class Chat(accountProperties: AccountProperties, private val permissionPropertie
                         if (buffer.length > 3200) {
                             subject.sendMessage(At(sender) + "上下文长度超过限制，已清除上下文，请重试")
                             buffer = StringBuffer(prompt.format(LocalDate.now()))
-                        }else{
+                        } else {
                             buffer.setLength(temp)
                             subject.sendMessage(At(sender) + "出现错误，请重试")
                             e.printStackTrace()

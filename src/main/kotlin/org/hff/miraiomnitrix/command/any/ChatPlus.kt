@@ -10,11 +10,11 @@ import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.*
@@ -45,7 +45,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
     fun getBuffer() =
         StringBuffer(prompt.format(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): CommandResult? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         val (subject, sender, message) = event.getInfo()
         val cache = stateCache[sender.id]
         if (cache == null) {

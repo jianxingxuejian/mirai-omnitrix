@@ -12,7 +12,7 @@ import org.springframework.core.io.ClassPathResource
 class Thesaurus(private val permissionProperties: PermissionProperties, private val botProperties: BotProperties) :
     GroupEvent {
 
-    val thesaurus = hashMapOf<String, MutableSet<String>>()
+    private val thesaurus = hashMapOf<String, MutableSet<String>>()
 
     init {
         listOf("json/thesaurus1.json", "json/thesaurus1.json", "json/thesaurus3.json").forEach {

@@ -7,10 +7,10 @@ import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.contact.remarkOrNameCard
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.CommandResult
 import org.hff.miraiomnitrix.command.GroupCommand
-import org.hff.miraiomnitrix.command.result
 import org.hff.miraiomnitrix.utils.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.springframework.core.io.Resource
@@ -39,15 +39,15 @@ class RandomWaifu : GroupCommand {
         }
     }
 
-    override suspend fun execute(args: List<String>, event: GroupMessageEvent): CommandResult? {
+    override suspend fun execute(args: List<String>, event: GroupMessageEvent): Message? {
         val (group, sender, message) = event.getInfo()
         val left = sender.id
-        val imgUrl =message.getImage()?.queryUrl()
+        val imgUrl = message.getImage()?.queryUrl()
         when {
             imgUrl != null -> {
                 val names = if (args.isEmpty()) sender.nameCardOrNick else sender.nameCardOrNick + " " + args[0]
-                HttpUtil.getInputStream(imgUrl)
-                    .use { draw(left, it, names).use { img -> group.sendImageAndCache(img) } }
+                val right = HttpUtil.getInputStream(imgUrl)
+                draw(left, right, names).use { group.sendImageAndCache(it) }
             }
 
             args.isEmpty() -> {
@@ -58,20 +58,21 @@ class RandomWaifu : GroupCommand {
 
             args[0] == "二次元" || args[0] == "动漫" -> {
                 val name = avatars.keys.random()
-                val names = sender.nameCardOrNick + avatars.keys.random()
-                avatars[name]!!.inputStream.use { draw(left, it, names).use { img -> group.sendImageAndCache(img) } }
+                val names = sender.nameCardOrNick + " " + name
+                val right = avatars[name]!!.inputStream
+                draw(left, right, names).use { group.sendImageAndCache(it) }
             }
 
             else -> {
-                when (val qq = Util.getQq(args)) {
+                when (val qq = args.getQq()) {
                     null -> {
-                        val avatar = avatars[args[0]] ?: return result("没有找到角色")
+                        val avatar = avatars[args[0]] ?: return "没有找到角色".toPlainText()
                         val names = sender.nameCardOrNick + " " + args[0]
-                        avatar.inputStream.use { draw(left, it, names).use { img -> group.sendImageAndCache(img) } }
+                        draw(left, avatar.inputStream, names).use { group.sendImageAndCache(it) }
                     }
 
                     else -> {
-                        val member = group.members[qq] ?: return result("没有找到成员")
+                        val member = group.members[qq] ?: return "没有找到成员".toPlainText()
                         val names = sender.nameCardOrNick + " " + member.remarkOrNameCard
                         draw(left, qq, names).use { group.sendImageAndCache(it) }
                     }
@@ -81,19 +82,19 @@ class RandomWaifu : GroupCommand {
         return null
     }
 
-    private fun draw(left: Long, right: Long, names: String): ByteArrayInputStream {
-        val rightByteArray = Util.getQqImg(right)
-        return draw(left, rightByteArray, names)
-    }
+    private fun draw(left: Long, right: Long, names: String): ByteArrayInputStream =
+        draw(left, right.toAvatar(), names)
 
-    private fun draw(left: Long, rightIs: InputStream, names: String): ByteArrayInputStream {
-        val leftIs = Util.getQqImg(left)
-        return when ((1..3).random()) {
-            1 -> draw1(leftIs, rightIs, names)
-            2 -> draw2(leftIs, rightIs, names)
-            else -> draw3(leftIs, rightIs)
+    private fun draw(left: Long, right: InputStream, names: String): ByteArrayInputStream =
+        left.toAvatar().use { leftIS ->
+            right.use {
+                when ((1..3).random()) {
+                    1 -> draw1(leftIS, it, names)
+                    2 -> draw2(leftIS, it, names)
+                    else -> draw3(leftIS, it)
+                }
+            }
         }
-    }
 
     private fun draw1(left: InputStream, right: InputStream, names: String): ByteArrayInputStream {
         val imgLeft = ImageUtil.scaleTo(left, 160, 160)
