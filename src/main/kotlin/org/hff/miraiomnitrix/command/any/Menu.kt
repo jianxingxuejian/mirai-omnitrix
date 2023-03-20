@@ -34,7 +34,8 @@ class Menu : AnyCommand {
         |2：爬、一直、急急国王，生成表情包
         |3：B站链接解析
         |4：合成两个emoji
-        |5：二刺螈词库
+        |5：自动回复，每20秒只能触发1次
+        |6：二刺螈词库，@机器人常见词触发
         |开源地址：https://github.com/jianxingxuejian/mirai-omnitrix
     """.trimMargin()
 
