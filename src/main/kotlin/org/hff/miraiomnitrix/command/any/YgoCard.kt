@@ -34,7 +34,7 @@ class YgoCard : AnyCommand {
             it.color = Color.BLACK
             it.font = Font("SimSun", Font.BOLD, 40)
         }
-        sender.id.toAvatar().use { avatar ->
+        member.id.toAvatar().use { avatar ->
             Canvas(Type.Spell.image)
                 .draw(name).draw(content).image
                 .overlay(Attr.Spell.image, 680, 58)
