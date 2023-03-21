@@ -22,6 +22,18 @@ fun List<String>.getQq(): Long? {
     return null
 }
 
+fun List<String>.getQqAndRemove(): Pair<Long?, List<String>> {
+    val newStringList = this.toMutableList()
+    for (arg in this) {
+        val qq = arg.getQq()
+        if (qq != null) {
+            newStringList.remove(arg)
+            return Pair(qq, newStringList)
+        }
+    }
+    return Pair(null, this)
+}
+
 fun Long.toAvatar() = HttpUtil.getInputStream(QQ_URL + this)
 
 

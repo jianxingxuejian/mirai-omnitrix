@@ -71,14 +71,13 @@ class AutoReply(
                     replyMap[arg]?.takeIf { tryAcquire() }?.run { return stop(message.quote() + this.random()) }
 
                 in imageMap.keys ->
-                    imageMap[arg]?.takeIf { tryAcquire() }?.run { group.sendImageAndCache(this.random()) }
-                        .run { return stop() }
+                    imageMap[arg]?.takeIf { tryAcquire() }?.run { group.sendImageAndCache(this.random());return stop() }
 
                 else -> {
                     regexMap.entries.find { it.key.matches(arg) }?.value?.takeIf { tryAcquire() }
                         ?.run { return stop(this.invoke()) }
                     regexImageMap.entries.find { it.key.matches(arg) }?.value?.takeIf { tryAcquire() }
-                        ?.run { group.sendImageAndCache(this.random()) }.run { return stop() }
+                        ?.run { group.sendImageAndCache(this.random());return stop() }
                 }
 
             }
