@@ -49,7 +49,7 @@ class Tts(accountProperties: AccountProperties) : AnyCommand {
         }
         if (speechSynthesisResult.reason == ResultReason.SynthesizingAudioCompleted) {
             speechSynthesisResult.audioData?.let {
-                when (val subject = event.subject) {
+                return when (val subject = event.subject) {
                     is Group -> subject.uploadAudio(it.toExternalResource())
                     is Friend -> subject.uploadAudio(it.toExternalResource())
                     else -> null
