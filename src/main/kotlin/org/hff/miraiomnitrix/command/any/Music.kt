@@ -1,10 +1,12 @@
 package org.hff.miraiomnitrix.command.any
 
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
+import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.message.data.MusicKind
-import net.mamoe.mirai.message.data.MusicShare
-import net.mamoe.mirai.message.data.toPlainText
+import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
@@ -14,7 +16,7 @@ import java.net.URLEncoder
 @Command(name = ["音乐", "网易云", "music", "wyy", "点歌"])
 class Music : AnyCommand {
 
-    private val searchUrl = "http://music.163.com/api/search/get?type=1&limit=20&s="
+    private val searchUrl = "http://music.163.com/api/search/get?type=1&limit=5&s="
 
     override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         if (args.isEmpty()) return "请输入歌曲名".toPlainText()
@@ -24,17 +26,36 @@ class Music : AnyCommand {
         val result: MusicResult = JsonUtil.fromJson(json, "result")
         val songs = result.songs
         if (songs.isEmpty()) return "未找到歌曲".toPlainText()
-        val song = songs.find { it.status == 0 } ?: songs[0]
-        val artists = song.artists
-        return MusicShare(
-            kind = MusicKind.NeteaseCloudMusic,
-            title = song.name,
-            summary = artists.joinToString("/") { it.name },
-            jumpUrl = "https://y.music.163.com/m/song?id=${song.id}",
-            pictureUrl = artists[0].img1v1Url,
-            musicUrl = "http://music.163.com/song/media/outer/url?id=${song.id}",
-            brief = "[分享]" + song.name,
-        )
+        val list = songs.mapIndexed { index, song ->
+            val artists = song.artists
+            val artist = artists.joinToString("/") { it.name }
+            "${index + 1}. ${song.name} - $artist"
+        }
+        val subject = event.subject
+        subject.sendMessage(list.joinToString("\n"))
+
+        try {
+            coroutineScope {
+                while (isActive) {
+                    val next = event.nextMessage(60_000L, EventPriority.HIGH, intercept = true)
+                    val index = next.content.toIntOrNull() ?: continue
+                    if (index !in 1..10) subject.sendMessage("只能输入1-10的数字")
+                    val song = songs[index]
+                    val artists = song.artists
+                    MusicShare(
+                        kind = MusicKind.NeteaseCloudMusic,
+                        title = song.name,
+                        summary = artists.joinToString("/") { it.name },
+                        jumpUrl = "https://y.music.163.com/m/song?id=${song.id}",
+                        pictureUrl = artists[0].img1v1Url,
+                        musicUrl = "http://music.163.com/song/media/outer/url?id=${song.id}",
+                        brief = "[分享]" + song.name,
+                    ).run { subject.sendMessage(this) }
+                }
+            }
+        } catch (_: TimeoutCancellationException) {
+        }
+        return null
     }
 
 
