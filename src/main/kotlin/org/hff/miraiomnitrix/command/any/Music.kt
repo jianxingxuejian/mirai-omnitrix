@@ -39,7 +39,7 @@ class Music : AnyCommand {
                 while (isActive) {
                     val next = event.nextMessage(60_000L, EventPriority.HIGH, intercept = true)
                     val index = next.content.toIntOrNull() ?: continue
-                    if (index !in 1..list.size) subject.sendMessage("只能输入1-10的数字")
+                    if (index !in 1..list.size) subject.sendMessage("请输入有效的序号")
                     val song = songs[index]
                     val artists = song.artists
                     MusicShare(
