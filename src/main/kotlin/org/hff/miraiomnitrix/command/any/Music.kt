@@ -29,7 +29,11 @@ class Music : AnyCommand {
         val list = songs.mapIndexed { index, song ->
             val artists = song.artists
             val artist = artists.joinToString("/") { it.name }
-            "${index + 1}. ${song.name} - $artist"
+            val duration = song.duration
+            val minutes = duration / 1000 / 60
+            val seconds = duration / 1000 % 60
+            val length = String.format("%02d:%02d", minutes, seconds)
+            "${index + 1}. ${song.name} - $artist  $length"
         }
         val subject = event.subject
         subject.sendMessage(list.joinToString("\n"))
