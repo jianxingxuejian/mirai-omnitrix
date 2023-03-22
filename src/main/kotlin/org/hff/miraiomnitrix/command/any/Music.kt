@@ -26,7 +26,7 @@ class Music : AnyCommand {
         val json = HttpUtil.getString(searchUrl + encode)
         val result: MusicResult = JsonUtil.fromJson(json, "result")
         val songs = result.songs
-        if (songs.isEmpty()) return "未找到歌曲".toPlainText()
+        if (songs.isNullOrEmpty()) return "未找到歌曲".toPlainText()
         val list = songs.mapIndexed { index, song ->
             val artists = song.artists
             val artist = artists.joinToString("/") { it.name }
@@ -72,7 +72,7 @@ class Music : AnyCommand {
     data class MusicResult(
         val hasMore: Boolean,
         val songCount: Int,
-        val songs: List<Song>
+        val songs: List<Song>?
     )
 
     data class Song(
