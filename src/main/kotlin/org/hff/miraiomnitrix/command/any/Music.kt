@@ -16,7 +16,7 @@ import java.net.URLEncoder
 @Command(name = ["音乐", "网易云", "music", "wyy", "点歌"])
 class Music : AnyCommand {
 
-    private val searchUrl = "http://music.163.com/api/search/get?type=1&limit=5&s="
+    private val searchUrl = "http://music.163.com/api/search/get?type=1&limit=10&s="
 
     override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         if (args.isEmpty()) return "请输入歌曲名".toPlainText()
@@ -39,7 +39,7 @@ class Music : AnyCommand {
                 while (isActive) {
                     val next = event.nextMessage(60_000L, EventPriority.HIGH, intercept = true)
                     val index = next.content.toIntOrNull() ?: continue
-                    if (index !in 1..10) subject.sendMessage("只能输入1-10的数字")
+                    if (index !in 1..list.size) subject.sendMessage("只能输入1-10的数字")
                     val song = songs[index]
                     val artists = song.artists
                     MusicShare(
