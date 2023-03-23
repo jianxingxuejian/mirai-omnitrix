@@ -60,7 +60,6 @@ class Imitate(
                 }
             } catch (_: Exception) {
                 history.clear()
-                temp.clear()
             }
         }
         return stop()
