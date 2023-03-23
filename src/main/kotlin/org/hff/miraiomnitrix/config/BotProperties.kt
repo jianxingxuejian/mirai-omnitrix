@@ -10,6 +10,8 @@ data class BotProperties(
     val qq: Long?,
     /** qq密码 */
     val password: String?,
+    /** 协议类型 */
+    val protocol: String = "mac",
     /** bot名字 */
     val name: String?,
     /** 招呼语 */
