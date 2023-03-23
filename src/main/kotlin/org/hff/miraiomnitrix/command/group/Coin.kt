@@ -5,13 +5,14 @@ import net.mamoe.mirai.message.data.Message
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.db.service.BankServer
+import org.springframework.boot.CommandLineRunner
 
 @Command(name = ["coin", "幻书币"])
-class Coin(private val bankServer: BankServer) : GroupCommand {
+class Coin(private val bankServer: BankServer) : GroupCommand, CommandLineRunner {
 
-    init {
+    override fun run(vararg args: String?) {
         val list = bankServer.list()
-        if (list.isNotEmpty()) {
+        if (list.isNotEmpty()){
 
         }
     }

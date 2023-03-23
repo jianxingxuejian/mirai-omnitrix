@@ -13,6 +13,7 @@ import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.getInfo
 import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.hff.miraiomnitrix.utils.toImage
+import org.springframework.boot.CommandLineRunner
 import java.lang.management.ManagementFactory
 import java.time.LocalTime
 import java.util.concurrent.TimeUnit
@@ -20,8 +21,8 @@ import java.util.concurrent.TimeUnit
 @Event(priority = 2)
 class AutoReply(
     private val permissionProperties: PermissionProperties,
-    autoReplyService: AutoReplyService
-) : GroupEvent {
+    private val autoReplyService: AutoReplyService
+) : GroupEvent, CommandLineRunner {
 
     val limiterMap = hashMapOf<Long, RateLimiter>()
 
@@ -30,7 +31,7 @@ class AutoReply(
     private lateinit var imageMap: Map<String, List<Image>>
     private lateinit var regexImageMap: Map<Regex, List<Image>>
 
-    init {
+    override fun run(vararg args: String?) {
         val list = autoReplyService.list()
         textMap = list.filter { it.type == ReplyEnum.Text }.groupBy { it.keyword }
             .mapValues { entry -> entry.value.map { it.content } }
@@ -102,4 +103,5 @@ class AutoReply(
         val seconds = TimeUnit.MILLISECONDS.toSeconds(time) % 60
         return "已运行: ${if (days > 0) "$days 天" else ""}${if (hours > 0) "$hours 小时 " else ""}${if (minutes > 0) "$minutes 分钟 " else ""}$seconds 秒"
     }
+
 }
