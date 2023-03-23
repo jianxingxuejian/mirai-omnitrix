@@ -57,7 +57,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
     }
 
     /** 随机戳一个群友 */
-    @Scheduled(initialDelay = 60_000, fixedDelay = 4 * 60 * 60 * 1000)
+    @Scheduled(initialDelay = 60 * 60 * 1000, fixedDelay = 4 * 60 * 60 * 1000)
     fun nudge() {
         runBlocking {
             val group = bot.groups.random()

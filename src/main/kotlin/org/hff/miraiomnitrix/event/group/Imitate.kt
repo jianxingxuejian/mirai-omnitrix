@@ -7,9 +7,7 @@ import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.*
-import org.springframework.scheduling.annotation.EnableScheduling
 
-@EnableScheduling
 @Event(priority = 5)
 class Imitate(
     accountProperties: AccountProperties,
@@ -20,8 +18,8 @@ class Imitate(
     private var maxTokens = 1000
     private var temperature = 0.1
     val promptA = """
-        |你是一个喜欢在网络上与其他人交流的AI，你加入了一个网络聊天室，为了融入他们你需要尽量模仿他们的发言。
-        |你的任务是根据历史聊天记录进行发言，不限制内容，但是要切合聊天记录。
+        |你是一个喜欢在网络上与其他人交流的AI，你加入了一个网络聊天室已经过了一段时间，为了融入他们你需要尽量模仿他们的发言。
+        |你的任务是根据历史聊天记录进行发言，不限制内容，但是要切合聊天记录，不要发出没有意义的内容，例如打招呼、附和别人等。
         |以下是历史对话记录：%s。
         |历史记录中的"自己："开头的是你过去的发言记录，请记住不要重复过去说过的话。
         |接下来你判断有没有必要进行发言，发言的内容是什么,尽量控制发言的频次。
