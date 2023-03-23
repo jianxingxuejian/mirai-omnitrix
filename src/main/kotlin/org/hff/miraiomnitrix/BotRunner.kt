@@ -11,10 +11,12 @@ import org.hff.miraiomnitrix.command.CommandManager
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.event.EventManger
 import org.springframework.boot.CommandLineRunner
+import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.stereotype.Component
 import xyz.cssxsh.mirai.tool.FixProtocolVersion
 
 @Component
+@EnableScheduling
 class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
 
     companion object {
@@ -39,6 +41,16 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
             }
         }
     }
+
+    /** 随机戳一个群友 */
+//    @Scheduled(initialDelay = 60_000, fixedDelay = 90_000)
+//    fun nudge() {
+//        runBlocking {
+//            val group = BotRunner.bot.groups.random()
+//            val member = group.members.random()
+//            member.nudge().sendTo(group)
+//        }
+//    }
 
 }
 

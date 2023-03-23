@@ -20,7 +20,7 @@ import java.time.LocalDate
 @Command(["chat", "聊天"])
 class Chat(accountProperties: AccountProperties, private val permissionProperties: PermissionProperties) : AnyCommand {
 
-    private val prompt = "你是ChatGPT, 一个由OpenAI训练的大型语言模型。现在的时间是:%s，开始问答式交流。"
+    private val prompt = " "
     private val stateCache = mutableMapOf<Long, MutableSet<Long>>()
     private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
     private var maxTokens = 1000

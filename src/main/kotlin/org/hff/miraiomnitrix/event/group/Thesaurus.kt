@@ -34,7 +34,7 @@ class Thesaurus(private val permissionProperties: PermissionProperties, private 
                     return stop(botProperties.hello)
             }
 
-            else -> return list.random().replace("我", "爱丽丝").let(::stop)
+            else -> botProperties.name?.run { return stop(list.random().replace("我", this)) }
         }
         return next()
     }

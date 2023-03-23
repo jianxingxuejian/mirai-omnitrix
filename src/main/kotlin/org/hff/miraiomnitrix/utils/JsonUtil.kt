@@ -30,8 +30,7 @@ object JsonUtil {
 
     fun parse(data: Any) = gson.toJson(data).toString()
 
-    fun getKey(json: String, key: String): JsonElement =
-        JsonParser.parseString(json).asJsonObject.get(key) ?: throw MyException("json解析失败，检查key")
+    fun getKey(json: String, key: String): JsonElement = JsonParser.parseString(json).asJsonObject.get(key)
 
     private fun parse(json: String): JsonElement =
         try {

@@ -20,7 +20,7 @@ object CommandManager {
     private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
 
     /** 指令容器 */
-    private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
+    val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
     private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
     private val userCommands: HashMap<String, UserCommand> = hashMapOf()
 
@@ -107,5 +107,7 @@ object CommandManager {
         if (needHead && !hasHead) return Triple(null, args, false)
         return Triple(args[0], args.slice(1 until args.size), isAt)
     }
+
+    inline fun <reified T : AnyCommand> getCommand(): T = anyCommands[T::class.simpleName!!.lowercase()] as T
 
 }

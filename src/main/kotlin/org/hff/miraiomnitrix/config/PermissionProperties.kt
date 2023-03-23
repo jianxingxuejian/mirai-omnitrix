@@ -19,5 +19,7 @@ data class PermissionProperties(
     /** 排除回复功能的群号 */
     val replyExcludeGroup: List<Long>,
     /** 不需要指令头就可以聊天的群号(会影响部分功能) */
-    val chatPlusNotNeedCommandGroup: List<Long>
+    val chatPlusNotNeedCommandGroup: List<Long>,
+    /** 开启模仿功能的群 */
+    val imitateIncludeGroup: List<Long>,
 )

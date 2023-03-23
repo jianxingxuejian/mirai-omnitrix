@@ -20,6 +20,7 @@ spring:
 bot:
   qq:
   password:
+  name:
   hello:
 
 http:
@@ -35,6 +36,7 @@ permission:
   emojiMixExcludeGroup:
   chatPlusNotNeedCommandGroup:
   replyExcludeGroup:
+  imitateIncludeGroup:
 
 account:
   characterAiToken:

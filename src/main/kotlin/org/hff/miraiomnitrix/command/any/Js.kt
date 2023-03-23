@@ -1,19 +1,19 @@
-package org.hff.miraiomnitrix.command.group
+package org.hff.miraiomnitrix.command.any
 
 import delight.nashornsandbox.NashornSandboxes
 import delight.nashornsandbox.exceptions.ScriptCPUAbuseException
-import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
+import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.command.GroupCommand
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror
 import java.util.concurrent.Executors
 import javax.script.ScriptException
 
 
 @Command(name = ["js"])
-class Js : GroupCommand {
+class Js : AnyCommand {
 
     private final val sandbox = NashornSandboxes.create()
 
@@ -25,7 +25,7 @@ class Js : GroupCommand {
         sandbox.executor = Executors.newSingleThreadExecutor()
     }
 
-    override suspend fun execute(args: List<String>, event: GroupMessageEvent): Message? {
+    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
         val command = args.joinToString(" ")
         return try {
             val result = sandbox.eval(command) ?: return "null".toPlainText()
