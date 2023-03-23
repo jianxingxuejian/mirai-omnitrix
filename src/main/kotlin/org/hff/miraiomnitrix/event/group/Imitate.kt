@@ -58,9 +58,7 @@ class Imitate(
             } catch (_: Exception) {
                 history.clear()
                 temp.clear()
-                return stop()
             }
-            return stop()
         }
         return stop()
     }
@@ -71,7 +69,7 @@ class Imitate(
         val content = prompt.format(history.joinToString("\n"))
         val message = mapOf("role" to "user", "content" to content)
         val params = mapOf(
-            "model" to "gpt-3.5-turbo-0301",
+            "model" to "gpt-3.5-turbo",
             "messages" to listOf(message),
             "max_tokens" to maxTokens,
             "temperature" to temperature

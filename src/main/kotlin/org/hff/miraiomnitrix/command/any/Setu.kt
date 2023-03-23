@@ -47,7 +47,7 @@ class Setu : AnyCommand {
                     }
                 }
                 launch(exceptionHandler) {
-                    val url = "$api2?r18=$r18&num=$num&keyword=${keywords.joinToString("|") { it.toUrl() }}"
+                    val url = "$api2?r18=$r18&num=$num&keyword=${keywords.joinToString("|").toUrl()}"
                     val json = HttpUtil.getString(url)
                     JsonUtil.getArray(json).map { it.getAsStr("url") }
                         .forEach { launch { forwardBuilder.add(subject, it) } }
