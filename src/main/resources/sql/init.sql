@@ -21,3 +21,11 @@ CREATE TABLE IF NOT EXISTS `auto_reply`
     `keyword` INTEGER NOT NULL,
     `content` INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS `bank`
+(
+    `id`    INTEGER PRIMARY KEY AUTOINCREMENT,
+    `qq`    INTEGER NOT NULL,
+    `money` INTEGER NOT NULL,
+    `coin`  INTEGER NOT NULL
+);

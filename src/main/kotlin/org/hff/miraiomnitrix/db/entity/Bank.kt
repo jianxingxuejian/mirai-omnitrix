@@ -17,6 +17,6 @@ data class Bank(
     @TableField("`money`")
     val money: Long,
     /** 持有的幻书币 */
-    @TableField("`num`")
+    @TableField("`coin`")
     val coin: String,
 )
