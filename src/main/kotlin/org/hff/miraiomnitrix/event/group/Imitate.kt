@@ -16,7 +16,7 @@ class Imitate(
 
     private val apiKey = accountProperties.openaiApiKey?.let { "Bearer $it" }
     private var maxTokens = 1000
-    private var temperature = 0.1
+    private var temperature = 0
     val promptA = """
         |你是一个喜欢在网络上与其他人交流的AI，现在你加入了一个网络聊天室并且已经呆了一段时间。聊天室里大部分人是程序员、游戏玩家，AI研究爱好者等等，可能还存在其他AI。
         |大家都知道你的身份，你可以随意发言，但是你想真正融入他们的谈话中，所以你需要模仿他们的发言方式。
@@ -33,8 +33,8 @@ class Imitate(
         |每一个人的发言用`userA:谈话内容`的格式，单独一行以换行符结尾。
         |以下是历史对话记录：
         |%s。
-        |越前面的记录越不重要，如果聊天记录太长则抛弃前面的部分。
-        |请你回复浓缩后的对话记录，不能超过50条。
+        |越前面的记录越不重要，如果聊天记录太多则抛弃前面的部分。
+        |请你回复浓缩后的对话记录，不能超过40条。
     """.trimMargin()
 
     val historyRecord = hashMapOf<Long, MutableList<String>>()
@@ -47,11 +47,11 @@ class Imitate(
         if (text.length > 100) return stop()
         val temp = tempRecord.getOrPut(group.id) { mutableListOf() }
             .apply { add("${sender.nameCardOrNick}：${text}") }
-        if (temp.size > 19) {
+        if (temp.size >= 20) {
             var history = historyRecord.getOrPut(group.id) { mutableListOf() }.apply { addAll(temp) }
             temp.clear()
             try {
-                if (history.size > 60) history = completion(promptB, history).split("\n").toMutableList()
+                if (history.size >= 40) history = completion(promptB, history).split("\n").toMutableList()
                 val content = completion(promptA, history).split("\n")
                 println(content)
                 if (content[0] == "yes") {

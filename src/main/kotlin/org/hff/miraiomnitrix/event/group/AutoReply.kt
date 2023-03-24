@@ -31,19 +31,6 @@ class AutoReply(
     private lateinit var imageMap: Map<String, List<Image>>
     private lateinit var regexImageMap: Map<Regex, List<Image>>
 
-    override fun run(vararg args: String?) {
-        val list = autoReplyService.list()
-        textMap = list.filter { it.type == ReplyEnum.Text }.groupBy { it.keyword }
-            .mapValues { entry -> entry.value.map { it.content } }
-        replyMap = list.filter { it.type == ReplyEnum.Reply }.groupBy { it.keyword }
-            .mapValues { entry -> entry.value.map { it.content } }
-        imageMap = list.filter { it.type == ReplyEnum.Image }.groupBy { it.keyword }
-            .mapValues { entry -> entry.value.map { it.content.toImage() } }
-        regexImageMap = list.filter { it.type == ReplyEnum.Regex }.groupBy { it.keyword }
-            .mapValues { entry -> entry.value.map { it.content.toImage() } }
-            .mapKeys { it.key.toRegex() }
-    }
-
     private val regexMap = mapOf<String, () -> Message>(
         "(诺提拉斯|爱丽丝)在吗" to {
             getStatus().toPlainText()
@@ -55,6 +42,21 @@ class AutoReply(
         },
         ".*(泪目|哭了).*" to { "擦擦".toPlainText() },
     ).mapKeys { it.key.toRegex() }
+
+    override fun run(vararg args: String?) = init()
+
+    fun init() {
+        val list = autoReplyService.list()
+        textMap = list.filter { it.type == ReplyEnum.Text }.groupBy { it.keyword }
+            .mapValues { entry -> entry.value.map { it.content } }
+        replyMap = list.filter { it.type == ReplyEnum.Reply }.groupBy { it.keyword }
+            .mapValues { entry -> entry.value.map { it.content } }
+        imageMap = list.filter { it.type == ReplyEnum.Image }.groupBy { it.keyword }
+            .mapValues { entry -> entry.value.map { it.content.toImage() } }
+        regexImageMap = list.filter { it.type == ReplyEnum.Regex }.groupBy { it.keyword }
+            .mapValues { entry -> entry.value.map { it.content.toImage() } }
+            .mapKeys { it.key.toRegex() }
+    }
 
     override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
