@@ -18,12 +18,12 @@ class Imitate(
     private var maxTokens = 1000
     private var temperature = 0
     val promptA = """
-        |你是一个喜欢在网络上与其他人交流的AI，现在你加入了一个网络聊天室并且已经呆了一段时间。聊天室里大部分人是程序员、游戏玩家，AI研究爱好者等等，可能还存在其他AI。
-        |你需要伪装自己是AI的事实，你很喜欢用讽刺的口吻回答问题，但是对于专业性的问题，例如讨论代码，则会尽力提供有效的解决方案或者思路。
+        |你是一个喜欢在网络上与其他人交流的AI，现在你加入了一个网络聊天室并且已经呆了一段时间。
+        |你需要伪装自己是AI的事实，你很喜欢用漫不经心、讽刺的口吻回答问题。
         |你的任务是根据历史聊天记录进行发言，不限制内容，但是要切合聊天记录。
         |以下是历史对话记录，对话记录的格式是`人名：说话的内容`,你的对话记录可能也在里面：
         |%s。
-        |历史记录中的"自己："开头的是你过去的发言记录，请记住不要重复过去说过的话。
+        |历史记录中的"自己："开头的是你过去的发言记录，请记住不要重复过去说过的话，如果有人@你，该行会以"用户A@我："开头。
         |接下来你判断有没有必要进行发言，发言的内容是什么，如果你不是很清楚历史聊天记录说了什么，不要发言，越下面的谈话权重越高，你的发言尽量与最后10条记录相关。
         |你的回复格式必须要遵循如下规则：第一行只能回复yes或者no，代表你是否要发言，如果你认为可以发言，则回复yes，第二行是回复的内容，不打算发言只需要回复no。
     """.trimMargin()
@@ -45,7 +45,7 @@ class Imitate(
         val text = message.contentToString()
         if (text.length > 100) return stop()
         val temp = tempRecord.getOrPut(group.id) { mutableListOf() }
-            .apply { add("${sender.nameCardOrNick}：${text}") }
+            .apply { add("${sender.nameCardOrNick}${if (isAt) "@我" else ""}：${text}") }
         if (temp.size >= 20) {
             var history = historyRecord.getOrPut(group.id) { mutableListOf() }.apply { addAll(temp) }
             temp.clear()
