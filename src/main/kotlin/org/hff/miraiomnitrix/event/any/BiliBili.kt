@@ -12,8 +12,7 @@ import org.hff.miraiomnitrix.utils.JsonUtil
 class BiliBili(private val permissionProperties: PermissionProperties) : AnyEvent {
 
     private val videoUrl = "https://api.bilibili.com/x/web-interface/view"
-    private val avRegex = """(?i)(?<!\w)av(\d+)""".toRegex()
-    private val bvRegex = """(?i)(?<!\w)BV1[1-9A-NP-Za-km-z]{9}""".toRegex()
+    private val regex = """(?i)(?<!\w)(?:av(\d+)|(BV1[1-9A-NP-Za-km-z]{9}))""".toRegex()
     override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
         if (args.isEmpty()) return next()
 
@@ -21,12 +20,13 @@ class BiliBili(private val permissionProperties: PermissionProperties) : AnyEven
         if (permissionProperties.bvExcludeGroup.contains(subject.id)) return next()
 
         val first = args[0]
-        if (first.length > 30) return next()
+        if (first.length > 50) return next()
 
+        val matchResult = regex.find(first) ?: return next()
+        val value = matchResult.groups[0]?.value ?: return next()
         val param = when {
-            avRegex.matches(first) -> mapOf("aid" to avRegex.find(first)!!.groups[1]!!.value)
-            bvRegex.matches(first) -> mapOf("bvid" to first)
-            else -> return next()
+            value.startsWith("a") -> mapOf("aid" to value)
+            else -> mapOf("bvid" to value)
         }
         val json = HttpUtil.getString(videoUrl, param)
         val data: BiliVideoInfo = JsonUtil.fromJson(json, "data")
