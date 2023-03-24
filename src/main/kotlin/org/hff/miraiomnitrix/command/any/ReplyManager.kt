@@ -10,6 +10,7 @@ import org.hff.miraiomnitrix.db.entity.AutoReply
 import org.hff.miraiomnitrix.db.entity.ReplyEnum
 import org.hff.miraiomnitrix.db.service.AutoReplyService
 import org.hff.miraiomnitrix.utils.getImage
+import org.hff.miraiomnitrix.utils.toImage
 
 @Command(name = ["回复管理", "reply"])
 class ReplyManager(
@@ -23,7 +24,12 @@ class ReplyManager(
         val message = event.message
 
         when (args[0]) {
-            "info", "get" -> {}
+            "info", "get" -> {
+                val num = args.getOrNull(1)?.toIntOrNull() ?: return "参数错误".toPlainText()
+                val reply = autoReplyService.getById(num)
+                return if (reply.type == ReplyEnum.Text || reply.type == ReplyEnum.Reply) reply.content.toPlainText()
+                else reply.content.toImage()
+            }
 
             "add", "添加" -> {
                 val type =
