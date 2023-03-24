@@ -56,6 +56,7 @@ class Imitate(
                 println(content)
                 if (content[0] == "yes") {
                     val talk = content.drop(1).joinToString("\n")
+                        .let { if (it.endsWith("。")) it.dropLast(1) else it }
                     history.add("自己：$talk")
                     return stop(talk)
                 }
