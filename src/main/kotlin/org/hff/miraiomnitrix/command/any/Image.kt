@@ -11,6 +11,7 @@ import org.hff.miraiomnitrix.config.AccountProperties
 import org.hff.miraiomnitrix.exception.MyException
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.getAsStr
 
 @Command(name = ["img", "image", "画图"])
 class Image(accountProperties: AccountProperties) : AnyCommand {
@@ -28,7 +29,7 @@ class Image(accountProperties: AccountProperties) : AnyCommand {
         val data = mapOf("prompt" to prompt)
         val headers = mapOf("Authorization" to apiKey)
         val json = HttpUtil.postStringByProxy("https://api.openai.com/v1/images/generations", data, headers)
-        val url = JsonUtil.getArray(json, "data")[0].asString
+        val url = JsonUtil.getArray(json, "data")[0].getAsStr("url")
         HttpUtil.getInputStream(url).use { return subject.uploadImage(it) }
     }
 
