@@ -27,5 +27,7 @@ object ImageUtil {
     fun InputStream.toImmutableImage(width: Int, height: Int): ImmutableImage =
         use { loader.fromStream(this).scaleTo(width, height) }
 
+    fun InputStream.toImmutableImage(): ImmutableImage = use { loader.fromStream(this) }
+
 }
 
