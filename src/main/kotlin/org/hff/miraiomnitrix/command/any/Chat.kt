@@ -42,15 +42,15 @@ private val groupCache = hashMapOf<Long, HashMap<Long, ChatData>>()
 /**
  * 获取对话缓存，或者初始化对话数据
  *
- * @param prompt 初始化对话的prompt
+ * @param defaultPrompt 初始化对话的prompt
  */
-private fun MessageEvent.getChatCache(prompt: Prompt): ChatData? {
+private fun MessageEvent.getChatCache(defaultPrompt: Prompt): ChatData? {
     if (subject.id in chatExcludeGroup) return null
     return when (this) {
         is GroupMessageEvent -> groupCache.getOrPut(group.id) { hashMapOf() }
-            .getOrPut(sender.id) { initChatData(prompt) }
+            .getOrPut(sender.id) { initChatData(defaultPrompt) }
 
-        is FriendMessageEvent -> userCache.getOrPut(sender.id) { initChatData(prompt) }
+        is FriendMessageEvent -> userCache.getOrPut(sender.id) { initChatData(defaultPrompt) }
         else -> throw MyException("不支持的消息类型")
     }.apply {
         if (messages.isEmpty()) addMessage("system", prompt.content)
