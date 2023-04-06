@@ -5,11 +5,11 @@ import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.common.getImage
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.db.entity.AutoReply
 import org.hff.miraiomnitrix.db.entity.ReplyEnum
 import org.hff.miraiomnitrix.db.service.AutoReplyService
-import org.hff.miraiomnitrix.utils.getImage
 import org.hff.miraiomnitrix.utils.toImage
 
 @Command(name = ["回复管理", "reply"])
@@ -18,16 +18,14 @@ class ReplyManager(
     private val autoReplyService: AutoReplyService
 ) : AnyCommand {
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
-        if (!permissionProperties.admin.contains(event.sender.id)) return "没有权限".toPlainText()
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
+        if (!permissionProperties.admin.contains(sender.id)) return "没有权限".toPlainText()
 
-        val message = event.message
-
-        when (args[0]) {
+        return when (args[0]) {
             "info", "get" -> {
                 val num = args.getOrNull(1)?.toIntOrNull() ?: return "参数错误".toPlainText()
                 val reply = autoReplyService.getById(num)
-                return if (reply.type == ReplyEnum.Text || reply.type == ReplyEnum.Reply) reply.content.toPlainText()
+                if (reply.type == ReplyEnum.Text || reply.type == ReplyEnum.Reply) reply.content.toPlainText()
                 else reply.content.toImage()
             }
 
@@ -38,7 +36,7 @@ class ReplyManager(
                 val content = args.getOrNull(3) ?: message.getImage()?.imageId ?: return null
                 val autoReply = AutoReply(null, type, keyword, content)
                 val save = autoReplyService.save(autoReply)
-                return (if (save) "添加成功" else "添加失败").toPlainText()
+                (if (save) "添加成功" else "添加失败").toPlainText()
             }
 
             "edit", "修改" -> {
@@ -48,13 +46,13 @@ class ReplyManager(
                     .set(AutoReply::content, content)
                     .eq(AutoReply::id, id)
                     .update()
-                return (if (update) "修改成功" else "修改失败").toPlainText()
+                (if (update) "修改成功" else "修改失败").toPlainText()
             }
 
             "del", "删除" -> {
                 val id = args.getOrNull(1)?.toIntOrNull() ?: return "id错误".toPlainText()
                 val remove = autoReplyService.removeById(id)
-                return (if (remove) "删除成功" else "删除失败").toPlainText()
+                (if (remove) "删除成功" else "删除失败").toPlainText()
             }
 
             "list", "列表" -> {
@@ -62,11 +60,10 @@ class ReplyManager(
                 val list = autoReplyService.ktQuery()
                     .eq(keyword != null, AutoReply::keyword, keyword)
                     .list()
-                return list.joinToString("\n") { "${it.id} ${it.type.value} ${it.keyword}" }.toPlainText()
+                list.joinToString("\n") { "${it.id} ${it.type.value} ${it.keyword}" }.toPlainText()
             }
 
-            else -> {}
+            else -> null
         }
-        return null
     }
 }

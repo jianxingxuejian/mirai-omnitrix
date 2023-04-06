@@ -1,14 +1,13 @@
 package org.hff.miraiomnitrix.event.group
 
 import com.sksamuel.scrimage.ImmutableImage
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
-import org.hff.miraiomnitrix.utils.getInfo
 import org.hff.miraiomnitrix.utils.getQq
-import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.hff.miraiomnitrix.utils.toAvatar
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
@@ -19,25 +18,22 @@ import java.awt.image.BufferedImage
 import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
 
-@Event(priority = 3)
+@Event(priority = 4)
 class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
 
     private val paDir = "/img/pa/*"
     private val tieDir = "/img/tie/*"
 
-    override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
-        if (args.isEmpty()) return next()
+    override suspend fun GroupMessageEvent.handle(args: List<String>, isAt: Boolean): EventResult {
+        if (args.isEmpty()) return stop()
         val pa = args.contains("爬")
         val tie = args.contains("贴")
         if (!pa && !tie) return next()
-
-        val (group, sender) = event.getInfo()
         val qq = if (isAt) sender.id else args.getQq() ?: return next()
 
         val imageA = getFileByQQ(qq, pa).toImmutableImage(400, 400)
         val imageB = qq.toAvatar().toImmutableImage(75, 75).transformAvatar()
-        imageA.overlay(imageB, 5, 320).toStream().use { group.sendImageAndCache(it) }
-        return stop()
+        return imageA.overlay(imageB, 5, 320).toStream().use { group.uploadImage(it) }.run(::stop)
     }
 
     private fun getFileByQQ(qq: Long, pa: Boolean): InputStream {
@@ -52,13 +48,12 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
     }
 
     private fun ImmutableImage.transformAvatar(): ImmutableImage {
-        val height = this.height
         val bufferedImage = BufferedImage(height, height, BufferedImage.TYPE_4BYTE_ABGR)
 
         with(bufferedImage.createGraphics()) {
             setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             clip = Ellipse2D.Double(1.0, 1.0, height - 2.0, height - 2.0)
-            drawImage(this@transformAvatar.awt(), 1, 1, height - 2, height - 2, null)
+            drawImage(awt(), 1, 1, height - 2, height - 2, null)
             dispose()
         }
 

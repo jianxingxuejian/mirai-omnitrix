@@ -14,9 +14,8 @@ import net.mamoe.mirai.message.data.OfflineAudio
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
+import org.hff.miraiomnitrix.common.MyException
 import org.hff.miraiomnitrix.config.AccountProperties
-import org.hff.miraiomnitrix.exception.MyException
-
 
 @Command(name = ["tts", "语音"])
 class Tts(accountProperties: AccountProperties) : AnyCommand {
@@ -39,12 +38,12 @@ class Tts(accountProperties: AccountProperties) : AnyCommand {
     </speak>
 """.trimIndent()
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         if (args.isEmpty()) return null
-        return tts(args.joinToString(" "), event.subject)
+        return generate(args.joinToString(" "), subject)
     }
 
-    suspend fun tts(text: String, subject: Contact): OfflineAudio? {
+    suspend fun generate(text: String, subject: Contact): OfflineAudio? {
         if (azureSpeechKey == null || azureSpeechRegion == null) throw MyException("未配置Azure Speech Key或Region")
         if (speechRecognizer == null) {
             speechRecognizer = SpeechSynthesizer(SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion))
@@ -53,10 +52,10 @@ class Tts(accountProperties: AccountProperties) : AnyCommand {
             speechRecognizer!!.SpeakSsml(speechConfigXml.format(text))
         }
         if (speechSynthesisResult.reason == ResultReason.SynthesizingAudioCompleted) {
-            speechSynthesisResult.audioData.run {
+            speechSynthesisResult.audioData.toExternalResource().use {
                 return when (subject) {
-                    is Group -> subject.uploadAudio(this.toExternalResource())
-                    is Friend -> subject.uploadAudio(this.toExternalResource())
+                    is Group -> subject.uploadAudio(it)
+                    is Friend -> subject.uploadAudio(it)
                     else -> null
                 }
             }

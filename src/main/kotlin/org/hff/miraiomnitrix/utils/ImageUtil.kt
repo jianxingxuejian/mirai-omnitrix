@@ -20,9 +20,9 @@ object ImageUtil {
     fun scaleTo(inputStream: InputStream, width: Int, height: Int): ImmutableImage =
         inputStream.use { loader.fromStream(it).scaleTo(width, height) }
 
-    fun ImmutableImage.toStream() = this.toStream(PngWriter())
+    fun ImmutableImage.toStream() = toStream(PngWriter())
 
-    fun ImmutableImage.toStream(write: ImageWriter) = ByteArrayInputStream(this.bytes(write))
+    fun ImmutableImage.toStream(write: ImageWriter) = ByteArrayInputStream(bytes(write))
 
     fun InputStream.toImmutableImage(width: Int, height: Int): ImmutableImage =
         use { loader.fromStream(this).scaleTo(width, height) }

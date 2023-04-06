@@ -4,73 +4,61 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
+import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.NudgeEvent
-import net.mamoe.mirai.utils.BotConfiguration
+import net.mamoe.mirai.event.events.UserMessageEvent
 import org.hff.miraiomnitrix.command.CommandManager
+import org.hff.miraiomnitrix.command.any.isChatting
+import org.hff.miraiomnitrix.common.putImage
 import org.hff.miraiomnitrix.config.BotProperties
-import org.hff.miraiomnitrix.event.EventManger
 import org.springframework.boot.CommandLineRunner
-import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import xyz.cssxsh.mirai.tool.FixProtocolVersion
 
-@Component
-@EnableScheduling
-class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
+lateinit var bot: Bot
+lateinit var atBot: String
 
-    companion object {
-        lateinit var bot: Bot
-    }
+@Component
+class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
 
     override fun run(args: Array<String>) {
         runBlocking(Dispatchers.IO) {
             val (qq, password) = botProperties
             if (qq == null || password == null) throw IllegalArgumentException("qq或者密码为空，请先在配置文件里添加")
             FixProtocolVersion.update()
-            val miraiProtocol = when (botProperties.protocol.lowercase()) {
-                "mac" -> BotConfiguration.MiraiProtocol.MACOS
-                "macos" -> BotConfiguration.MiraiProtocol.MACOS
-                "ipad" -> BotConfiguration.MiraiProtocol.IPAD
-                "android" -> BotConfiguration.MiraiProtocol.ANDROID_PHONE
-                "phone" -> BotConfiguration.MiraiProtocol.ANDROID_PHONE
-                "android_phone" -> BotConfiguration.MiraiProtocol.ANDROID_PHONE
-                "pad" -> BotConfiguration.MiraiProtocol.ANDROID_PAD
-                "android_pad" -> BotConfiguration.MiraiProtocol.ANDROID_PAD
-                "watch" -> BotConfiguration.MiraiProtocol.ANDROID_WATCH
-                "android_watch" -> BotConfiguration.MiraiProtocol.ANDROID_WATCH
-                else -> BotConfiguration.MiraiProtocol.MACOS
-            }
             bot = BotFactory.newBot(qq, password) {
-                protocol = miraiProtocol
+                protocol = botProperties.getProtocol()
                 fileBasedDeviceInfo("device.json")
             }
+            atBot = "@" + bot.id
             bot.login()
-            // 监听所有消息
-            bot.eventChannel.subscribeAlways<MessageEvent> { handleMessage(this) }
-            // 机器人被戳后戳回去
+            // 监听消息事件
+            bot.eventChannel.subscribeAlways<MessageEvent> { handleMessage() }
+            // 监听戳一戳事件
             bot.eventChannel.subscribeAlways<NudgeEvent> {
+                // 机器人被戳后戳回去
                 if (target.id == bot.id) from.nudge().sendTo(subject)
             }
         }
     }
 
-    /** 随机戳一个群友 */
-    @Scheduled(initialDelay = 60 * 60 * 1000, fixedDelay = 4 * 60 * 60 * 1000)
-    fun nudge() {
-        runBlocking {
-            val group = bot.groups.random()
-            val member = group.members.random()
-            member.nudge().sendTo(group)
+    /** 处理消息，首先解析指令并执行，如果不是指令则接着进行事件处理 */
+    private suspend inline fun MessageEvent.handleMessage() {
+        putImage()
+        when (this) {
+            is GroupMessageEvent -> {
+                if (isChatting()) return
+                CommandManager.execute(this)
+            }
+
+            is UserMessageEvent -> {
+                if (isChatting()) return
+                CommandManager.execute(this)
+            }
+
+            else -> {}
         }
     }
 
-}
-
-/** 处理消息，首先解析指令并执行，如果不是指令则接着进行事件处理 */
-suspend fun handleMessage(event: MessageEvent) {
-    val (execute, args, isAt) = CommandManager.handle(event)
-    if (execute) return
-    EventManger.handle(args, event, isAt)
 }

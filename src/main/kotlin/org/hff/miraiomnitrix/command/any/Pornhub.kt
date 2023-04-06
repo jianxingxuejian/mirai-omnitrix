@@ -8,17 +8,18 @@ import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.FontFamily
 import org.hff.miraiomnitrix.utils.SkiaExternalResource
 import org.hff.miraiomnitrix.utils.SkikoUtil
+import org.hff.miraiomnitrix.utils.toResource
 import org.jetbrains.skia.*
 
 @Command(name = ["pornhub", "ph"])
 class Pornhub : AnyCommand {
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         if (args.size == 1) return "参数错误".toPlainText()
         val first = args.getOrElse(0) { "Porn" }
         val second = args.getOrElse(1) { "hub" }
         val fontFamily = if (args.size >= 3) args.drop(2).joinToString(" ") else null
-        draw(first, second, fontFamily).use { return event.subject.uploadImage(it) }
+        draw(first, second, fontFamily).use { return subject.uploadImage(it) }
     }
 
     fun draw(porn: String = "Porn", hub: String = "Hub", fontFamily: String?): SkiaExternalResource {
@@ -37,6 +38,6 @@ class Pornhub : AnyCommand {
             drawRRect(RRect.makeXYWH(prefix.width + 15, 15F, suffix.width + 20, suffix.height + 10, 10F), yellow)
             drawTextLine(suffix, prefix.width + 25, 20 - font.metrics.ascent, black)
         }
-        return SkiaExternalResource(surface.makeImageSnapshot(), EncodedImageFormat.PNG)
+        return surface.makeImageSnapshot().toResource()
     }
 }

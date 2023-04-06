@@ -1,5 +1,7 @@
 package org.hff.miraiomnitrix.utils
 
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -7,34 +9,45 @@ private const val QQ_URL = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
 fun String.toUrl(): String = URLEncoder.encode(this, StandardCharsets.UTF_8)
 
-fun String.getQq() = if (this.startsWith("@"))
-    this.substring(1).toLongOrNull()
-else
-    this.toLongOrNull()
+fun String.getQq() = if (startsWith("@")) substring(1).toLongOrNull() else toLongOrNull()
 
 fun List<String>.getQq(): Long? {
     for (arg in this) {
-        val qq = arg.getQq()
-        if (qq != null) {
-            return qq
-        }
+        arg.getQq()?.run { return this }
     }
     return null
 }
 
 fun List<String>.getQqAndRemove(): Pair<Long?, List<String>> {
-    val newStringList = this.toMutableList()
+    val newStringList = toMutableList()
     for (arg in this) {
-        val qq = arg.getQq()
-        if (qq != null) {
+        arg.getQq()?.run {
             newStringList.remove(arg)
-            return Pair(qq, newStringList)
+            return Pair(this, newStringList)
         }
     }
     return Pair(null, this)
 }
 
 fun Long.toAvatar() = HttpUtil.getInputStream(QQ_URL + this)
+
+suspend inline fun <T> Iterable<T>.forEachLaunch(crossinline action: suspend (T) -> Unit) =
+    coroutineScope {
+        forEach { launch { action(it) } }
+    }
+
+fun Int.toTime(): String {
+    val hours = this / 3600
+    val minutes = this % 3600 / 60
+    val seconds = this % 60
+    return when {
+        hours > 0 -> String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        minutes > 0 -> String.format("%02d:%02d", minutes, seconds)
+        else -> String.format("%02d", seconds)
+    }
+}
+
+fun Double.toTime() = toInt().toTime()
 
 
 

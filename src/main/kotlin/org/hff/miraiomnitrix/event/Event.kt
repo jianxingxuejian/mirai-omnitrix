@@ -8,27 +8,29 @@ import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.common.Allow
 import org.springframework.stereotype.Component
 
+/**
+ * 事件注解
+ *
+ * @property priority 优先级
+ */
 @Component
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-annotation class Event(
-    /** 优先级 */
-    val priority: Int
-)
+annotation class Event(val priority: Int)
 
 /** 全部消息事件,可能来自群或者用户 */
-interface AnyEvent : Handle<MessageEvent>, Allow
+interface AnyEvent : Handler<MessageEvent>, Allow
 
 /** 群消息事件 */
-interface GroupEvent : Handle<GroupMessageEvent>
+interface GroupEvent : Handler<GroupMessageEvent>
 
 /** 用户消息事件 */
-interface UserEvent : Handle<UserMessageEvent>, Allow
+interface UserEvent : Handler<UserMessageEvent>, Allow
 
 /** 事件执行接口 */
-sealed interface Handle<T : MessageEvent> {
-    suspend fun handle(args: List<String>, event: T, isAt: Boolean): EventResult
+sealed interface Handler<T : MessageEvent> {
+    suspend fun T.handle(args: List<String>, isAt: Boolean): EventResult
 }
 
 /** 事件处理返回结果 stop()方法代表任务链中止，next()方法代表任务链继续 */

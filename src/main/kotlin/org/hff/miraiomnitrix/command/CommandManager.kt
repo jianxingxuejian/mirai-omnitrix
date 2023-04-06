@@ -3,24 +3,21 @@ package org.hff.miraiomnitrix.command
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
-import org.hff.miraiomnitrix.BotRunner
+import net.mamoe.mirai.message.data.At
+import org.hff.miraiomnitrix.atBot
+import org.hff.miraiomnitrix.command.any.ChatPlus
+import org.hff.miraiomnitrix.command.any.Tts
 import org.hff.miraiomnitrix.common.check
+import org.hff.miraiomnitrix.common.errorCache
+import org.hff.miraiomnitrix.common.sendAndCache
 import org.hff.miraiomnitrix.config.PermissionProperties
-import org.hff.miraiomnitrix.event.any.Cache
+import org.hff.miraiomnitrix.event.EventManger
 import org.hff.miraiomnitrix.utils.SpringUtil
 import kotlin.reflect.full.findAnnotation
 
-/**
- * 指令管理器，设置指令头(硬编码)，加载所有指令
- *
- * TODO: 指令头可配置
- */
 object CommandManager {
-    private val commandHeads = arrayOf("|", "\\", ",", ".", "，", "。")
-    private val permissionProperties = SpringUtil.getBean(PermissionProperties::class)
-
     /** 指令容器 */
-    val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
+    private val anyCommands: HashMap<String, AnyCommand> = hashMapOf()
     private val groupCommands: HashMap<String, GroupCommand> = hashMapOf()
     private val userCommands: HashMap<String, UserCommand> = hashMapOf()
 
@@ -29,85 +26,90 @@ object CommandManager {
         SpringUtil.getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
             val annotation = command::class.findAnnotation<Command>()
             when (command) {
-                is AnyCommand -> annotation?.name?.forEach { anyCommands[it] = command }
-                is UserCommand -> annotation?.name?.forEach { userCommands[it] = command }
-                is GroupCommand -> annotation?.name?.forEach { groupCommands[it] = command }
-            }
-        }
-    }
+                is AnyCommand -> annotation?.name?.forEach {
+                    command.needHead = annotation.needHead
+                    anyCommands[it] = command
+                }
 
-    /** 处理消息，如果是指令则执行 */
-    suspend fun handle(event: MessageEvent): Triple<Boolean, List<String>, Boolean> = when (event) {
-        is GroupMessageEvent -> {
-            val (commandName, args, isAt) = parseCommand(event)
-            if (commandName == null) Triple(false, args, isAt)
-            else groupCommands[commandName]?.tryExecute(args, event)
-                ?: anyCommands[commandName]?.tryExecute(args, event)
-                ?: Triple(false, listOf(commandName), isAt)
-        }
+                is UserCommand -> annotation?.name?.forEach {
+                    command.needHead = annotation.needHead
+                    userCommands[it] = command
+                }
 
-        is UserMessageEvent -> {
-            val (commandName, args, isAt) = parseCommand(event, false)
-            if (commandName == null) Triple(false, args, isAt)
-            else userCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
-                ?: anyCommands[commandName]?.takeIf { it.check(event) }?.tryExecute(args, event)
-                ?: Triple(false, listOf(commandName), isAt)
-        }
-
-        else -> Triple(false, listOf(), false)
-    }
-
-    private suspend fun <T : MessageEvent> Execute<T>.tryExecute(
-        args: List<String>,
-        event: T
-    ): Triple<Boolean, List<String>, Boolean> {
-        val subject = event.subject
-        try {
-            this.execute(args, event)?.run {
-                subject.sendMessage(this)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Cache.errorCache.put(subject.id, e)
-            subject.sendMessage(e.message ?: "未知错误")
-        }
-        return Triple(true, args, true)
-    }
-
-
-    /**
-     * 解析消息文本，判断是否含有指令头或者@机器人
-     *
-     * @param event 原始事件
-     * @param needHead 是否需要指令头，默认值为true，如果是非群消息则无需指令头
-     * @return Pair<指令名, 参数列表>
-     */
-    private fun parseCommand(event: MessageEvent, needHead: Boolean = true): Triple<String?, List<String>, Boolean> {
-        var string = event.message.contentToString().trim()
-
-        var hasHead = commandHeads.any { string.startsWith(it) }
-        var isAt = false
-        if (needHead) {
-            if (hasHead) {
-                string = string.substring(1)
-            } else {
-                val atBot = "@" + BotRunner.bot.id
-                if (string.contains(atBot)) {
-                    hasHead = true
-                    isAt = true
-                    string = string.replace(atBot, "")
-                    // 如果是群消息，且群号在不需要chatplus指令头的群号列表中
-                    if (permissionProperties.chatPlusNotNeedCommandGroup.contains(event.subject.id)) {
-                        return Triple("chatplus", string.split(Regex("\\s+")), true)
-                    }
+                is GroupCommand -> annotation?.name?.forEach {
+                    command.needHead = annotation.needHead
+                    groupCommands[it] = command
                 }
             }
         }
-        val args = string.replace("[图片]", "").replace("[动画表情]", "").trim().split(Regex("\\s+"))
-        if (needHead && !hasHead) return Triple(null, args, false)
-        return Triple(args[0], args.slice(1 until args.size), isAt)
     }
 
-    inline fun <reified T : AnyCommand> getCommand(): T = anyCommands[T::class.simpleName!!.lowercase()] as T
+    val ttsCommand = getCommand<Tts>()
+
+
+    /** 指令头 */
+    private val commandHeads = hashSetOf('|', '\\', ',', '.', '，', '。')
+    private val chatPlusInclude = SpringUtil.getBean(PermissionProperties::class).chatPlusNotNeedCommandGroup
+    private val chatPlusCommand = getCommand<ChatPlus>()
+
+    /** 解析群消息文本并执行指令，如果不是指令，则会继续执行事件 */
+    suspend fun execute(event: GroupMessageEvent) {
+        // 解析原始文本，判断是否有指令头或者@机器人
+        val (content, hasHead, isAt) = event.message.contentToString().trim().run {
+            if (commandHeads.contains(first())) Triple(substring(1), true, false)
+            else if (startsWith(atBot)) Triple(replace(atBot, ""), false, true)
+            else Triple(this, false, false)
+        }
+        val args = content.toArgs()
+        // 配置了无需指令头就能使用chatplus功能的群，直接执行，该功能可能跟其他指令会产生冲突
+        if (isAt && chatPlusInclude.contains(event.group.id)) {
+            chatPlusCommand.tryExecute(args, event)
+            return
+        }
+        val check = hasHead || isAt
+        val commandName = args[0]
+        val appendArgs = args.drop(1)
+        groupCommands[commandName]?.run {
+            if (needHead && !check) return
+            tryExecute(appendArgs, event)
+        } ?: anyCommands[commandName]?.run {
+            if (needHead && !check) return
+            tryExecute(appendArgs, event)
+        } ?: EventManger.handle(args, event, isAt)
+    }
+
+    /** 解析用户消息文本并执行指令，如果不是指令，则会继续执行事件 */
+    suspend fun execute(event: UserMessageEvent) {
+        val args = event.message.contentToString().trim().run {
+            if (commandHeads.contains(first())) substring(1)
+            else this
+        }.toArgs()
+        val commandName = args[0]
+        val appendArgs = args.drop(1)
+        userCommands[commandName]?.apply { if (!check(event)) return }?.tryExecute(appendArgs, event)
+            ?: anyCommands[commandName]?.apply { if (!check(event)) return }?.tryExecute(appendArgs, event)
+            ?: EventManger.handle(args, event)
+    }
+
+    /** 字符串转换成参数列表 */
+    private fun String.toArgs() = replace("[图片]", "").replace("[动画表情]", "").trim().split(Regex("\\s+"))
+
+    private suspend inline fun <reified T : MessageEvent> Execute<T>.tryExecute(args: List<String>, event: T) {
+        event.run {
+            try {
+                execute(args)?.run { subject.sendAndCache(this) }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                errorCache.put(subject.id, e)
+                subject.sendMessage(At(sender) + (e.message ?: "未知错误"))
+            }
+        }
+    }
+
+    /** 获取指令实例 */
+    private inline fun <reified T : Execute<MessageEvent>> getCommand(): T {
+        val name = T::class.simpleName!!.lowercase()
+        return (anyCommands[name] ?: groupCommands[name] ?: userCommands[name]) as T
+    }
 
 }

@@ -1,7 +1,6 @@
 package org.hff.miraiomnitrix.command.any
 
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Message
@@ -12,8 +11,11 @@ import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.add
+import org.hff.miraiomnitrix.utils.forEachLaunch
 import java.time.LocalDate
 
+/** [api文档地址](https://bangumi.github.io/api) */
 @Command(name = ["番剧推荐", "bgm"])
 class Bgm : AnyCommand {
 
@@ -28,33 +30,19 @@ class Bgm : AnyCommand {
         |示例3：全金属狂潮 日期 >2008 <2020 评分 >=4.5 排名 <3000 >100 标签 冒险
     """.trimMargin().toPlainText()
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+    private val calendar = hashSetOf("每日放送", "每日", "放送", "放送表", "calendar", "day")
+
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         if (args.isEmpty() || args[0] == "help") return help
 
-        val subject = event.subject
-
-        if (hashSetOf("每日放送", "每日", "放送", "放送表", "calendar", "day").contains(args[0])) {
+        if (calendar.contains(args[0])) {
             val index = args.getOrNull(1)?.toIntOrNull() ?: LocalDate.now().dayOfWeek.value
             val json = HttpUtil.getString(calendarApi)
             val calendarList: List<Calendar> = JsonUtil.fromJson(json)
             val calendar = calendarList[index - 1]
             return buildForwardMessage(subject) {
-                coroutineScope {
-                    calendar.items.forEach { (url, name, name_cn, rank, rating, summary, images) ->
-                        launch {
-                            val image = HttpUtil.getInputStream(images.medium.replaceFirst("http", "https"))
-                                .use { subject.uploadImage(it) }
-                            buildMessageChain {
-                                +image
-                                +"\n"
-                                +"名字: ${name_cn.ifBlank { name }}\n"
-                                if (rank != 0) +"排名: $rank\n" else +"暂无排名\n"
-                                if (summary.isNotBlank()) +"简介: $summary\n"
-                                +"评分: ${rating?.score ?: "暂无评分"}(${rating?.total ?: 0}人)\n"
-                                +"链接: $url"
-                            }.run { add(subject.bot, this) }
-                        }
-                    }
+                calendar.items.forEachLaunch {
+                    it.buildCalendar(subject).run(::add)
                 }
             }
         }
@@ -71,35 +59,45 @@ class Bgm : AnyCommand {
                 "评分" -> parseArgs(args, i, rating)
                 "排名" -> parseArgs(args, i, rank)
                 "标签" -> parseArgs(args, i, tag)
-                else -> keywords.add(args[i])
+                else -> if (listOf(airDate, rank, rating, tag).none { args[i] in it }) keywords.add(args[i])
             }
         }
         val filter = Filter(air_date = airDate, rating = rating, rank = rank, tag = tag)
-        val searchParam = SearchParam(keyword = keywords.joinToString(" "), filter = filter)
+        val searchParam =
+            SearchParam(keyword = if (keywords.isEmpty()) null else keywords.joinToString(" "), filter = filter)
+        println(searchParam)
         val json = HttpUtil.postString(searchApi, searchParam)
         val result: SearchResult = JsonUtil.fromJson(json)
         return buildForwardMessage(subject) {
-            coroutineScope {
-                result.data.forEach { (name, name_cn, rank, score, summary, image, tags) ->
-                    launch {
-                        buildMessageChain {
-                            if (image.isNotBlank()) {
-                                +HttpUtil.getInputStream(image).use { subject.uploadImage(it) }
-                                +"\n"
-                            }
-                            +"名字: ${name_cn.ifBlank { name }}\n"
-                            if (rank != 0) +"排名: $rank\n" else +"暂无排名\n"
-                            +"评分: ${if (score != null && score != 0.0) score else "暂无评分"}\n"
-                            if (summary?.isNotBlank() == true) +"简介: $summary\n"
-                            if (tags.isNotEmpty()) +"标签: ${tags.joinToString { tag -> tag.name }}"
-                        }.run { add(subject.bot, this) }
-                    }
-                }
-            }
+            result.data.forEachLaunch { it.buildSearch(context).run(::add) }
         }
     }
 
-    fun parseArgs(args: List<String>, i: Int, values: MutableList<String>) {
+    private suspend fun Item.buildCalendar(subject: Contact) =
+        buildMessageChain {
+            +HttpUtil.getInputStream(images.medium.replaceFirst("http", "https"))
+                .use { subject.uploadImage(it) }
+            +"\n"
+            +"名字: ${name_cn.ifBlank { name }}\n"
+            if (summary.isNotBlank()) +"简介: $summary\n"
+            +"排名: ${if (rank != 0) rank else "暂无"}\n"
+            +"评分: ${rating?.score ?: "暂无"}(${rating?.total ?: 0}人)\n"
+            +"链接: $url"
+        }
+
+    private suspend fun Data.buildSearch(subject: Contact) = buildMessageChain {
+        if (image.isNotBlank()) {
+            +HttpUtil.getInputStream(image).use { subject.uploadImage(it) }
+            +"\n"
+        }
+        +"名字: ${name_cn.ifBlank { name }}\n"
+        +"排名: ${if (rank != 0) rank else "暂无"}\n"
+        +"评分: ${if (score != null && score != 0.0) score else "暂无"}\n"
+        if (summary?.isNotBlank() == true) +"简介: $summary\n"
+        if (tags.isNotEmpty()) +"标签: ${tags.joinToString { tag -> tag.name }}"
+    }
+
+    private fun parseArgs(args: List<String>, i: Int, values: MutableList<String>) {
         if (i < args.size - 1 && (args[i + 1][0] == '<' || args[i + 1][0] == '>')) {
             values.add(args[i + 1])
         }
@@ -109,7 +107,6 @@ class Bgm : AnyCommand {
     }
 
     data class Calendar(val items: List<Item>)
-
     data class Item(
         val url: String,
         val name: String,
@@ -118,22 +115,12 @@ class Bgm : AnyCommand {
         val rating: Rating?,
         val summary: String,
         val images: Images,
-        val air_date: String,
-        val air_weekday: Int,
     )
 
-    data class Images(
-        val common: String,
-        val grid: String,
-        val large: String,
-        val medium: String,
-        val small: String
-    )
-
+    data class Images(val medium: String)
     data class Rating(val score: Double, val total: Int)
 
-    data class SearchParam(val filter: Filter, val keyword: String, val sort: String = "rank")
-
+    data class SearchParam(val filter: Filter, val keyword: String?, val sort: String = "rank")
     data class Filter(
         val air_date: List<String>,
         val rank: List<String>,
@@ -152,8 +139,6 @@ class Bgm : AnyCommand {
         val summary: String?,
         val image: String,
         val tags: List<Tag>,
-        val date: String,
-        val type: Int
     )
 
     data class Tag(val count: Int, val name: String)

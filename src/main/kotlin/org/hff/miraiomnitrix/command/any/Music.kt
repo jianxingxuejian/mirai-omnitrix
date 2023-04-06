@@ -9,7 +9,7 @@ import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.getInfo
+import org.hff.miraiomnitrix.utils.toTime
 import java.net.URLEncoder
 
 @Command(name = ["音乐", "网易云", "music", "wyy", "点歌"])
@@ -19,7 +19,7 @@ class Music : AnyCommand {
 
     private val jobMap = hashMapOf<Long, Job>()
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         if (args.isEmpty()) return "请输入歌曲名".toPlainText()
         val name = args.joinToString(" ")
         val encode = URLEncoder.encode(name, Charsets.UTF_8)
@@ -30,21 +30,17 @@ class Music : AnyCommand {
         val list = songs.mapIndexed { index, song ->
             val artists = song.artists
             val artist = artists.joinToString("/") { it.name }
-            val duration = song.duration
-            val minutes = duration / 1000 / 60
-            val seconds = duration / 1000 % 60
-            val length = String.format("%02d:%02d", minutes, seconds)
+            val length = song.duration.toTime()
             "${index + 1}. ${song.name} - $artist  $length"
         }
-        val (subject, sender) = event.getInfo()
         subject.sendMessage(list.joinToString("\n"))
 
         try {
             coroutineScope {
                 jobMap[sender.id]?.cancel()
-                val job = launch {
+                launch {
                     while (isActive) {
-                        val next = event.nextMessage(60_000L, EventPriority.HIGH, intercept = true)
+                        val next = nextMessage(60_000L, EventPriority.HIGH, intercept = true)
                         val num = next.content.toIntOrNull() ?: continue
                         if (num !in 1..list.size) subject.sendMessage("请输入有效的序号")
                         val song = songs[num - 1]
@@ -59,8 +55,7 @@ class Music : AnyCommand {
                             brief = "[分享]" + song.name,
                         ).run { subject.sendMessage(this) }
                     }
-                }
-                jobMap[sender.id] = job
+                }.run { jobMap[sender.id] = this }
             }
         } catch (_: TimeoutCancellationException) {
             jobMap.remove(sender.id)

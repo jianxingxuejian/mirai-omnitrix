@@ -1,5 +1,6 @@
 package org.hff.miraiomnitrix.command.any
 
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
@@ -7,7 +8,6 @@ import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.sendImageAndCache
 
 @Command(name = ["壁纸", "bizhi"])
 class Wallpaper : AnyCommand {
@@ -28,7 +28,7 @@ class Wallpaper : AnyCommand {
         "rsetbgsekbjlghelkrabvfgheiv"
     )
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         var sort = "random"
         args.forEach {
             when (it) {
@@ -47,19 +47,17 @@ class Wallpaper : AnyCommand {
             }
         }
 
-        val subject = event.subject
-
         if (vip.contains(sort)) {
             val apiResult = HttpUtil.getString(vipUrl + sort)
             if (apiResult.isBlank()) return "api获取为空".toPlainText()
-            val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-            HttpUtil.getInputStream(url).use { subject.sendImageAndCache(it) }.run { return null }
+            JsonUtil.getArray(apiResult, "pic")[0].asString.run(HttpUtil::getInputStream)
+                .use { return subject.uploadImage(it) }
         }
         urls.forEach {
             try {
                 val apiResult = HttpUtil.getString(it + sort)
-                val url = JsonUtil.getArray(apiResult, "pic")[0].asString
-                HttpUtil.getInputStream(url).use { img -> subject.sendImageAndCache(img) }.run { return null }
+                JsonUtil.getArray(apiResult, "pic")[0].asString.run(HttpUtil::getInputStream)
+                    .use { img -> return subject.uploadImage(img) }
             } catch (e: Exception) {
                 return@forEach
             }

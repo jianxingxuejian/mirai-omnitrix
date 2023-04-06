@@ -8,7 +8,7 @@ import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
-import org.hff.miraiomnitrix.BotRunner
+import org.hff.miraiomnitrix.bot
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.db.entity.Live
@@ -32,8 +32,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
     """.trimMargin()
 
 
-    override suspend fun execute(args: List<String>, event: GroupMessageEvent): Message? {
-        val group = event.group
+    override suspend fun GroupMessageEvent.execute(args: List<String>): Message? {
         if (args.isEmpty()) {
             val list = liveService.ktQuery().eq(Live::groupId, group.id).list()
             if (list.isEmpty()) return "尚未添加主播\n使用live help指令获取使用方法".toPlainText()
@@ -101,7 +100,7 @@ class Live(private val liveService: LiveService) : GroupCommand {
                 val userInfo = getBilibiliUserInfo(it.uid)
                 val liveRoom = userInfo.live_room ?: return@forEach
                 if (cache != null) {
-                    val group = BotRunner.bot.groups[it.groupId] ?: return@forEach
+                    val group = bot.groups[it.groupId] ?: return@forEach
                     if (cache == 0 && liveRoom.liveStatus == 1) {
                         group.sendMessage("${userInfo.name}开始直播，地址:${liveRoom.url}")
                     }

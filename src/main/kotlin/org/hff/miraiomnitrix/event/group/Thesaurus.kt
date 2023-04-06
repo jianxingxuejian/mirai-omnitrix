@@ -8,7 +8,7 @@ import org.hff.miraiomnitrix.utils.JsonUtil
 import org.springframework.core.io.ClassPathResource
 
 /** 二次元回复，词库出自: https://github.com/Kyomotoi/AnimeThesaurus */
-@Event(priority = 1)
+@Event(priority = 3)
 class Thesaurus(private val permissionProperties: PermissionProperties, private val botProperties: BotProperties) :
     GroupEvent {
 
@@ -23,19 +23,16 @@ class Thesaurus(private val permissionProperties: PermissionProperties, private 
         }
     }
 
-    override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
+    override suspend fun GroupMessageEvent.handle(args: List<String>, isAt: Boolean): EventResult {
         if (!isAt) return next()
-        if (permissionProperties.replyExcludeGroup.contains(event.group.id)) return next()
+        if (permissionProperties.replyExcludeGroup.contains(group.id)) return next()
         val arg = args.getOrNull(0) ?: return next()
 
         when (val list = thesaurus[arg]) {
-            null -> {
-                if (botProperties.hello != null && (arg.startsWith("你是谁") || arg.startsWith("你好")))
-                    return stop(botProperties.hello)
-            }
-
+            null -> if ((arg.startsWith("你是谁") && botProperties.hello != null)) return stop(botProperties.hello)
             else -> botProperties.name?.run { return stop(list.random().replace("我", this)) }
         }
         return next()
     }
+
 }

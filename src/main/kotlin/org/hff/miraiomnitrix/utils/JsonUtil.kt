@@ -2,13 +2,15 @@ package org.hff.miraiomnitrix.utils
 
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
-import org.hff.miraiomnitrix.exception.MyException
+import org.hff.miraiomnitrix.common.MyException
 
 object JsonUtil {
 
     val gson = Gson()
 
     fun getStr(json: String, key: String): String = getKey(json, key).asString
+
+    fun getObj(json: String): JsonObject = parse(json).asJsonObject
 
     fun getObj(json: String, key: String): JsonObject = getKey(json, key).asJsonObject
 
@@ -41,10 +43,10 @@ object JsonUtil {
 
 }
 
-fun JsonObject.getAsStr(key: String): String = this.get(key).asString
+fun JsonObject.getAsStr(key: String): String = this[key].asString
 
-fun JsonElement.get(key: String): JsonElement = this.asJsonObject.get(key)
+fun JsonElement.get(key: String): JsonElement = asJsonObject.get(key)
 
-fun JsonElement.getAsStr(key: String): String = this.asJsonObject.getAsStr(key)
+fun JsonElement.getAsStr(key: String): String = asJsonObject.getAsStr(key)
 
-fun JsonElement.getAsArray(key: String): JsonArray = this.asJsonObject.getAsJsonArray(key)
+fun JsonElement.getAsArray(key: String): JsonArray = asJsonObject.getAsJsonArray(key)

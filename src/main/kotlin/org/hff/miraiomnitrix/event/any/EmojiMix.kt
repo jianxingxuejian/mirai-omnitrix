@@ -1,11 +1,12 @@
 package org.hff.miraiomnitrix.event.any
 
+
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
-import org.hff.miraiomnitrix.utils.sendImageAndCache
 import org.springframework.core.io.ClassPathResource
 
 /** emoji合成，json数据来源于 https://github.com/xsalazar/emoji-kitchen */
@@ -15,7 +16,6 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
     private val url = "https://www.gstatic.com/android/keyboard/emojikitchen"
 
     private val emojiCache = hashMapOf<String, HashMap<String, Emoji>>()
-
 
     init {
         val json =
@@ -34,9 +34,8 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
         }
     }
 
-    override suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean): EventResult {
-        if (args.isEmpty()) return next()
-        val subject = event.subject
+    override suspend fun MessageEvent.handle(args: List<String>, isAt: Boolean): EventResult {
+        if (args.isEmpty()) return stop()
         if (permissionProperties.emojiMixExcludeGroup.contains(subject.id)) return next()
 
         val regex = Regex("^(\\p{So}){2}") // 匹配以两个emoji开头的字符串
@@ -48,8 +47,8 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
         val (leftEmoji, rightEmoji, date) = emojiCache[first]?.get(second)
             ?: emojiCache[second]?.get(first)
             ?: return next()
-        HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
-            .use { subject.sendImageAndCache(it) }.run { return stop() }
+        return HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
+            .use { subject.uploadImage(it) }.run(::stop)
     }
 
     data class Emoji(

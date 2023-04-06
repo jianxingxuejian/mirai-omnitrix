@@ -3,6 +3,7 @@ package org.hff.miraiomnitrix.command.any
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.canvas.Canvas
 import com.sksamuel.scrimage.canvas.drawables.Text
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.getMember
 import net.mamoe.mirai.contact.nameCardOrNick
@@ -11,20 +12,21 @@ import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.utils.*
+import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
+import org.hff.miraiomnitrix.utils.getQqAndRemove
+import org.hff.miraiomnitrix.utils.toAvatar
 import java.awt.Color
 import java.awt.Font
 
 @Command(name = ["游戏王", "ygocard", "ygo"])
 class YgoCard : AnyCommand {
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
-        val (subject, sender) = event.getInfo()
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         val (qq, args1) = args.getQqAndRemove()
         val member =
-            if (subject is Group && qq != null) subject.getMember(qq) ?: return "未查到群成员".toPlainText()
+            if (subject is Group && qq != null) (subject as Group).getMember(qq) ?: return "未查到群成员".toPlainText()
             else sender
         var lb = false
         var type = Type.Spell
@@ -89,9 +91,8 @@ class YgoCard : AnyCommand {
                     if (lb) 57 else 101,
                     if (lb) 215 else 220
                 )
-                .toStream().use { subject.sendImageAndCache(it) }
+                .toStream().use { return subject.uploadImage(it) }
         }
-        return null
     }
 
     enum class Type(val image: ImmutableImage) {

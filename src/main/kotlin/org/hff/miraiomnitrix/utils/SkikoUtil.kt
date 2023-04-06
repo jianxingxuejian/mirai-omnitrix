@@ -30,7 +30,7 @@ enum class FontFamily(val value: String) {
 
 class SkiaExternalResource(override val origin: Data, override val formatName: String) :
     ExternalResource, AbstractExternalResource({ origin.close() }) {
-    constructor(image: Image, format: EncodedImageFormat) : this(
+    constructor(image: Image, format: EncodedImageFormat = EncodedImageFormat.PNG) : this(
         origin = requireNotNull(image.encodeToData(format)) { "encode $format result null." },
         formatName = format.name.replace("JPEG", "JPG")
     )
@@ -40,3 +40,5 @@ class SkiaExternalResource(override val origin: Data, override val formatName: S
     override val size: Long get() = origin.size.toLong()
     override fun inputStream0(): InputStream = origin.bytes.inputStream()
 }
+
+fun Image.toResource(format: EncodedImageFormat = EncodedImageFormat.PNG) = SkiaExternalResource(this, format)

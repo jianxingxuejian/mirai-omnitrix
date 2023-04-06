@@ -26,4 +26,7 @@ data class AccountProperties(
     val githubToken: String?,
     /** https://www.v2ex.com/settings/tokens  */
     val v2exToken: String?,
+    /** https://replicate.com/account */
+    val replicateToken: String?,
+    val civitaiKey: String?,
 )

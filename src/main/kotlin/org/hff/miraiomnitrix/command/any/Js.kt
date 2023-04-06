@@ -25,7 +25,7 @@ class Js : AnyCommand {
         sandbox.executor = Executors.newSingleThreadExecutor()
     }
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         val command = args.joinToString(" ")
         return try {
             val result = sandbox.eval(command) ?: return "null".toPlainText()

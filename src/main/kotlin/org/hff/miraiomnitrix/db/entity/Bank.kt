@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
+import java.io.Serializable
 
 @TableName("`bank`")
 data class Bank(
@@ -19,4 +20,4 @@ data class Bank(
     /** 持有的幻书币 */
     @TableField("`coin`")
     val coin: String,
-)
+): Serializable

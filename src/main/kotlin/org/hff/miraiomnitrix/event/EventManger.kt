@@ -3,7 +3,8 @@ package org.hff.miraiomnitrix.event
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
-import org.hff.miraiomnitrix.event.any.Cache
+import org.hff.miraiomnitrix.common.errorCache
+import org.hff.miraiomnitrix.common.sendAndCache
 import org.hff.miraiomnitrix.utils.SpringUtil
 
 object EventManger {
@@ -20,47 +21,40 @@ object EventManger {
                 is UserEvent -> userChain.add(it)
             }
         }
-        sortByPriority(anyChain)
-        sortByPriority(groupChain)
-        sortByPriority(userChain)
+        sortByPriority(listOf(anyChain, groupChain, userChain))
     }
 
-    private fun sortByPriority(chain: MutableList<out Any>) =
-        chain.sortBy { it.javaClass.getAnnotation(Event::class.java).priority }
+    private fun sortByPriority(chains: List<MutableList<out Any>>) =
+        chains.forEach { it.sortBy { chain -> chain.javaClass.getAnnotation(Event::class.java).priority } }
 
     /** 非指令消息按照事件优先度进行处理 */
-    suspend fun handle(args: List<String>, event: MessageEvent, isAt: Boolean) {
-        when (event) {
-            is GroupMessageEvent -> {
-                groupChain.handle(args, event, isAt)
-                anyChain.handle(args, event)
-            }
-
-            is UserMessageEvent -> {
-                userChain.handle(args, event)
-                anyChain.handle(args, event)
-            }
-
-            else -> {}
-        }
+    suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean) {
+        groupChain.handleBatch(args, event, isAt)
+        anyChain.handleBatch(args, event, isAt)
     }
 
-    private suspend fun <T : MessageEvent, K : Handle<T>> MutableList<K>.handle(
+    suspend fun handle(args: List<String>, event: UserMessageEvent) {
+        userChain.handleBatch(args, event)
+        anyChain.handleBatch(args, event)
+    }
+
+    private suspend inline fun <T : MessageEvent, K : Handler<T>> MutableList<K>.handleBatch(
         args: List<String>,
         event: T,
         isAt: Boolean = false
-    ) {
-        val subject = event.subject
-        try {
-            for (handler in this) {
-                val (stop, message) = handler.handle(args, event, isAt)
-                if (message != null) subject.sendMessage(message)
-                if (stop) break
+    ) = event.run {
+        forEach {
+            it.run {
+                try {
+                    val (stop, message) = handle(args, isAt)
+                    subject.sendAndCache(message)
+                    if (stop) return@forEach
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    errorCache.put(subject.id, e)
+                    subject.sendMessage(e.message ?: "未知错误")
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Cache.errorCache.put(subject.id, e)
-            subject.sendMessage(e.message ?: "未知错误")
         }
     }
 

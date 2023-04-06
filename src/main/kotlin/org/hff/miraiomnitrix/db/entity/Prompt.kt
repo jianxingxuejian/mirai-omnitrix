@@ -6,16 +6,15 @@ import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
 import java.io.Serializable
 
-@TableName("`character`")
-class Character: Serializable {
-
+@TableName("`prompt`")
+data class Prompt(
     /** 主键 */
     @TableId(value = "id", type = IdType.AUTO)
-    var id: Int? = null
-
-    /** 角色名 */
+    var id: Int?,
+    /** prompt名称 */
     @TableField("`name`")
-    var name: String? = null
-
-    var externalId: String? = null
-}
+    val name: String,
+    /** prompt正文 */
+    @TableField("`content`")
+    var content: String,
+): Serializable

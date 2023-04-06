@@ -16,7 +16,7 @@ class Moyu : AnyCommand {
 
     private val url = "https://api.j4u.ink/proxy/redirect/moyu/calendar/"
 
-    override suspend fun execute(args: List<String>, event: MessageEvent): Message? {
+    override suspend fun MessageEvent.execute(args: List<String>): Message? {
         val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
         HttpUtil.getInputStream("$url$formattedDate.png")
             .use {
@@ -24,7 +24,7 @@ class Moyu : AnyCommand {
                     .let { image ->
                         ByteArrayOutputStream().use { baos ->
                             ImageIO.write(image, "png", baos)
-                            return event.subject.uploadImage(baos.toByteArray().toExternalResource())
+                            return subject.uploadImage(baos.toByteArray().toExternalResource())
                         }
                     }
             }

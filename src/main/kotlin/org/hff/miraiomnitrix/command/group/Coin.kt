@@ -12,13 +12,13 @@ class Coin(private val bankServer: BankServer) : GroupCommand, CommandLineRunner
 
     override fun run(vararg args: String?) {
         val list = bankServer.list()
-        if (list.isNotEmpty()){
+        if (list.isNotEmpty()) {
 
         }
     }
 
-    override suspend fun execute(args: List<String>, event: GroupMessageEvent): Message? {
-        TODO("Not yet implemented")
+    override suspend fun GroupMessageEvent.execute(args: List<String>): Message? {
+        return null
     }
 
 }

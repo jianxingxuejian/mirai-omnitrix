@@ -1,6 +1,6 @@
 package org.hff.miraiomnitrix.db.mapper
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper
-import org.hff.miraiomnitrix.db.entity.Character
+import org.hff.miraiomnitrix.db.entity.Prompt
 
-interface CharacterMapper: BaseMapper<Character>
+interface PromptMapper : BaseMapper<Prompt>

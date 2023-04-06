@@ -6,10 +6,11 @@ import org.hff.miraiomnitrix.event.EventResult
 import org.hff.miraiomnitrix.event.GroupEvent
 import org.hff.miraiomnitrix.event.stop
 
+// TODO: 挖矿
 @Event(priority = 6)
 class Mine : GroupEvent {
 
-    override suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean): EventResult {
+    override suspend fun GroupMessageEvent.handle(args: List<String>, isAt: Boolean): EventResult {
         return stop()
     }
 
