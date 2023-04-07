@@ -32,7 +32,7 @@ interface UserCommand : Execute<UserMessageEvent>, Allow
 sealed interface Execute<T : MessageEvent> {
     /** 是否需要指令头 */
     var needHead: Boolean
-        get() = false
+        get() = true
         set(value) {}
 
     /**
