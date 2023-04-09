@@ -5,13 +5,15 @@ import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.buildMessageChain
 import org.apache.ibatis.ognl.DynamicSubscript.first
 import org.hff.miraiomnitrix.config.AccountProperties
+import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.uploadImage
 
 @Event(priority = 4)
-class LinkParse(accountProperties: AccountProperties) : GroupEvent {
+class LinkParse(accountProperties: AccountProperties, private val permissionProperties: PermissionProperties) :
+    GroupEvent {
 
     private val bvRegex = """(?i)(?<!\w)(?:av(\d+)|(BV1[1-9A-NP-Za-km-z]{9}))""".toRegex()
     private val v2exRegex = """(?:https?://)?(?:www\.)?v2ex\.com/t/(\d+)""".toRegex()
@@ -23,6 +25,7 @@ class LinkParse(accountProperties: AccountProperties) : GroupEvent {
 
         val bvMatch = bvRegex.find(link)
         if (bvMatch != null) {
+            if (permissionProperties.bvExcludeGroup.contains(subject.id)) return stop()
             val value = bvMatch.groups[0]?.value ?: return stop()
             return parseBilibili(value).let(::stop)
         }

@@ -3,6 +3,7 @@ package org.hff.miraiomnitrix.event
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
+import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.common.errorCache
 import org.hff.miraiomnitrix.common.sendAndCache
 import org.hff.miraiomnitrix.utils.SpringUtil
