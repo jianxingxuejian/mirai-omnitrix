@@ -30,10 +30,9 @@ interface UserCommand : Execute<UserMessageEvent>, Allow
 
 /** 指令执行接口 */
 sealed interface Execute<T : MessageEvent> {
-    /** 是否需要指令头 */
-    var needHead: Boolean
+    /** 是否需要指令头，默认需要 */
+    val needHead: Boolean
         get() = true
-        set(value) {}
 
     /**
      * 执行指令

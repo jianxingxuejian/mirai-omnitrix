@@ -1,6 +1,7 @@
 package org.hff.miraiomnitrix.event.group
 
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.message.data.At
 import org.hff.miraiomnitrix.config.BotProperties
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
@@ -8,7 +9,7 @@ import org.hff.miraiomnitrix.utils.JsonUtil
 import org.springframework.core.io.ClassPathResource
 
 /** 二次元回复，词库出自: https://github.com/Kyomotoi/AnimeThesaurus */
-@Event(priority = 3)
+@Event(priority = 2)
 class Thesaurus(private val permissionProperties: PermissionProperties, private val botProperties: BotProperties) :
     GroupEvent {
 
@@ -30,7 +31,7 @@ class Thesaurus(private val permissionProperties: PermissionProperties, private 
 
         when (val list = thesaurus[arg]) {
             null -> if ((arg.startsWith("你是谁") && botProperties.hello != null)) return stop(botProperties.hello)
-            else -> botProperties.name?.run { return stop(list.random().replace("我", this)) }
+            else -> botProperties.name?.let { return stop(At(sender) + list.random().replace("我", it)) }
         }
         return next()
     }

@@ -12,7 +12,7 @@ import org.hff.miraiomnitrix.utils.HttpUtil
 class KFC : AnyCommand {
 
     override suspend fun MessageEvent.execute(args: List<String>): Message? {
-        val text = HttpUtil.getStringByProxy("https://kfc-crazy-thursday.vercel.app/api/index")
+        val text = HttpUtil.getString("https://kfc-crazy-thursday.vercel.app/api/index", isProxy = true)
         return if (args.getOrNull(0) == "tts") {
             ttsCommand.generate(text, subject)
         } else {

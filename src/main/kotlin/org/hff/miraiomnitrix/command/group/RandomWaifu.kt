@@ -13,11 +13,8 @@ import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.common.getImage
-import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.ImageUtil
+import org.hff.miraiomnitrix.utils.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
-import org.hff.miraiomnitrix.utils.getQq
-import org.hff.miraiomnitrix.utils.toAvatar
 import org.springframework.core.io.Resource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.Color
@@ -49,20 +46,20 @@ class RandomWaifu : GroupCommand {
             imgUrl != null -> {
                 val names = if (args.isEmpty()) sender.nameCardOrNick else sender.nameCardOrNick + " " + args[0]
                 val right = HttpUtil.getInputStream(imgUrl)
-                draw(left, right, names).use { group.uploadImage(it) }
+                uploadImage(draw(left, right, names))
             }
 
             args.isEmpty() -> {
                 val member = group.members.random()
                 val names = sender.nameCardOrNick + " " + member.nameCardOrNick
-                draw(left, member.id, names).use { group.uploadImage(it) }
+                uploadImage(draw(left, member.id, names))
             }
 
             args[0] == "二次元" || args[0] == "动漫" -> {
                 val name = avatars.keys.random()
                 val names = sender.nameCardOrNick + " " + name
                 val right = avatars[name]!!.inputStream
-                draw(left, right, names).use { group.uploadImage(it) }
+                draw(left, right, names).use { uploadImage(it) }
             }
 
             else -> when (val qq = args.getQq()) {
@@ -81,11 +78,11 @@ class RandomWaifu : GroupCommand {
         }
     }
 
-    private fun draw(left: Long, right: Long, names: String): ByteArrayInputStream =
-        draw(left, right.toAvatar(), names)
+    private suspend fun draw(left: Long, right: Long, names: String): ByteArrayInputStream =
+        draw(left, right.download(), names)
 
-    private fun draw(left: Long, right: InputStream, names: String): ByteArrayInputStream =
-        left.toAvatar().use { leftIS ->
+    private suspend fun draw(left: Long, right: InputStream, names: String): ByteArrayInputStream =
+        left.download().use { leftIS ->
             right.use {
                 when ((1..3).random()) {
                     1 -> draw1(leftIS, it, names)

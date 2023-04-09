@@ -25,7 +25,7 @@ object EventManger {
     }
 
     private fun sortByPriority(chains: List<MutableList<out Any>>) =
-            chains.forEach { it.sortBy { chain -> chain.javaClass.getAnnotation(Event::class.java).priority } }
+        chains.forEach { it.sortBy { chain -> chain.javaClass.getAnnotation(Event::class.java).priority } }
 
     /** 非指令消息按照事件优先度进行处理 */
     suspend fun handle(args: List<String>, event: GroupMessageEvent, isAt: Boolean) {
@@ -39,9 +39,9 @@ object EventManger {
     }
 
     private suspend inline fun <T : MessageEvent, K : Handler<T>> MutableList<K>.handleBatch(
-            args: List<String>,
-            event: T,
-            isAt: Boolean = false
+        args: List<String>,
+        event: T,
+        isAt: Boolean = false
     ) = event.apply {
         forEach {
             it.run {
@@ -52,7 +52,7 @@ object EventManger {
                 } catch (e: Exception) {
                     e.printStackTrace()
                     errorCache.put(subject.id, e)
-                    subject.sendMessage(e.message ?: "未知错误")
+                    subject.sendAndCache((e.message ?: "未知错误").toPlainText())
                 }
             }
         }

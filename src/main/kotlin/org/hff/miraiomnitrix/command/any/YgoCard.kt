@@ -3,7 +3,6 @@ package org.hff.miraiomnitrix.command.any
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.canvas.Canvas
 import com.sksamuel.scrimage.canvas.drawables.Text
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.getMember
 import net.mamoe.mirai.contact.nameCardOrNick
@@ -15,8 +14,9 @@ import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.ImageUtil
 import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
+import org.hff.miraiomnitrix.utils.download
 import org.hff.miraiomnitrix.utils.getQqAndRemove
-import org.hff.miraiomnitrix.utils.toAvatar
+import org.hff.miraiomnitrix.utils.uploadImage
 import java.awt.Color
 import java.awt.Font
 
@@ -82,16 +82,15 @@ class YgoCard : AnyCommand {
             it.color = Color.BLACK
             it.font = Font("SimSun", Font.BOLD, 40)
         }
-        member.id.toAvatar().use { avatar ->
-            Canvas(type.image)
+        member.id.download().use { avatar ->
+            return Canvas(type.image)
                 .draw(nameText).draw(contentText).image
                 .overlay(attr.image, 680, 58)
                 .overlay(
                     avatar.toImmutableImage(if (lb) 700 else 613, if (lb) 522 else 613),
                     if (lb) 57 else 101,
                     if (lb) 215 else 220
-                )
-                .toStream().use { return subject.uploadImage(it) }
+                ).toStream().let { uploadImage(it) }
         }
     }
 

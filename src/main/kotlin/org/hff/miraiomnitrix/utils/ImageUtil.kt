@@ -30,4 +30,3 @@ object ImageUtil {
     fun InputStream.toImmutableImage(): ImmutableImage = use { loader.fromStream(this) }
 
 }
-

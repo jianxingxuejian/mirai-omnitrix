@@ -2,10 +2,11 @@ package org.hff.miraiomnitrix.command.any
 
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import net.mamoe.mirai.utils.withUse
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
+import org.hff.miraiomnitrix.utils.uploadImage
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -18,16 +19,12 @@ class Moyu : AnyCommand {
 
     override suspend fun MessageEvent.execute(args: List<String>): Message? {
         val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        HttpUtil.getInputStream("$url$formattedDate.png")
-            .use {
-                ImageIO.read(it)
-                    .let { image ->
-                        ByteArrayOutputStream().use { baos ->
-                            ImageIO.write(image, "png", baos)
-                            return subject.uploadImage(baos.toByteArray().toExternalResource())
-                        }
-                    }
+        HttpUtil.getInputStream("$url$formattedDate.webp").withUse(ImageIO::read).let { image ->
+            ByteArrayOutputStream().use { baos ->
+                ImageIO.write(image, "png", baos)
+                return uploadImage(baos.toByteArray())
             }
+        }
     }
 
 }

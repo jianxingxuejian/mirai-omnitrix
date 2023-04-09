@@ -1,6 +1,9 @@
 package org.hff.miraiomnitrix.command.any
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.*
@@ -8,9 +11,10 @@ import net.mamoe.mirai.message.nextMessage
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.send
 import org.hff.miraiomnitrix.utils.toTime
-import java.net.URLEncoder
+import org.hff.miraiomnitrix.utils.toUrl
+import kotlin.collections.set
 
 @Command(name = ["音乐", "网易云", "music", "wyy", "点歌"])
 class Music : AnyCommand {
@@ -20,12 +24,9 @@ class Music : AnyCommand {
     private val jobMap = hashMapOf<Long, Job>()
 
     override suspend fun MessageEvent.execute(args: List<String>): Message? {
-        if (args.isEmpty()) return "请输入歌曲名".toPlainText()
-        val name = args.joinToString(" ")
-        val encode = URLEncoder.encode(name, Charsets.UTF_8)
-        val json = HttpUtil.getString(searchUrl + encode)
-        val result: MusicResult = JsonUtil.fromJson(json, "result")
-        val songs = result.songs
+        if (args.isEmpty()) return At(sender) + "请输入歌曲名"
+        val name = args.joinToString(" ").toUrl()
+        val songs = HttpUtil.getJson<Result>(searchUrl + name).result.songs
         if (songs.isNullOrEmpty()) return "未找到歌曲".toPlainText()
         val list = songs.mapIndexed { index, song ->
             val artists = song.artists
@@ -36,11 +37,11 @@ class Music : AnyCommand {
         subject.sendMessage(list.joinToString("\n"))
 
         try {
+            jobMap[sender.id]?.cancel()
             coroutineScope {
-                jobMap[sender.id]?.cancel()
                 launch {
                     while (isActive) {
-                        val next = nextMessage(60_000L, EventPriority.HIGH, intercept = true)
+                        val next = nextMessage(30_000L, EventPriority.HIGH, intercept = true)
                         val num = next.content.toIntOrNull() ?: continue
                         if (num !in 1..list.size) subject.sendMessage("请输入有效的序号")
                         val song = songs[num - 1]
@@ -53,64 +54,20 @@ class Music : AnyCommand {
                             pictureUrl = artists[0].img1v1Url,
                             musicUrl = "http://music.163.com/song/media/outer/url?id=${song.id}",
                             brief = "[分享]" + song.name,
-                        ).run { subject.sendMessage(this) }
+                        ).let { send(it) }
                     }
-                }.run { jobMap[sender.id] = this }
+                }.also { jobMap[sender.id] = it }
             }
-        } catch (_: TimeoutCancellationException) {
+        } finally {
             jobMap.remove(sender.id)
         }
+
         return null
     }
 
+    data class Result(val code: Int, val result: MusicResult)
+    data class MusicResult(val hasMore: Boolean, val songCount: Int, val songs: List<Song>?)
+    data class Song(val artists: List<ArtistX>, val duration: Int, val id: Int, val name: String)
+    data class ArtistX(val img1v1Url: String, val name: String)
 
-    data class MusicResult(
-        val hasMore: Boolean,
-        val songCount: Int,
-        val songs: List<Song>?
-    )
-
-    data class Song(
-        val album: Album,
-        val alias: List<String>,
-        val artists: List<ArtistX>,
-        val copyrightId: Int,
-        val duration: Int,
-        val fee: Int,
-        val ftype: Int,
-        val id: Int,
-        val mark: Long,
-        val mvid: Int,
-        val name: String,
-        val rUrl: Any,
-        val rtype: Int,
-        val status: Int
-    )
-
-    data class Album(
-        val alia: List<String>,
-        val artist: ArtistX,
-        val copyrightId: Int,
-        val id: Int,
-        val mark: Int,
-        val name: String,
-        val picId: Long,
-        val publishTime: Long,
-        val size: Int,
-        val status: Int,
-        val transNames: List<String>
-    )
-
-    data class ArtistX(
-        val albumSize: Int,
-        val alias: List<Any>,
-        val fansGroup: Any,
-        val id: Int,
-        val img1v1: Int,
-        val img1v1Url: String,
-        val name: String,
-        val picId: Int,
-        val picUrl: Any,
-        val trans: Any
-    )
 }

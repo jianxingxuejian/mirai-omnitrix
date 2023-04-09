@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.command.any
 
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
@@ -8,6 +7,7 @@ import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.uploadImage
 
 @Command(name = ["壁纸", "bizhi"])
 class Wallpaper : AnyCommand {
@@ -47,17 +47,18 @@ class Wallpaper : AnyCommand {
             }
         }
 
+        suspend fun String.parseJsonAndSend() =
+            JsonUtil.getArray(this, "pic")[0].asString.let { HttpUtil.getInputStream(it) }.let { uploadImage(it) }
+
         if (vip.contains(sort)) {
-            val apiResult = HttpUtil.getString(vipUrl + sort)
-            if (apiResult.isBlank()) return "api获取为空".toPlainText()
-            JsonUtil.getArray(apiResult, "pic")[0].asString.run(HttpUtil::getInputStream)
-                .use { return subject.uploadImage(it) }
+            return HttpUtil.getString(vipUrl + sort).run {
+                if (isBlank()) "api获取为空".toPlainText()
+                parseJsonAndSend()
+            }
         }
         urls.forEach {
             try {
-                val apiResult = HttpUtil.getString(it + sort)
-                JsonUtil.getArray(apiResult, "pic")[0].asString.run(HttpUtil::getInputStream)
-                    .use { img -> return subject.uploadImage(img) }
+                return HttpUtil.getString(it + sort).parseJsonAndSend()
             } catch (e: Exception) {
                 return@forEach
             }

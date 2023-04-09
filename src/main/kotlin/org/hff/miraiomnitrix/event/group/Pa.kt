@@ -1,14 +1,14 @@
 package org.hff.miraiomnitrix.event.group
 
 import com.sksamuel.scrimage.ImmutableImage
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.ImageUtil.toImmutableImage
 import org.hff.miraiomnitrix.utils.ImageUtil.toStream
+import org.hff.miraiomnitrix.utils.download
 import org.hff.miraiomnitrix.utils.getQq
-import org.hff.miraiomnitrix.utils.toAvatar
+import org.hff.miraiomnitrix.utils.uploadImage
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.awt.BasicStroke
 import java.awt.Color
@@ -18,7 +18,7 @@ import java.awt.image.BufferedImage
 import java.io.InputStream
 import java.util.concurrent.ThreadLocalRandom
 
-@Event(priority = 4)
+@Event(priority = 5)
 class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
 
     private val paDir = "/img/pa/*"
@@ -32,8 +32,8 @@ class Pa(private val permissionProperties: PermissionProperties) : GroupEvent {
         val qq = if (isAt) sender.id else args.getQq() ?: return next()
 
         val imageA = getFileByQQ(qq, pa).toImmutableImage(400, 400)
-        val imageB = qq.toAvatar().toImmutableImage(75, 75).transformAvatar()
-        return imageA.overlay(imageB, 5, 320).toStream().use { group.uploadImage(it) }.run(::stop)
+        val imageB = qq.download().toImmutableImage(75, 75).transformAvatar()
+        return imageA.overlay(imageB, 5, 320).toStream().let { uploadImage(it) }.let(::stop)
     }
 
     private fun getFileByQQ(qq: Long, pa: Boolean): InputStream {

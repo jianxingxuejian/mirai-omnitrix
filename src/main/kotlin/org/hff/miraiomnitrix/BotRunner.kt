@@ -10,6 +10,7 @@ import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
 import org.hff.miraiomnitrix.command.CommandManager
 import org.hff.miraiomnitrix.command.any.isChatting
+import org.hff.miraiomnitrix.common.messageCache
 import org.hff.miraiomnitrix.common.putImage
 import org.hff.miraiomnitrix.config.BotProperties
 import org.springframework.boot.CommandLineRunner
@@ -49,6 +50,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
         when (this) {
             is GroupMessageEvent -> {
                 if (isChatting()) return
+                messageCache[group.id] = sender.id
                 CommandManager.execute(this)
             }
 

@@ -37,7 +37,7 @@ class Setu : AnyCommand {
 
         coroutineScope {
             val exceptionHandler = CoroutineExceptionHandler { _, _ ->
-                run {
+                launch {
                     val tags = keywords.joinToString("&tag=", "&tag=") { it.toUrl() }
                     val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
                     JsonUtil.getArray(json, "data")
@@ -65,7 +65,7 @@ class Setu : AnyCommand {
         val regex = Regex("(?<=/)[^/]*?(?=_\\w+\\.[^.]*\$)")
         val match = regex.find(imgUrl)
         try {
-            HttpUtil.getInputStreamByProxy(imgUrl).use {
+            HttpUtil.getInputStream(imgUrl, isProxy = true).use {
                 buildMessageChain {
                     +subject.uploadImage(it)
                     if (match != null) +"\nhttps://www.pixiv.net/artworks/${match.value}"

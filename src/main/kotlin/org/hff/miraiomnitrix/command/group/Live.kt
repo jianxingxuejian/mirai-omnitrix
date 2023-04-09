@@ -14,7 +14,6 @@ import org.hff.miraiomnitrix.command.GroupCommand
 import org.hff.miraiomnitrix.db.entity.Live
 import org.hff.miraiomnitrix.db.service.LiveService
 import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.getQq
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
@@ -120,18 +119,13 @@ class Live(private val liveService: LiveService) : GroupCommand {
 
     private fun removeStr(str: String): String {
         val index = str.indexOf("?")
-        return if (index > 0) {
-            str.slice(0 until index)
-        } else str
+        return if (index > 0) str.take(index) else str
     }
 
-    private fun getBilibiliUserInfo(uid: Long): UserInfo {
-        val apiResult = HttpUtil.getString(infoApi + uid)
-        return JsonUtil.fromJson(apiResult, "data")
-    }
+    private suspend fun getBilibiliUserInfo(uid: Long): UserInfo = HttpUtil.getJson<Result>(infoApi + uid).data
 
+    data class Result(val data: UserInfo)
     data class UserInfo(val name: String, val live_room: LiveRoom?)
-
     data class LiveRoom(
         val liveStatus: Int,
         val roomStatus: Int,

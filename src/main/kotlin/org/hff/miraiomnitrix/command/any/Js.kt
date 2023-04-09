@@ -1,7 +1,6 @@
 package org.hff.miraiomnitrix.command.any
 
 import delight.nashornsandbox.NashornSandboxes
-import delight.nashornsandbox.exceptions.ScriptCPUAbuseException
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
@@ -9,20 +8,17 @@ import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror
 import java.util.concurrent.Executors
-import javax.script.ScriptException
 
 
 @Command(name = ["js"])
 class Js : AnyCommand {
 
-    private final val sandbox = NashornSandboxes.create()
-
-    init {
-        sandbox.setMaxCPUTime(100)
-        sandbox.setMaxMemory(1024 * 1024)
-        sandbox.allowNoBraces(false)
-        sandbox.setMaxPreparedStatements(30)
-        sandbox.executor = Executors.newSingleThreadExecutor()
+    private val sandbox = NashornSandboxes.create().apply {
+        setMaxCPUTime(100)
+        setMaxMemory(1024 * 1024)
+        allowNoBraces(false)
+        setMaxPreparedStatements(30)
+        executor = Executors.newSingleThreadExecutor()
     }
 
     override suspend fun MessageEvent.execute(args: List<String>): Message? {
@@ -35,13 +31,9 @@ class Js : AnyCommand {
                     return result.values.joinToString("\n").toPlainText()
                 }
             }
-            val text = result.toString()
-            if (text.isBlank()) return "blank".toPlainText()
-            text.toPlainText()
-        } catch (error: ScriptCPUAbuseException) {
-            error.message?.toPlainText()
-        } catch (error: ScriptException) {
-            error.message?.toPlainText()
-        }
+            result.toString().apply { if (isBlank()) return "blank".toPlainText() }
+        } catch (error: Exception) {
+            error.message
+        }?.toPlainText()
     }
 }

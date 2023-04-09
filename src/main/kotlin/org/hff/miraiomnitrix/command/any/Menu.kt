@@ -7,6 +7,7 @@ import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.SkiaExternalResource
 import org.hff.miraiomnitrix.utils.SkikoUtil
 import org.hff.miraiomnitrix.utils.toResource
+import org.hff.miraiomnitrix.utils.uploadImage
 import org.jetbrains.skia.FontStyle
 import org.jetbrains.skia.Paint
 import org.jetbrains.skia.RRect
@@ -40,6 +41,7 @@ class Menu : AnyCommand {
         |17：js，执行js程序
         |18：recall、撤回，撤回机器人1-10条消息
         |19：error，查看最近一条机器人报错信息
+        |20：state、状态，查看机器人运行状态
         |二、非指令功能
         |1：st、搜图，使用关键字回复一张图片，或者与自己的图片一起发送
         |2：sf、搜番，使用方法同上
@@ -51,7 +53,7 @@ class Menu : AnyCommand {
         |开源地址：https://github.com/jianxingxuejian/mirai-omnitrix
     """.trimMargin().run(::convertImage)
 
-    override suspend fun MessageEvent.execute(args: List<String>): Message? = subject.uploadImage(menu)
+    override suspend fun MessageEvent.execute(args: List<String>): Message? = uploadImage(menu)
 
     private final fun convertImage(text: String): SkiaExternalResource {
         val bgColor = 0xFF2C3E50.toInt()

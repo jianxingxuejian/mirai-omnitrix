@@ -60,3 +60,5 @@ suspend fun recallLastMessage(subjectId: Long, num: Int) {
 /** 错误缓存,key是subjectId,value是错误详情 */
 val errorCache = CacheBuilder.newBuilder().maximumSize(100).build<Long, Exception>()
 
+
+val messageCache = hashMapOf<Long, Long>()

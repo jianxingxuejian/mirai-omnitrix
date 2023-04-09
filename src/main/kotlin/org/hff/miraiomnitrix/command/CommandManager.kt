@@ -3,7 +3,7 @@ package org.hff.miraiomnitrix.command
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
-import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import org.hff.miraiomnitrix.atBot
 import org.hff.miraiomnitrix.command.any.ChatPlus
 import org.hff.miraiomnitrix.command.any.Tts
@@ -26,20 +26,9 @@ object CommandManager {
         SpringUtil.getBeansWithAnnotation(Command::class)?.values?.forEach { command ->
             val annotation = command::class.findAnnotation<Command>()
             when (command) {
-                is AnyCommand -> annotation?.name?.forEach {
-                    command.needHead = annotation.needHead
-                    anyCommands[it] = command
-                }
-
-                is UserCommand -> annotation?.name?.forEach {
-                    command.needHead = annotation.needHead
-                    userCommands[it] = command
-                }
-
-                is GroupCommand -> annotation?.name?.forEach {
-                    command.needHead = annotation.needHead
-                    groupCommands[it] = command
-                }
+                is AnyCommand -> annotation?.name?.forEach { anyCommands[it] = command }
+                is UserCommand -> annotation?.name?.forEach { userCommands[it] = command }
+                is GroupCommand -> annotation?.name?.forEach { groupCommands[it] = command }
             }
         }
     }
@@ -101,7 +90,7 @@ object CommandManager {
             } catch (e: Exception) {
                 e.printStackTrace()
                 errorCache.put(subject.id, e)
-                subject.sendMessage(At(sender) + (e.message ?: "未知错误"))
+                subject.sendAndCache(message.quote() + "指令执行失败，错误信息：" + (e.message ?: "未知错误"))
             }
         }
     }

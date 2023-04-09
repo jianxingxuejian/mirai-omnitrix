@@ -17,5 +17,5 @@ class Error : AnyCommand {
             return stackTrace.take(maxLines).joinToString("\n").toPlainText()
         } ?: return "没有错误信息".toPlainText()
     }
-}
 
+}

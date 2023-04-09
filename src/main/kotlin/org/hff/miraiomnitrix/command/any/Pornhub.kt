@@ -5,10 +5,7 @@ import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
-import org.hff.miraiomnitrix.utils.FontFamily
-import org.hff.miraiomnitrix.utils.SkiaExternalResource
-import org.hff.miraiomnitrix.utils.SkikoUtil
-import org.hff.miraiomnitrix.utils.toResource
+import org.hff.miraiomnitrix.utils.*
 import org.jetbrains.skia.*
 
 @Command(name = ["pornhub", "ph"])
@@ -19,7 +16,7 @@ class Pornhub : AnyCommand {
         val first = args.getOrElse(0) { "Porn" }
         val second = args.getOrElse(1) { "hub" }
         val fontFamily = if (args.size >= 3) args.drop(2).joinToString(" ") else null
-        draw(first, second, fontFamily).use { return subject.uploadImage(it) }
+        return uploadImage(draw(first, second, fontFamily))
     }
 
     fun draw(porn: String = "Porn", hub: String = "Hub", fontFamily: String?): SkiaExternalResource {

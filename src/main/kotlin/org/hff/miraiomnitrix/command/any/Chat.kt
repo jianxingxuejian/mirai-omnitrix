@@ -2,6 +2,7 @@ package org.hff.miraiomnitrix.command.any
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.ktor.client.call.*
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
@@ -147,7 +148,7 @@ private suspend inline fun ChatData.start(
 private fun ChatData.addMessage(role: String, content: String) = messages.add(CompletionMessage(role, content))
 
 /** 请求接口 */
-private fun completion(chatData: ChatData, maxTokens: Int = 1000, temperature: Double = 0.1): String {
+private suspend fun completion(chatData: ChatData, maxTokens: Int = 1000, temperature: Double = 0.1): String {
     if (apiKey == null) throw MyException("未配置apikey")
     val headers = mapOf("Authorization" to apiKey)
     val messages = chatData.messages
@@ -157,8 +158,8 @@ private fun completion(chatData: ChatData, maxTokens: Int = 1000, temperature: D
         "max_tokens" to maxTokens,
         "temperature" to temperature
     )
-    val res = HttpUtil.postStringResByProxy("https://api.openai.com/v1/chat/completions", params, headers)
-    when (val code = res.statusCode()) {
+    val res = HttpUtil.post("https://api.openai.com/v1/chat/completions", params, headers, true)
+    when (val code = res.status.value) {
         200 -> {
             val result: CompletionResult = JsonUtil.fromJson(res.body())
             val choices = result.choices

@@ -10,8 +10,6 @@ object JsonUtil {
 
     fun getStr(json: String, key: String): String = getKey(json, key).asString
 
-    fun getObj(json: String): JsonObject = parse(json).asJsonObject
-
     fun getObj(json: String, key: String): JsonObject = getKey(json, key).asJsonObject
 
     fun getArray(json: String): JsonArray = parse(json).asJsonArray
@@ -43,10 +41,10 @@ object JsonUtil {
 
 }
 
+fun JsonObject.getAsObj(key: String): JsonObject = this[key].asJsonObject
 fun JsonObject.getAsStr(key: String): String = this[key].asString
+fun JsonObject.getAsStrOrNull(key: String): String? = this[key]?.asString
+fun JsonObject.getAsArrayOrNull(key: String): JsonArray? = this[key]?.asJsonArray
 
 fun JsonElement.get(key: String): JsonElement = asJsonObject.get(key)
-
 fun JsonElement.getAsStr(key: String): String = asJsonObject.getAsStr(key)
-
-fun JsonElement.getAsArray(key: String): JsonArray = asJsonObject.getAsJsonArray(key)

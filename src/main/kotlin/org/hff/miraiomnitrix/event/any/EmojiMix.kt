@@ -1,12 +1,12 @@
 package org.hff.miraiomnitrix.event.any
 
 
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import org.hff.miraiomnitrix.utils.HttpUtil
 import org.hff.miraiomnitrix.utils.JsonUtil
+import org.hff.miraiomnitrix.utils.uploadImage
 import org.springframework.core.io.ClassPathResource
 
 /** emoji合成，json数据来源于 https://github.com/xsalazar/emoji-kitchen */
@@ -47,8 +47,7 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
         val (leftEmoji, rightEmoji, date) = emojiCache[first]?.get(second)
             ?: emojiCache[second]?.get(first)
             ?: return next()
-        return HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")
-            .use { subject.uploadImage(it) }.run(::stop)
+        return uploadImage(HttpUtil.getInputStream("$url/$date/u$leftEmoji/u${leftEmoji}_u$rightEmoji.png")).let(::stop)
     }
 
     data class Emoji(
@@ -56,4 +55,5 @@ class EmojiMix(private val permissionProperties: PermissionProperties) : AnyEven
         val rightEmoji: String,
         val date: String
     )
+
 }

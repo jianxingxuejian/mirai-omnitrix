@@ -3,14 +3,10 @@ package org.hff.miraiomnitrix.command.any
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.message.data.buildForwardMessage
-import net.mamoe.mirai.message.data.buildMessageChain
-import net.mamoe.mirai.message.data.toPlainText
+import net.mamoe.mirai.message.data.*
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.HttpUtil
-import org.hff.miraiomnitrix.utils.JsonUtil
 import org.hff.miraiomnitrix.utils.add
 import org.hff.miraiomnitrix.utils.forEachLaunch
 import java.time.LocalDate
@@ -37,13 +33,10 @@ class Bgm : AnyCommand {
 
         if (calendar.contains(args[0])) {
             val index = args.getOrNull(1)?.toIntOrNull() ?: LocalDate.now().dayOfWeek.value
-            val json = HttpUtil.getString(calendarApi)
-            val calendarList: List<Calendar> = JsonUtil.fromJson(json)
+            val calendarList: List<Calendar> = HttpUtil.getJson(calendarApi)
             val calendar = calendarList[index - 1]
             return buildForwardMessage(subject) {
-                calendar.items.forEachLaunch {
-                    it.buildCalendar(subject).run(::add)
-                }
+                calendar.items.forEachLaunch { it.buildCalendar(subject).let(::add) }
             }
         }
 
@@ -63,38 +56,33 @@ class Bgm : AnyCommand {
             }
         }
         val filter = Filter(air_date = airDate, rating = rating, rank = rank, tag = tag)
-        val searchParam =
-            SearchParam(keyword = if (keywords.isEmpty()) null else keywords.joinToString(" "), filter = filter)
-        println(searchParam)
-        val json = HttpUtil.postString(searchApi, searchParam)
-        val result: SearchResult = JsonUtil.fromJson(json)
+        val keyword = if (keywords.isEmpty()) null else keywords.joinToString(" ")
+        val searchParam = SearchParam(keyword = keyword, filter = filter)
+        val result: SearchResult = HttpUtil.postJson(searchApi, searchParam)
         return buildForwardMessage(subject) {
-            result.data.forEachLaunch { it.buildSearch(context).run(::add) }
+            result.data.forEachLaunch { it.buildSearch(subject).let(::add) }
         }
     }
 
-    private suspend fun Item.buildCalendar(subject: Contact) =
-        buildMessageChain {
-            +HttpUtil.getInputStream(images.medium.replaceFirst("http", "https"))
-                .use { subject.uploadImage(it) }
-            +"\n"
-            +"名字: ${name_cn.ifBlank { name }}\n"
-            if (summary.isNotBlank()) +"简介: $summary\n"
-            +"排名: ${if (rank != 0) rank else "暂无"}\n"
-            +"评分: ${rating?.score ?: "暂无"}(${rating?.total ?: 0}人)\n"
-            +"链接: $url"
+    private suspend fun Item.buildCalendar(subject: Contact): MessageChain = buildMessageChain {
+        images?.medium?.replaceFirst("http", "https")?.let { url ->
+            +HttpUtil.getInputStream(url).use { subject.uploadImage(it) }
         }
+        +"\n名字: ${name_cn.ifBlank { name }}"
+        if (summary.isNotBlank()) +"\n简介: $summary"
+        +"\n排名: ${if (rank != 0) rank else "暂无"}"
+        +"\n评分: ${rating?.score ?: "暂无"}(${rating?.total ?: 0}人)"
+        +"\n链接: $url"
+    }
+
 
     private suspend fun Data.buildSearch(subject: Contact) = buildMessageChain {
-        if (image.isNotBlank()) {
-            +HttpUtil.getInputStream(image).use { subject.uploadImage(it) }
-            +"\n"
-        }
-        +"名字: ${name_cn.ifBlank { name }}\n"
-        +"排名: ${if (rank != 0) rank else "暂无"}\n"
-        +"评分: ${if (score != null && score != 0.0) score else "暂无"}\n"
-        if (summary?.isNotBlank() == true) +"简介: $summary\n"
-        if (tags.isNotEmpty()) +"标签: ${tags.joinToString { tag -> tag.name }}"
+        if (image.isNotBlank()) +HttpUtil.getInputStream(image).use { subject.uploadImage(it) }
+        +"\n名字: ${name_cn.ifBlank { name }}"
+        +"\n排名: ${if (rank != 0) rank else "暂无"}"
+        +"\n评分: ${if (score != null && score != 0.0) score else "暂无"}"
+        if (summary?.isNotBlank() == true) +"\n简介: $summary"
+        if (tags.isNotEmpty()) +"\n标签: ${tags.joinToString { tag -> tag.name }}"
     }
 
     private fun parseArgs(args: List<String>, i: Int, values: MutableList<String>) {
@@ -106,22 +94,22 @@ class Bgm : AnyCommand {
         }
     }
 
-    data class Calendar(val items: List<Item>)
-    data class Item(
+    private data class Calendar(val items: List<Item>)
+    private data class Item(
         val url: String,
         val name: String,
         val name_cn: String,
         val rank: Int,
         val rating: Rating?,
         val summary: String,
-        val images: Images,
+        val images: Images?,
     )
 
-    data class Images(val medium: String)
-    data class Rating(val score: Double, val total: Int)
+    private data class Images(val medium: String)
+    private data class Rating(val score: Double, val total: Int)
 
-    data class SearchParam(val filter: Filter, val keyword: String?, val sort: String = "rank")
-    data class Filter(
+    private data class SearchParam(val filter: Filter, val keyword: String?, val sort: String = "rank")
+    private data class Filter(
         val air_date: List<String>,
         val rank: List<String>,
         val rating: List<String>,
@@ -129,9 +117,8 @@ class Bgm : AnyCommand {
         val type: List<Int> = listOf(2)
     )
 
-    data class SearchResult(val `data`: List<Data>, val limit: Int, val offset: Int, val total: Int)
-
-    data class Data(
+    private data class SearchResult(val `data`: List<Data>, val limit: Int, val offset: Int, val total: Int)
+    private data class Data(
         val name: String,
         val name_cn: String,
         val rank: Int,
@@ -141,5 +128,6 @@ class Bgm : AnyCommand {
         val tags: List<Tag>,
     )
 
-    data class Tag(val count: Int, val name: String)
+    private data class Tag(val count: Int, val name: String)
+
 }
