@@ -59,4 +59,4 @@ fun Int.toTime(): String {
 
 /** @see toTime */
 fun Double.toTime() = toInt().toTime()
-fun Long.toTime() = toInt().toTime()
+fun Long.toTime() = (this / 1000).toInt().toTime()
