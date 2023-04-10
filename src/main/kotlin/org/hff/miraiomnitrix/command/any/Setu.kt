@@ -1,8 +1,7 @@
 package org.hff.miraiomnitrix.command.any
 
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
@@ -35,22 +34,15 @@ class Setu : AnyCommand {
         }
         val forwardBuilder = ForwardMessageBuilder(subject)
 
-        coroutineScope {
-            val exceptionHandler = CoroutineExceptionHandler { _, _ ->
-                launch {
-                    val tags = keywords.joinToString("&tag=", "&tag=") { it.toUrl() }
-                    val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
-                    JsonUtil.getArray(json, "data")
-                        .map { it.get("urls").getAsStr("original") }
-                        .forEach { launch { forwardBuilder.add(subject, it) } }
-                }
-            }
-            launch(exceptionHandler) {
+        supervisorScope {
+            val tags = keywords.joinToString("&tag=", "&tag=") { it.toUrl() }
+            try {
+                val json = HttpUtil.getString("$api1?r18=$r18&num=$num$tags")
+                JsonUtil.getArray(json, "data").map { it.get("urls").getAsStr("original") }
+            } catch (_: Exception) {
                 val url = "$api2?r18=$r18&num=$num&keyword=${keywords.joinToString("|").toUrl()}"
-                val json = HttpUtil.getString(url)
-                JsonUtil.getArray(json).map { it.getAsStr("url") }
-                    .forEach { launch { forwardBuilder.add(subject, it) } }
-            }
+                JsonUtil.getArray(HttpUtil.getString(url)).map { it.getAsStr("url") }
+            }.forEach { launch { forwardBuilder.add(subject, it) } }
         }
 
         if (forwardBuilder.size > 0) {

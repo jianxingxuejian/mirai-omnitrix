@@ -31,10 +31,9 @@ class SearchImage(accountProperties: AccountProperties) : AnyCommand {
         return null
     }
 
-    private suspend fun MessageEvent.sauceNAO(imgUrl: String): Boolean {
+    private suspend inline fun MessageEvent.sauceNAO(imgUrl: String): Boolean {
         if (saucenaoKey == null) throw MyException("未配置SauceNAO Key")
         val json = HttpUtil.getString("$sauceNAOUrl$saucenaoKey&url=$imgUrl", isProxy = true)
-        println(json)
         val results = JsonUtil.getArray(json, "results")
         if (results.isEmpty) {
             subject.sendMessage("SauceNAO未找到搜图结果，切换下一个引擎")
