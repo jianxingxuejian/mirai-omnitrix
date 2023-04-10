@@ -54,7 +54,8 @@ private fun MessageEvent.getChatCache(defaultPrompt: Prompt): ChatData? {
         is FriendMessageEvent -> userCache.getOrPut(sender.id) { initChatData(defaultPrompt) }
         else -> throw MyException("不支持的消息类型")
     }.apply {
-        if (messages.isEmpty()) addMessage("system", prompt.content)
+        if (prompt == null) prompt = defaultPrompt
+        if (messages.isEmpty()) addMessage("system", prompt!!.content)
     }
 }
 
@@ -186,6 +187,7 @@ private suspend fun completion(chatData: ChatData, maxTokens: Int = 1000, temper
 /** 结束对话 */
 fun ChatData.end() {
     chatting = false
+    prompt = null
     messages.clear()
 }
 
@@ -197,7 +199,7 @@ data class ChatData(
     val sender: User,
     /** 对话上下文 */
     val messages: MutableList<CompletionMessage>,
-    var prompt: Prompt,
+    var prompt: Prompt?,
     /** 是否对话中 */
     var chatting: Boolean,
 )
@@ -241,7 +243,7 @@ class Chat(private val promptService: PromptService) : AnyCommand, CommandLineRu
             "help", "帮助" -> help
             "列表", "list" -> {
                 val list = promptList.mapIndexed { index, prompt -> "${index + 1}. ${prompt.name}" }.joinToString("\n")
-                val current = "当前角色：${prompt.name}"
+                val current = "当前角色：${prompt!!.name}"
                 "0：默认\n$list\n$current"
             }
 
@@ -253,10 +255,10 @@ class Chat(private val promptService: PromptService) : AnyCommand, CommandLineRu
 
             "set", "select", "选择" -> {
                 val index = args.getOrNull(1)?.toIntOrNull() ?: throw MyException("请输入序号")
-                if (prompt.id == index) throw MyException("已经是该角色")
+                if (prompt!!.id == index) throw MyException("已经是该角色")
                 if (index == 0) changePrompt(defaultPrompt)
                 else promptList.getOrNull(index - 1)?.run(::changePrompt) ?: throw MyException("序号不存在")
-                "切换角色为${prompt.name}"
+                "切换角色为${prompt!!.name}"
             }
 
             "add", "save", "增加" -> {
@@ -315,6 +317,7 @@ class ChatPlus(accountProperties: AccountProperties) : AnyCommand {
         val chatData = getChatCache(defaultPrompt) ?: return null
         try {
             chatData.start(this, args, hashSetOf("chatplus", "高级聊天"), ::handleExternalApi)
+        } catch (_: TimeoutCancellationException) {
         } catch (e: Exception) {
             sendOrAt("错误信息：${e.message}")
         } finally {
