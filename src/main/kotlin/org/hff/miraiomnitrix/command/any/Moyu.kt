@@ -19,7 +19,7 @@ class Moyu : AnyCommand {
 
     override suspend fun MessageEvent.execute(args: List<String>): Message? {
         val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        HttpUtil.getInputStream("$url$formattedDate.webp").withUse(ImageIO::read).let { image ->
+        HttpUtil.getInputStream("$url$formattedDate.png").withUse(ImageIO::read).let { image ->
             ByteArrayOutputStream().use { baos ->
                 ImageIO.write(image, "png", baos)
                 return uploadImage(baos.toByteArray())
