@@ -1,7 +1,6 @@
 package org.hff.miraiomnitrix.command.any
 
 import com.sksamuel.scrimage.ImmutableImage
-import com.sksamuel.scrimage.canvas.Canvas
 import com.sksamuel.scrimage.canvas.drawables.Text
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.getMember
@@ -78,19 +77,22 @@ class YgoCard : AnyCommand {
             it.color = Color.BLACK
             it.font = Font("SimSun", Font.BOLD, 80)
         }
-        val contentText = Text(content ?: "效果未知", 60, 925) {
-            it.color = Color.BLACK
-            it.font = Font("SimSun", Font.BOLD, 40)
-        }
+        val canvas = ImageUtil.drawTextLines(
+            type.image,
+            content ?: "效果未知",
+            60,
+            925,
+            Color.BLACK,
+            Font("SimSun", Font.BOLD, 40)
+        )
         member.id.download().use { avatar ->
-            return Canvas(type.image)
-                .draw(nameText).draw(contentText).image
-                .overlay(attr.image, 680, 58)
-                .overlay(
-                    avatar.toImmutableImage(if (lb) 700 else 613, if (lb) 522 else 613),
-                    if (lb) 57 else 101,
-                    if (lb) 215 else 220
-                ).toStream().let { uploadImage(it) }
+            return canvas.draw(nameText).image.overlay(attr.image, 680, 58).run {
+                if (lb) {
+                    overlay(avatar.toImmutableImage(700, 522), 57, 215)
+                } else {
+                    overlay(avatar.toImmutableImage(613, 613), 101, 220)
+                }.toStream().let { uploadImage(it) }
+            }
         }
     }
 

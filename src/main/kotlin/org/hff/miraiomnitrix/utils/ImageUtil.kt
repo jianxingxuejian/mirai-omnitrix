@@ -42,7 +42,7 @@ object ImageUtil {
         color: Color,
         font: Font,
         lineHeight: Double = 1.2,
-    ): ByteArrayInputStream {
+    ): Canvas {
         val width = bottomImage.width
         val lineLimit = (width - 2 * paddingLeft) / font.size
         val count = lines.length / lineLimit
@@ -64,7 +64,7 @@ object ImageUtil {
             )
             canvas.drawInPlace(text)
         }
-        return canvas.image.toStream()
+        return canvas
     }
 
 }

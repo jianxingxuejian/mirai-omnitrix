@@ -6,6 +6,7 @@ import net.mamoe.mirai.message.data.toPlainText
 import org.hff.miraiomnitrix.command.AnyCommand
 import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.ImageUtil
+import org.hff.miraiomnitrix.utils.ImageUtil.toStream
 import org.hff.miraiomnitrix.utils.uploadImage
 import java.awt.Color
 import java.awt.Font
@@ -20,7 +21,7 @@ class Xibao : AnyCommand {
         val lines = args.joinToString(" ")
         val font = Font("simhei", Font.BOLD, 55)
         val color = Color(219, 49, 33)
-        return uploadImage(ImageUtil.drawTextLines(xibao, lines, 120, 200, color, font))
+        return ImageUtil.drawTextLines(xibao, lines, 120, 200, color, font).image.toStream().let { uploadImage(it) }
     }
 
 }

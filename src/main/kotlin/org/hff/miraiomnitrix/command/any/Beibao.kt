@@ -36,7 +36,7 @@ class Beibao : AnyCommand {
             Canvas(dian).draw(text).image.overlay(avatar, 117, 195).toStream().let { uploadImage(it) }
         } else {
             val lines = args.joinToString(" ")
-            uploadImage(ImageUtil.drawTextLines(beibao, lines, 120, 200, color, font))
+            ImageUtil.drawTextLines(beibao, lines, 120, 200, color, font).image.toStream().let { uploadImage(it) }
         }
     }
 
