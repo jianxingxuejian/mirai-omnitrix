@@ -422,7 +422,8 @@ class Support : MemeCommand {
         val empty = basic.empty().toImmutableImage()
         return getImageOrAt(args)?.let {
             handleImageOrGif(it) {
-                empty.overlay(scaleTo(820, 820), -172, -20).overlay(basic)
+                val image = scaleTo(820, 820).rotate(Degrees(-23))
+                empty.overlay(image, -172, -20).overlay(basic)
             }
         }
     }
