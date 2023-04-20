@@ -9,7 +9,7 @@ import org.hff.miraiomnitrix.utils.JsonUtil
 import org.springframework.core.io.ClassPathResource
 
 /** 二次元回复，词库出自: https://github.com/Kyomotoi/AnimeThesaurus */
-@Event(priority = 2)
+@Event(priority = 1)
 class Thesaurus(private val permissionProperties: PermissionProperties, private val botProperties: BotProperties) :
     GroupEvent {
 

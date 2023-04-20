@@ -16,8 +16,8 @@ data class Bank(
     val qq: Long,
     /** 持有的钱 */
     @TableField("`money`")
-    val money: Long,
+    var money: Long,
     /** 持有的幻书币 */
     @TableField("`coin`")
-    val coin: String,
+    var coin: Long,
 ): Serializable

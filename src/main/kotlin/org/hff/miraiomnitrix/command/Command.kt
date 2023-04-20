@@ -11,13 +11,12 @@ import org.springframework.stereotype.Component
  * 使用该注解注册指令
  *
  * @property name 指令名称列表
- * @property needHead 是否需要指令头，默认需要
  */
 @Component
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-annotation class Command(val name: Array<String>, val needHead: Boolean = true)
+annotation class Command(val name: Array<String>)
 
 /** 全部消息指令，可能来自群或者用户 */
 interface AnyCommand : Execute<MessageEvent>, Allow

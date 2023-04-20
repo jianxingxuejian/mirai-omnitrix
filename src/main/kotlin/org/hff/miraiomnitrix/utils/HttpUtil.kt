@@ -6,6 +6,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.hff.miraiomnitrix.common.MyException
 import org.hff.miraiomnitrix.config.HttpProperties
@@ -140,7 +141,7 @@ object HttpUtil {
     private fun HttpRequestBuilder.addHeaders(headers: Map<String, String>?) =
         headers { headers?.forEach { (key, value) -> append(key, value) } }
 
-    private suspend inline fun <reified T> io.ktor.client.statement.HttpResponse.tryGetBody(): T {
+    private suspend inline fun <reified T> HttpResponse.tryGetBody(): T {
         if (status != HttpStatusCode.OK) throw MyException("请求失败: $status")
         return body()
     }

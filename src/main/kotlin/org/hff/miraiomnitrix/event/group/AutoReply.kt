@@ -14,7 +14,7 @@ import org.hff.miraiomnitrix.utils.toImage
 import org.springframework.boot.CommandLineRunner
 import java.time.LocalTime
 
-@Event(priority = 3)
+@Event(priority = 4)
 class AutoReply(
     private val permissionProperties: PermissionProperties,
     private val autoReplyService: AutoReplyService,

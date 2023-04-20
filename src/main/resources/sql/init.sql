@@ -22,10 +22,28 @@ CREATE TABLE IF NOT EXISTS `prompt`
     `content` TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS `vip`
+(
+    `id`          INTEGER PRIMARY KEY AUTOINCREMENT,
+    `qq`          INTEGER NOT NULL,
+    `free_tokens` INTEGER NOT NULL,
+    `pay_tokens`  INTEGER NOT NULL,
+    `cost_tokens` INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS `bank`
 (
     `id`    INTEGER PRIMARY KEY AUTOINCREMENT,
     `qq`    INTEGER NOT NULL,
     `money` INTEGER NOT NULL,
     `coin`  INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS `niuzi`
+(
+    `id`       INTEGER PRIMARY KEY AUTOINCREMENT,
+    `qq`       INTEGER NOT NULL,
+    `group_id` INTEGER NOT NULL,
+    `length`   INTEGER NOT NULL,
+    `is_day`   INTEGER NOT NULL DEFAULT 0
 );

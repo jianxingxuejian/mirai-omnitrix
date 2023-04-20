@@ -48,7 +48,7 @@ object EventManger {
             it.run {
                 try {
                     val (stop, message) = handle(args, isAt)
-                    subject.sendAndCache(message)
+                    if (message != null) subject.sendAndCache(message)
                     if (stop) return@apply
                 } catch (e: Exception) {
                     e.printStackTrace()

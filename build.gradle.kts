@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.7.5"
+    id("org.springframework.boot") version "2.7.10"
     id("io.spring.dependency-management") version "1.1.0"
-    kotlin("jvm") version "1.7.20"
-    kotlin("plugin.spring") version "1.7.20"
-    kotlin("kapt") version "1.7.20"
+    kotlin("jvm") version "1.8.20"
+    kotlin("plugin.spring") version "1.8.20"
+    kotlin("kapt") version "1.8.20"
 }
 
 group = "org.hff"
@@ -61,15 +61,15 @@ dependencies {
     // tools
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("com.sksamuel.scrimage:scrimage-core:4.0.33")
-    implementation("org.jsoup:jsoup:1.15.3")
+    implementation("com.sksamuel.scrimage:scrimage-core:4.0.34")
+    implementation("org.jsoup:jsoup:1.15.4")
 
     // js
     implementation("org.javadelight:delight-nashorn-sandbox:0.2.5")
     implementation("org.openjdk.nashorn:nashorn-core:15.4")
 
     // 微软语音
-    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.25.0@jar")
+    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.26.0@jar")
 
     // skiko
     val osName = System.getProperty("os.name")
@@ -84,7 +84,7 @@ dependencies {
         "aarch64" -> "arm64"
         else -> error("Unsupported arch: $osArch")
     }
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-${targetOs}-${targetArch}:0.7.54")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-${targetOs}-${targetArch}:0.7.58")
 
     // 修复插件
     implementation(files("lib/fix-protocol-version-1.3.0.mirai2.jar"))

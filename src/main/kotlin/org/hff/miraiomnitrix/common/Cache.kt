@@ -32,8 +32,7 @@ fun MessageEvent.putImage() {
 private val receiptCache = hashMapOf<Long, EvictingQueue<MessageReceipt<Contact>>>()
 
 /** 发送消息并缓存回执 */
-suspend fun Contact.sendAndCache(message: Message?) {
-    if (message == null) return
+suspend fun Contact.sendAndCache(message: Message) {
     val receipt = sendMessage(message)
     if (message is Image) imageCache.put(receipt.source.internalIds[0], message.imageId)
     receiptCache.getOrPut(id) { EvictingQueue.create(10) }.apply { add(receipt) }

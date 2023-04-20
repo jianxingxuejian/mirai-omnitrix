@@ -1,6 +1,5 @@
 package org.hff.miraiomnitrix.event.any
 
-
 import net.mamoe.mirai.event.events.MessageEvent
 import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*

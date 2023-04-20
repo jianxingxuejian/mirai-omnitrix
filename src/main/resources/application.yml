@@ -37,7 +37,8 @@ permission:
   emojiMixExcludeGroup:
   chatPlusNotNeedCommandGroup:
   replyExcludeGroup:
-  imitateIncludeGroup:
+  mineIncludeGroup:
+  githubExcludeGroup:
 
 account:
   characterAiToken:

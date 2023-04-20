@@ -2,8 +2,13 @@ package org.hff.miraiomnitrix.utils
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.Image.Key.queryUrl
+import org.hff.miraiomnitrix.common.getImage
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.time.LocalTime
 
 private const val QQ_URL = "https://q1.qlogo.cn/g?b=qq&s=640&nk="
 
@@ -33,6 +38,20 @@ fun String.toUrl(): String = URLEncoder.encode(this, StandardCharsets.UTF_8)
 /** 根据qq下载头像 */
 suspend fun Long.download() = HttpUtil.getInputStream(QQ_URL + this)
 
+/** 获取消息链中的图片或者追加参数中的qq号或者发送者的头像 */
+suspend fun MessageEvent.getImageOrAtOrSender(args: List<String>) =
+    when (val image = message.getImage()) {
+        null -> (args.getQq() ?: sender.id).download()
+        else -> HttpUtil.getInputStream(image.queryUrl())
+    }
+
+/** 获取消息链中的图片或者追加参数中的qq号对应的头像 */
+suspend fun MessageEvent.getImageOrAt(args: List<String>) =
+    when (val image = message.getImage()) {
+        null -> args.getQq()?.download()
+        else -> HttpUtil.getInputStream(image.queryUrl())
+    }
+
 /**
  * forEach的launch版本
  *
@@ -50,13 +69,15 @@ fun Int.toTime(): String {
     val minutes = this % 3600 / 60
     val seconds = this % 60
     return when {
-        day > 0 -> String.format("%d天%02d:%02d:%02d", day, hours, minutes, seconds)
-        hours > 0 -> String.format("%02d:%02d:%02d", hours, minutes, seconds)
-        minutes > 0 -> String.format("%02d:%02d", minutes, seconds)
-        else -> String.format("%02d", seconds)
+        day > 0 -> String.format("%d天%02d小时%02d分%02d秒", day, hours, minutes, seconds)
+        hours > 0 -> String.format("%02d小时%02d分%02d秒", hours, minutes, seconds)
+        minutes > 0 -> String.format("%02d分%02d秒", minutes, seconds)
+        else -> String.format("%02d秒", seconds)
     }
 }
 
 /** @see toTime */
 fun Double.toTime() = toInt().toTime()
 fun Long.toTime() = (this / 1000).toInt().toTime()
+
+fun LocalTime.toDuration() = Duration.between(LocalTime.now(), this).seconds.toInt().toTime()

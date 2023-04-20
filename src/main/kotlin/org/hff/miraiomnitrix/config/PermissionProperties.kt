@@ -20,4 +20,8 @@ data class PermissionProperties(
     val replyExcludeGroup: HashSet<Long>,
     /** 不需要指令头就可以聊天的群号(会影响部分功能) */
     val chatPlusNotNeedCommandGroup: HashSet<Long>,
+    /** 开启挖矿功能的群 */
+    val mineIncludeGroup: HashSet<Long>,
+    /** 排除github链接解析的群号 */
+    val githubExcludeGroup: HashSet<Long>,
 )

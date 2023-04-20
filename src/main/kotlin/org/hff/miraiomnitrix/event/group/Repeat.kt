@@ -9,7 +9,7 @@ import org.hff.miraiomnitrix.config.PermissionProperties
 import org.hff.miraiomnitrix.event.*
 import java.util.*
 
-@Event(priority = 1)
+@Event(priority = 3)
 class Repeat(private val permissionProperties: PermissionProperties) : GroupEvent {
 
     private val groupMsgMap = hashMapOf<Long, Queue<String>>()

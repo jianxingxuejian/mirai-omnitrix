@@ -46,7 +46,8 @@ suspend fun MessageEvent.uploadImage(inputStream: InputStream) = inputStream.use
 suspend fun MessageEvent.uploadImage(resource: ExternalResource) = resource.use { subject.uploadImage(it) }
 
 /** 上传图片 */
-suspend fun MessageEvent.uploadImage(byteArray: ByteArray) = uploadImage(byteArray.toExternalResource())
+suspend fun MessageEvent.uploadImage(byteArray: ByteArray, formatName: String? = null) =
+    uploadImage(byteArray.toExternalResource(formatName))
 
 /** 上传图片并引用消息 */
 suspend fun MessageEvent.uploadImageAndQuote(inputStream: InputStream) = message.quote() + uploadImage(inputStream)

@@ -9,6 +9,9 @@ import com.sksamuel.scrimage.nio.PngWriter
 import org.springframework.core.io.ClassPathResource
 import java.awt.Color
 import java.awt.Font
+import java.awt.RenderingHints
+import java.awt.geom.Ellipse2D
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
@@ -22,6 +25,9 @@ object ImageUtil {
 
     fun load(path: String, width: Int, height: Int): ImmutableImage = load(path).scaleTo(width, height)
 
+    fun loadBatch(path: String, count: Int) =
+        (0 until count).map { index -> load(ClassPathResource(path.format(index)).inputStream.use { it.readBytes() }) }
+
     fun scaleTo(inputStream: InputStream, width: Int, height: Int): ImmutableImage =
         inputStream.use { loader.fromStream(it).scaleTo(width, height) }
 
@@ -33,6 +39,17 @@ object ImageUtil {
         use { loader.fromStream(this).scaleTo(width, height) }
 
     fun InputStream.toImmutableImage(): ImmutableImage = use { loader.fromStream(this) }
+
+    fun ImmutableImage.toOval(): ImmutableImage {
+        val bufferedImage = BufferedImage(height, height, BufferedImage.TYPE_4BYTE_ABGR)
+        with(bufferedImage.createGraphics()) {
+            setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            clip = Ellipse2D.Double(0.0, 0.0, width.toDouble(), height.toDouble())
+            drawImage(awt(), 0, 0, height, height, null)
+            dispose()
+        }
+        return ImmutableImage.fromAwt(bufferedImage)
+    }
 
     fun drawTextLines(
         bottomImage: ImmutableImage,
