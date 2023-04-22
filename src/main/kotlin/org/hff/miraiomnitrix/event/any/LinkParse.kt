@@ -58,7 +58,7 @@ class LinkParse(accountProperties: AccountProperties, private val permissionProp
 
     private suspend fun MessageEvent.parseBilibili(value: String): MessageChain {
         val param = when {
-            value.startsWith("a") -> mapOf("aid" to value)
+            value.startsWith("a") -> mapOf("aid" to value.drop(2))
             else -> mapOf("bvid" to value)
         }
         val json = HttpUtil.getString("https://api.bilibili.com/x/web-interface/view", param)
