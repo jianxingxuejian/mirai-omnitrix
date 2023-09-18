@@ -9,6 +9,9 @@ MyGenerator.kt
 device.json
 cache/
 *.db
+!txlib/**/stderr
+!txlib/**/stdin
+!txlib/**/stdout
 
 ### STS ###
 .apt_generated
