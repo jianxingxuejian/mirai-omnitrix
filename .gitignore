@@ -9,10 +9,11 @@ MyGenerator.kt
 device.json
 cache/
 *.db
-!txlib/**/stderr
-!txlib/**/stdin
-!txlib/**/stdout
-!txlib/**/.system_android_l2
+txlib/
+!txlib/**/android_phone.json
+!txlib/**/config.json
+!txlib/**/dtconfig.json
+!txlib/**/libfekit.so
 
 ### STS ###
 .apt_generated
