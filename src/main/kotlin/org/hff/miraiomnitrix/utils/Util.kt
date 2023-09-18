@@ -2,9 +2,6 @@ package org.hff.miraiomnitrix.utils
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import org.hff.miraiomnitrix.common.getImage
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -37,20 +34,6 @@ fun String.toUrl(): String = URLEncoder.encode(this, StandardCharsets.UTF_8)
 
 /** 根据qq下载头像 */
 suspend fun Long.download() = HttpUtil.getInputStream(QQ_URL + this)
-
-/** 获取消息链中的图片或者追加参数中的qq号或者发送者的头像 */
-suspend fun MessageEvent.getImageOrAtOrSender(args: List<String>) =
-    when (val image = message.getImage()) {
-        null -> (args.getQq() ?: sender.id).download()
-        else -> HttpUtil.getInputStream(image.queryUrl())
-    }
-
-/** 获取消息链中的图片或者追加参数中的qq号对应的头像 */
-suspend fun MessageEvent.getImageOrAt(args: List<String>) =
-    when (val image = message.getImage()) {
-        null -> args.getQq()?.download()
-        else -> HttpUtil.getInputStream(image.queryUrl())
-    }
 
 /**
  * forEach的launch版本

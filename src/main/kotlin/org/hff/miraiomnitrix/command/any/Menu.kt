@@ -7,7 +7,6 @@ import org.hff.miraiomnitrix.command.Command
 import org.hff.miraiomnitrix.utils.SkiaExternalResource
 import org.hff.miraiomnitrix.utils.SkikoUtil
 import org.hff.miraiomnitrix.utils.toResource
-import org.hff.miraiomnitrix.utils.uploadImage
 import org.jetbrains.skia.FontStyle
 import org.jetbrains.skia.Paint
 import org.jetbrains.skia.RRect
@@ -59,7 +58,7 @@ class Menu : AnyCommand {
         |开源地址：https://github.com/jianxingxuejian/mirai-omnitrix
     """.trimMargin().let(::convertImage)
 
-    override suspend fun MessageEvent.execute(args: List<String>): Message? = uploadImage(menu)
+    override suspend fun MessageEvent.execute(args: List<String>): Message? = subject.uploadImage(menu)
 
     private final fun convertImage(text: String): SkiaExternalResource {
         val bgColor = 0xFF2C3E50.toInt()

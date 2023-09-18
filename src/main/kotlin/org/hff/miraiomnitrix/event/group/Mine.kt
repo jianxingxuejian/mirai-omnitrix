@@ -36,9 +36,9 @@ class Mine(private val bankService: BankService, private val permissionPropertie
                     coin += 1
                     stop(message.quote() + "给你一枚幻书币~")
                 } else {
-                    stop(At(sender) + "您好。今天您的发言频率过多，已失去本群发言权利。想要继续发言，请下载原神客户端游玩，官方网址：game.granbluefantasy.jp")
+                    val game = listOf("原神", "崩坏:星穹铁道", "崩坏学园2", "崩坏3").random()
+                    stop(At(sender) + "您好。今天您的发言频率过多，已失去本群发言权利。想要继续发言，请下载${game}客户端游玩，官方网址：game.granbluefantasy.jp")
                 }
-
             }
         }
 
