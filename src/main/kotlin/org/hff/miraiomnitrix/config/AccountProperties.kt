@@ -1,9 +1,7 @@
 package org.hff.miraiomnitrix.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties("account")
 data class AccountProperties(
     /** https://beta.character.ai 登陆后F12查看请求头的authorization */

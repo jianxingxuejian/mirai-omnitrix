@@ -50,21 +50,24 @@ object CommandManager {
             else Triple(this, false, false)
         }
         val args = content.toArgs()
+        if (args.isEmpty()) return
         // 配置了无需指令头就能使用chatplus功能的群，直接执行，该功能可能跟其他指令会产生冲突
         if (isAt && chatPlusInclude.contains(event.group.id)) {
             chatPlusCommand.tryExecute(args, event)
             return
         }
         val check = hasHead || isAt
-        val commandName = args[0]
-        val appendArgs = args.drop(1)
-        groupCommands[commandName]?.run {
-            if (needHead && !check) return
-            tryExecute(appendArgs, event)
-        } ?: anyCommands[commandName]?.run {
-            if (needHead && !check) return
-            tryExecute(appendArgs, event)
-        } ?: EventManger.handle(args, event, isAt)
+        val commandNameA = args.first()
+        val appendArgsA = args.drop(1)
+        val execute = groupCommands[commandNameA]?.run { tryExecute(appendArgsA, event, check) }
+            ?: anyCommands[commandNameA]?.run { tryExecute(appendArgsA, event, check) }
+        if (execute == null) {
+            val commandNameB = args.last()
+            val appendArgsB = args.dropLast(1)
+            groupCommands[commandNameB]?.run { tryExecute(appendArgsB, event, check) }
+                ?: anyCommands[commandNameB]?.run { tryExecute(appendArgsB, event, check) }
+                ?: EventManger.handle(args, event, isAt)
+        }
     }
 
     /** 解析用户消息文本并执行指令，如果不是指令，则会继续执行事件 */
@@ -83,7 +86,12 @@ object CommandManager {
     /** 字符串转换成参数列表 */
     private fun String.toArgs() = replace("[图片]", "").replace("[动画表情]", "").trim().split(Regex("\\s+"))
 
-    private suspend inline fun <reified T : MessageEvent> Execute<T>.tryExecute(args: List<String>, event: T) {
+    private suspend inline fun <reified T : MessageEvent> Execute<T>.tryExecute(
+        args: List<String>,
+        event: T,
+        check: Boolean? = null
+    ) {
+        if (check != null && needHead && !check) return
         event.run {
             try {
                 execute(args)?.run { subject.sendAndCache(this) }

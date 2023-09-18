@@ -1,9 +1,7 @@
 package org.hff.miraiomnitrix.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties("http")
 data class HttpProperties(
     /** 代理配置 */

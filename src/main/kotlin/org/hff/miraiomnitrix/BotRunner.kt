@@ -8,6 +8,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.events.UserMessageEvent
+import nu.pattern.OpenCV
 import org.hff.miraiomnitrix.command.CommandManager
 import org.hff.miraiomnitrix.command.any.isChatting
 import org.hff.miraiomnitrix.common.messageCache
@@ -15,7 +16,10 @@ import org.hff.miraiomnitrix.common.putImage
 import org.hff.miraiomnitrix.config.BotProperties
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
+import top.mrxiaom.qsign.QSignService
+import xyz.cssxsh.mirai.device.MiraiDeviceGenerator
 import xyz.cssxsh.mirai.tool.FixProtocolVersion
+import java.io.File
 
 lateinit var bot: Bot
 lateinit var atBot: String
@@ -27,13 +31,26 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
         runBlocking(Dispatchers.IO) {
             val (qq, password) = botProperties
             if (qq == null || password == null) throw IllegalArgumentException("qq或者密码为空，请先在配置文件里添加")
-            FixProtocolVersion.update()
             bot = BotFactory.newBot(qq, password) {
                 protocol = botProperties.getProtocol()
                 fileBasedDeviceInfo("device.json")
+                deviceInfo = MiraiDeviceGenerator()::load
             }
             atBot = "@" + bot.id
+
+            // 加载opencv
+            OpenCV.loadLocally()
+            // 加载修复插件
+            FixProtocolVersion.update()
+            // 加载签名服务
+            QSignService.Factory.apply {
+                init(File("txlib/8.9.63"))
+                loadProtocols()
+                register()
+            }
+
             bot.login()
+
             // 监听消息事件
             bot.eventChannel.subscribeAlways<MessageEvent> { handleMessage() }
             // 监听戳一戳事件
