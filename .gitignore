@@ -12,6 +12,7 @@ cache/
 !txlib/**/stderr
 !txlib/**/stdin
 !txlib/**/stdout
+!txlib/**/.system_android_l2
 
 ### STS ###
 .apt_generated
