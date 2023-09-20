@@ -2,6 +2,8 @@ package org.hff.miraiomnitrix.command.group.meme
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.angles.Degrees
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Message
 import org.hff.miraiomnitrix.command.Command
@@ -198,7 +200,7 @@ class Loading : MemeCommand {
     override suspend fun GroupMessageEvent.execute(args: List<String>): Message? {
         val inputStream = getImage(args, isSender = true)!!
         val top = ImageUtil.load(inputStream, 300, 300).brightness(0.75)
-        inputStream.reset()
+        withContext(Dispatchers.IO) { inputStream.reset() }
         return handleImageOrGif(inputStream) {
             val bottom = scaleTo(50, 50)
             basic.overlay(top).overlay(bottom, 60, 310).overlay(icon, 100, 100)

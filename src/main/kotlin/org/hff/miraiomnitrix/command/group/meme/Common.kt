@@ -6,6 +6,8 @@ import com.sksamuel.scrimage.format.FormatDetector
 import com.sksamuel.scrimage.nio.AnimatedGifReader
 import com.sksamuel.scrimage.nio.ImageSource
 import com.sksamuel.scrimage.nio.StreamingGifWriter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
@@ -53,7 +55,7 @@ suspend inline fun GroupMessageEvent.handleImageOrGif(
     crossinline handle: ImmutableImage.() -> ImmutableImage
 ): Image {
     val detect = FormatDetector.detect(inputStream)
-    inputStream.reset()
+    withContext(Dispatchers.IO) { inputStream.reset() }
 
     if (!detect.isPresent || detect.get().ordinal != 1) {
         inputStream.toImmutableImage().handle().toStream().let { return uploadImage(it) }
