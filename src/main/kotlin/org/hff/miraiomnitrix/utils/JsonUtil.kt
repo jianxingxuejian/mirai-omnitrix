@@ -44,6 +44,7 @@ object JsonUtil {
 fun JsonObject.getAsObj(key: String): JsonObject = this[key].asJsonObject
 fun JsonObject.getAsStr(key: String): String = this[key].asString
 fun JsonObject.getAsStrOrNull(key: String): String? = this[key]?.asString
+fun JsonObject.getAsInt(key: String): Int = this[key].asInt
 fun JsonObject.getAsArrayOrNull(key: String): JsonArray? = this[key]?.asJsonArray
 
 fun JsonElement.get(key: String): JsonElement = asJsonObject.get(key)

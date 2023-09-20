@@ -30,6 +30,19 @@ springBoot {
 }
 
 dependencies {
+    val osName = System.getProperty("os.name")
+    val targetOs = when {
+        osName == "Mac OS X" -> "macos"
+        osName.startsWith("Win") -> "windows"
+        osName.startsWith("Linux") -> "linux"
+        else -> error("Unsupported OS: $osName")
+    }
+    val targetArch = when (val osArch = System.getProperty("os.arch")) {
+        "x86_64", "amd64" -> "x64"
+        "aarch64" -> "arm64"
+        else -> error("Unsupported arch: $osArch")
+    }
+
     // kotlin
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
 
@@ -51,7 +64,7 @@ dependencies {
     implementation("io.ktor:ktor-client-java:$ktorVersion")
 
     // db
-    implementation("org.xerial:sqlite-jdbc:3.43.0.0")
+    implementation("org.xerial:sqlite-jdbc:3.42.0.1")
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.3.1")
     compileOnly("com.baomidou:mybatis-plus-generator:3.5.3.1")
     compileOnly("org.freemarker:freemarker:2.3.32")
@@ -71,18 +84,6 @@ dependencies {
     implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.32.1@jar")
 
     // skiko
-    val osName = System.getProperty("os.name")
-    val targetOs = when {
-        osName == "Mac OS X" -> "macos"
-        osName.startsWith("Win") -> "windows"
-        osName.startsWith("Linux") -> "linux"
-        else -> error("Unsupported OS: $osName")
-    }
-    val targetArch = when (val osArch = System.getProperty("os.arch")) {
-        "x86_64", "amd64" -> "x64"
-        "aarch64" -> "arm64"
-        else -> error("Unsupported arch: $osArch")
-    }
     implementation("org.jetbrains.skiko:skiko-awt-runtime-${targetOs}-${targetArch}:0.7.80")
 
     // 修复插件
@@ -92,6 +93,8 @@ dependencies {
     // 签名服务
     implementation("top.mrxiaom:qsign:1.1.0-beta")
 
+    // selenium
+    implementation("org.seleniumhq.selenium:selenium-java:4.12.1")
 }
 
 tasks.withType<KotlinCompile> {

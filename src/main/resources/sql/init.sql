@@ -47,3 +47,10 @@ CREATE TABLE IF NOT EXISTS `niuzi`
     `length`   INTEGER NOT NULL,
     `is_day`   INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS `domain_name`
+(
+    `id`          INTEGER PRIMARY KEY AUTOINCREMENT,
+    `domain_name` TEXT    NOT NULL,
+    `state`       INTEGER NOT NULL
+);

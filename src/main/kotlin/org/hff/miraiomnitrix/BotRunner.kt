@@ -17,7 +17,6 @@ import org.hff.miraiomnitrix.config.BotProperties
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 import top.mrxiaom.qsign.QSignService
-import xyz.cssxsh.mirai.device.MiraiDeviceGenerator
 import xyz.cssxsh.mirai.tool.FixProtocolVersion
 import java.io.File
 
@@ -34,7 +33,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
             bot = BotFactory.newBot(qq, password) {
                 protocol = botProperties.getProtocol()
                 fileBasedDeviceInfo("device.json")
-                deviceInfo = MiraiDeviceGenerator()::load
+//                deviceInfo = MiraiDeviceGenerator()::load
             }
             atBot = "@" + bot.id
 
