@@ -43,7 +43,7 @@ class BotRunner(private val botProperties: BotProperties) : CommandLineRunner {
             FixProtocolVersion.update()
             // 加载签名服务
             QSignService.Factory.apply {
-                init(File("txlib/8.9.63"))
+                init(File("txlib/8.9.70"))
                 loadProtocols()
                 register()
             }

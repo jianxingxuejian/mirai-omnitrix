@@ -1,18 +1,26 @@
 package org.hff.miraiomnitrix.utils
 
+import jakarta.annotation.PreDestroy
 import org.hff.miraiomnitrix.db.service.DomainNameService
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.OutputType
+import org.openqa.selenium.TimeoutException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
 import org.springframework.boot.CommandLineRunner
+import org.springframework.stereotype.Component
 import java.time.Duration
 
+
+private val domainNameMap = hashMapOf<String, Int>()
+private val domainNameService = SpringUtil.getBean(DomainNameService::class)
+
+@Component
 object SeleniumUtil : CommandLineRunner {
 
-    private val driver: ChromeDriver
+    private lateinit var driver: ChromeDriver
 
     init {
         val os = System.getProperty("os.name").lowercase()
@@ -45,9 +53,6 @@ object SeleniumUtil : CommandLineRunner {
         }
     }
 
-    private val domainNameMap = hashMapOf<String, Int>()
-    private val domainNameService = SpringUtil.getBean(DomainNameService::class)
-
     override fun run(vararg args: String?) {
         domainNameService.list().forEach { (_, domainName, state) ->
             domainNameMap[domainName] = state
@@ -63,6 +68,7 @@ object SeleniumUtil : CommandLineRunner {
             2 -> null
             0, 1 -> screenshot(url)
             null -> try {
+                // 使用腾讯域名检测接口，判断该域名是否安全，并将结果存到数据库
                 val json = HttpUtil.getString(CHECK_API + url)
                 val state = JsonUtil.getObj(json, "data").getAsInt("state")
                 domainNameService.add(domainName, state)
@@ -81,18 +87,32 @@ object SeleniumUtil : CommandLineRunner {
     }
 
     private fun screenshot(url: String): ByteArray? {
-        driver[url]
-        val script =
-            "return (window.performance.timing.loadEventEnd - window.performance.timing.navigationStart) >= 0;"
-        val webDriverWait = WebDriverWait(driver, Duration.ofSeconds(50))
-        webDriverWait.until(ExpectedConditions.jsReturnsValue(script))
-        Thread.sleep(5000)
+        // 打开指定url
+        driver.manage().window().size = Dimension(800, 1280)
+        driver.get(url)
+
+        // 判断页面是否加载完成，最多等待10秒
+        val script = "return (window.performance.timing.loadEventEnd - window.performance.timing.navigationStart) >= 0;"
+        val webDriverWait = WebDriverWait(driver, Duration.ofSeconds(20))
+        try {
+            webDriverWait.until(ExpectedConditions.jsReturnsValue(script))
+        } catch (_: TimeoutException) {
+        }
+
+        //获取页面宽高,并设置为浏览器宽高然后截图
         val width = driver.executeScript("return document.documentElement.scrollWidth") as Long
         val height = driver.executeScript("return document.documentElement.scrollHeight") as Long
-        driver.manage().window().size = Dimension(width.toInt(), height.toInt())
+        driver.manage().window().size = Dimension(width.toInt(), minOf(height, width * 3).toInt())
         val screenshotBytes = driver.getScreenshotAs(OutputType.BYTES)
-        driver.manage().window().size = Dimension(600, 800)
+
+        driver.get("about:blank")
         return screenshotBytes
+    }
+
+    @PreDestroy
+    fun exit() = try {
+        driver.quit()
+    } catch (_: Exception) {
     }
 
 }
